@@ -455,60 +455,60 @@ export default function MatchSimulator({
   ])
 
   return (
-    <div className="flex h-full flex-col justify-between rounded-xl border border-slate-700/60 bg-card-dark p-4 text-white shadow-lg">
-      <div className="mb-2 flex items-center justify-between border-b border-slate-700/50 pb-3">
+    <div className="kh-panel flex h-full flex-col justify-between p-4 text-slate-800 shadow-pf-md">
+      <div className="mb-2 flex items-center justify-between border-b border-slate-200 pb-3">
         <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Casa
           </p>
-          <span className="text-4xl font-extrabold tracking-tight text-court-orange">
+          <span className="font-display text-4xl font-extrabold tracking-tight text-nba-orange">
             {homeScore}
           </span>
         </div>
-        <div className="rounded-lg border border-slate-700/30 bg-slate-900/60 px-4 py-1 text-center">
-          <span className="block text-xs font-bold uppercase text-kings-green">
+        <div className="rounded-xl border border-slate-200 bg-pf-muted px-4 py-1 text-center shadow-pf-sm">
+          <span className="block font-display text-xs font-bold uppercase tracking-wider text-nba-navy">
             {phase}
           </span>
-          <span className="font-mono text-2xl font-bold tracking-widest">
+          <span className="font-display text-2xl font-bold tracking-widest text-slate-900">
             {phase === 'Matchball'
               ? 'MATCHBALL'
               : `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`}
           </span>
-          <span className="mt-0.5 block text-xs text-slate-400">Q{quarter}</span>
+          <span className="mt-0.5 block text-xs text-slate-500">Q{quarter}</span>
           {targetScore != null && phase === 'Matchball' && (
-            <span className="mt-0.5 block text-[10px] font-semibold text-court-orange">
+            <span className="mt-0.5 block text-[10px] font-semibold text-nba-orange">
               Alvo {targetScore}
             </span>
           )}
         </div>
         <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Fora
           </p>
-          <span className="text-4xl font-extrabold tracking-tight text-slate-300">
+          <span className="font-display text-4xl font-extrabold tracking-tight text-nba-navy">
             {awayScore}
           </span>
         </div>
       </div>
 
       {activeCard && (
-        <div className="animate-card-glow mb-3 flex items-center justify-between rounded-lg border border-kings-green/40 bg-kings-green/10 px-3 py-1.5">
+        <div className="animate-card-glow mb-3 flex items-center justify-between rounded-xl border border-nba-navy/25 bg-nba-navy/8 px-3 py-1.5">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase text-kings-green">
+            <p className="text-xs font-bold uppercase text-nba-navy">
               {activeCard.title}
             </p>
-            <p className="text-[10px] leading-tight text-slate-300">
+            <p className="text-[10px] leading-tight text-slate-600">
               {activeCard.description}
             </p>
           </div>
-          <span className="shrink-0 rounded bg-kings-green px-1.5 py-0.5 text-[9px] font-bold text-slate-950">
+          <span className="shrink-0 rounded-full bg-nba-navy px-2 py-0.5 text-[9px] font-bold text-white">
             ATIVO
           </span>
         </div>
       )}
 
-      <div className="my-2 flex flex-col items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+      <div className="my-2 flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-pf-muted p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           Jogadores em Quadra
         </p>
         <div className="flex w-full justify-around gap-1">
@@ -517,14 +517,14 @@ export default function MatchSimulator({
             return (
               <div
                 key={pos}
-                className={`flex-1 rounded-lg border py-2 text-center transition-all duration-300 ${
+                className={`flex-1 rounded-xl border py-2 text-center transition-all duration-300 ${
                   isActive
-                    ? 'border-kings-green bg-kings-green/10 text-kings-green shadow-[0_0_8px_rgba(46,196,182,0.25)]'
-                    : 'border-slate-800 bg-slate-900/40 text-slate-600 line-through opacity-40'
+                    ? 'border-nba-navy/30 bg-white text-nba-navy shadow-pf-sm'
+                    : 'border-slate-100 bg-slate-50 text-slate-400 line-through opacity-50'
                 }`}
               >
-                <span className="block text-xs font-black">{pos}</span>
-                <span className="block font-mono text-[9px]">
+                <span className="block font-display text-xs font-black">{pos}</span>
+                <span className="block text-[9px] font-semibold">
                   {isActive ? homeLineup?.[pos]?.shortName || 'Vazio' : 'Banco'}
                 </span>
               </div>
@@ -533,18 +533,18 @@ export default function MatchSimulator({
         </div>
       </div>
 
-      <div className="my-2 flex max-h-[160px] flex-1 flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-800/80 bg-slate-950/90 p-3 font-mono text-xs">
+      <div className="my-2 flex max-h-[160px] flex-1 flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 font-mono text-xs">
         {feed.map((entry, idx) => (
           <div
             key={`${idx}-${entry.slice(0, 12)}`}
             className={`border-l-2 py-0.5 pl-2 ${
               entry.includes('[CASA]')
-                ? 'border-court-orange text-orange-200'
+                ? 'border-nba-orange text-orange-800'
                 : entry.includes('[FORA]')
-                  ? 'border-slate-400 text-slate-300'
+                  ? 'border-slate-400 text-slate-600'
                   : entry.includes('DADO') || entry.includes('MATCHBALL')
-                    ? 'border-kings-green bg-kings-green/5 font-bold text-kings-green'
-                    : 'border-slate-700 text-slate-400'
+                    ? 'border-nba-navy bg-nba-navy/5 font-bold text-nba-navy'
+                    : 'border-slate-200 text-slate-500'
             }`}
           >
             {entry}
@@ -560,8 +560,8 @@ export default function MatchSimulator({
             onClick={() => setIsPlaying(!isPlaying)}
             className={`w-full rounded-xl border py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
               isPlaying
-                ? 'border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                : 'border-kings-green bg-kings-green font-black text-slate-950 shadow-[0_0_12px_rgba(46,196,182,0.3)] hover:bg-opacity-90'
+                ? 'border-nba-red/30 bg-nba-red/10 text-nba-red hover:bg-nba-red/15'
+                : 'kh-btn-primary border-transparent font-black'
             }`}
           >
             {isPlaying ? 'Pausar Partida' : 'Dar o Tip-Off'}
@@ -570,12 +570,12 @@ export default function MatchSimulator({
       </div>
 
       {showPresidentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-kings-green/40 bg-card-dark p-6 text-center shadow-2xl">
-            <h3 className="mb-2 font-display text-2xl tracking-wide text-kings-green">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-nba-navy/20 bg-white p-6 text-center shadow-pf-lg">
+            <h3 className="mb-2 font-display text-2xl tracking-wide text-nba-navy">
               Arremesso do Presidente!
             </h3>
-            <p className="mb-6 text-xs leading-relaxed text-slate-300">
+            <p className="mb-6 text-xs leading-relaxed text-slate-600">
               Halftime!{' '}
               {homePresident?.name || 'Seu presidente'} tenta o chute de 4 pontos
               do meio da quadra.
@@ -585,7 +585,7 @@ export default function MatchSimulator({
               <button
                 type="button"
                 onClick={arremessarPresidente}
-                className="w-full rounded-xl bg-kings-green py-3 text-xs font-black uppercase tracking-widest text-slate-950 shadow-[0_0_15px_rgba(46,196,182,0.4)] hover:bg-opacity-90"
+                className="kh-btn-primary w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest"
               >
                 Disparar Bola!
               </button>
@@ -593,14 +593,14 @@ export default function MatchSimulator({
               <div className="py-2">
                 <span
                   className={`block text-lg font-bold ${
-                    presidentShotSuccess ? 'text-kings-green' : 'text-red-400'
+                    presidentShotSuccess ? 'text-nba-navy' : 'text-nba-red'
                   }`}
                 >
                   {presidentShotSuccess
                     ? 'ACERTOU EM CHEIO! (+4 PTS)'
                     : 'NO ARO! Errou o alvo!'}
                 </span>
-                <span className="mt-1 block text-[10px] text-slate-400">
+                <span className="mt-1 block text-[10px] text-slate-500">
                   Retornando para a quadra em instantes...
                 </span>
               </div>
@@ -610,19 +610,19 @@ export default function MatchSimulator({
       )}
 
       {showDiceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-court-orange/40 bg-card-dark p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-nba-orange/30 bg-white p-6 text-center shadow-pf-lg">
             <div
-              className={`mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg border-2 border-court-orange bg-dark-bg font-display text-3xl text-court-orange ${
+              className={`mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-xl border-2 border-nba-orange bg-pf-muted font-display text-3xl text-nba-orange ${
                 isDiceSpinning ? 'animate-dice-spin' : ''
               }`}
             >
               {isDiceSpinning ? '?' : 'D4'}
             </div>
-            <h3 className="mb-2 font-display text-2xl tracking-wide text-court-orange">
+            <h3 className="mb-2 font-display text-2xl tracking-wide text-nba-orange">
               Dado do Caos!
             </h3>
-            <p className="mb-6 text-xs leading-relaxed text-slate-300">
+            <p className="mb-6 text-xs leading-relaxed text-slate-600">
               Cronometro travado aos 2:00 do ultimo quarto. O dado define o
               formato ate o fim!
             </p>
@@ -631,7 +631,7 @@ export default function MatchSimulator({
               type="button"
               disabled={isDiceSpinning}
               onClick={rodarDadoDoCaos}
-              className="w-full rounded-xl bg-court-orange py-3 text-xs font-black uppercase tracking-widest text-slate-950 hover:bg-opacity-90 disabled:opacity-50"
+              className="w-full rounded-xl bg-nba-orange py-3 text-xs font-black uppercase tracking-widest text-white hover:brightness-105 disabled:opacity-50"
             >
               {isDiceSpinning ? 'Sorteando...' : 'Girar o Dado!'}
             </button>

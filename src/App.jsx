@@ -86,29 +86,28 @@ export default function App() {
   const metricasCasa = calcularMetricasTime(homeLineup)
 
   return (
-    <div className="flex h-screen w-screen select-none flex-col overflow-hidden bg-dark-bg font-[family-name:var(--font-body)] text-white">
-      {/* Header */}
-      <header className="z-10 flex items-center justify-between border-b border-slate-800 bg-card-dark/80 px-6 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded bg-court-orange font-display text-xl leading-none text-dark-bg">
+    <div className="flex h-screen w-screen select-none flex-col overflow-hidden font-body text-slate-800">
+      <header className="kh-header relative z-10 flex items-center justify-between px-6 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-gradient-to-br from-nba-navy to-nba-navy-hover font-display text-xl text-white shadow-pf-sm ring-1 ring-nba-navy/10">
             KH
           </div>
-          <h1 className="font-display text-3xl tracking-widest text-court-orange">
-            KINGS<span className="text-kings-green">HOOP</span>
+          <h1 className="font-display text-3xl font-extrabold tracking-[0.12em] text-nba-navy">
+            KINGS<span className="text-nba-red">HOOP</span>
           </h1>
         </div>
 
         {gameStarted && (
           <div className="flex items-center gap-3">
-            <span className="hidden text-[10px] uppercase tracking-widest text-slate-500 sm:inline">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:inline">
               {gamePhase}
             </span>
-            <div className="flex gap-4 rounded-full border border-slate-800 bg-slate-950 px-4 py-1 font-mono text-lg">
-              <span className="font-black text-court-orange">
+            <div className="flex gap-4 rounded-full border border-slate-200/80 bg-white px-4 py-1 font-display text-xl shadow-pf-sm">
+              <span className="font-extrabold text-nba-orange">
                 {globalScores.homeScore}
               </span>
-              <span className="text-slate-600">:</span>
-              <span className="font-black text-slate-300">
+              <span className="text-slate-300">:</span>
+              <span className="font-extrabold text-nba-navy">
                 {globalScores.awayScore}
               </span>
             </div>
@@ -116,28 +115,29 @@ export default function App() {
         )}
 
         <div className="flex items-center gap-3">
-          <span className="rounded border border-kings-green/20 bg-kings-green/10 px-2 py-1 text-xs font-bold uppercase tracking-wider text-kings-green">
+          <span className="rounded-full bg-nba-navy/8 px-3 py-1 text-xs font-bold uppercase tracking-wider text-nba-navy">
             PRO MODE
           </span>
         </div>
       </header>
 
       <main className="flex min-h-0 flex-1 overflow-hidden">
-        {/* Coluna esquerda — Painel Tático */}
-        <section className="flex w-1/4 min-w-0 flex-col justify-between border-r border-slate-800/80 bg-card-dark/40 p-5">
+        <section className="flex w-1/4 min-w-0 flex-col justify-between border-r border-slate-200/80 bg-white/55 p-5 backdrop-blur-sm">
           <div className="flex flex-col gap-5 overflow-y-auto pr-1">
             <div>
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                 Ajustes Táticos
               </h2>
               <div className="flex flex-col gap-3">
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Formação</label>
+                  <label className="mb-1 block text-xs font-semibold text-slate-500">
+                    Formação
+                  </label>
                   <select
                     value={formation}
                     onChange={(e) => setFormation(e.target.value)}
                     disabled={gameStarted}
-                    className="w-full rounded-lg border border-slate-700/60 bg-card-dark p-2 text-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 shadow-pf-sm focus:border-nba-navy focus:outline-none disabled:opacity-50"
                   >
                     <option value="Equilibrada">Equilibrada (Padrão)</option>
                     <option value="Pace & Space">Pace & Space (Foco em 3PT)</option>
@@ -146,14 +146,14 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">
+                  <label className="mb-1 block text-xs font-semibold text-slate-500">
                     Estilo de Jogo
                   </label>
                   <select
                     value={playstyle}
                     onChange={(e) => setPlaystyle(e.target.value)}
                     disabled={gameStarted}
-                    className="w-full rounded-lg border border-slate-700/60 bg-card-dark p-2 text-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 shadow-pf-sm focus:border-nba-navy focus:outline-none disabled:opacity-50"
                   >
                     <option value="Run & Gun">Run & Gun (Transição Rápida)</option>
                     <option value="Meia Quadra">Meia Quadra (Posicional)</option>
@@ -165,8 +165,8 @@ export default function App() {
             </div>
 
             {homeLineup && (
-              <div className="border-t border-slate-800/80 pt-4">
-                <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div className="border-t border-slate-200/80 pt-4">
+                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                   Carta Secreta
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
@@ -178,16 +178,16 @@ export default function App() {
                         type="button"
                         disabled={gameStarted}
                         onClick={() => setSelectedCard(card)}
-                        className={`flex flex-col justify-between rounded-lg border p-2.5 text-left transition-all duration-200 disabled:opacity-50 ${
+                        className={`flex flex-col justify-between rounded-xl border p-2.5 text-left transition-all duration-200 disabled:opacity-50 ${
                           isSelected
-                            ? 'border-kings-green bg-kings-green/10 text-kings-green shadow-[0_0_10px_rgba(46,196,182,0.15)]'
-                            : 'border-slate-700/50 bg-card-dark text-slate-300 hover:border-slate-500'
+                            ? 'border-nba-navy bg-nba-navy/8 text-nba-navy shadow-pf-navy'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                         }`}
                       >
                         <span className="block text-xs font-bold leading-tight">
                           {card.title}
                         </span>
-                        <span className="mt-1 line-clamp-2 text-[9px] leading-snug text-slate-400">
+                        <span className="mt-1 line-clamp-2 text-[9px] leading-snug text-slate-500">
                           {card.description}
                         </span>
                       </button>
@@ -197,7 +197,7 @@ export default function App() {
                 {homePresident && (
                   <p className="mt-3 text-[10px] text-slate-500">
                     Presidente:{' '}
-                    <span className="font-semibold text-kings-green">
+                    <span className="font-semibold text-nba-navy">
                       {homePresident.shortName}
                     </span>{' '}
                     (arremesso no intervalo)
@@ -207,12 +207,12 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 border-t border-slate-800/80 pt-4">
+          <div className="flex flex-col gap-2 border-t border-slate-200/80 pt-4">
             <button
               type="button"
               onClick={realizarDraft}
               disabled={gameStarted}
-              className="w-full rounded-xl border border-slate-700 bg-card-dark py-3 text-xs font-bold uppercase tracking-wider text-slate-200 transition-all hover:border-slate-500 disabled:opacity-50"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-pf-sm transition-all hover:border-nba-navy/30 disabled:opacity-50"
             >
               Revelar Elenco / Draft Auto
             </button>
@@ -226,7 +226,7 @@ export default function App() {
                   setGlobalScores({ homeScore: 0, awayScore: 0 })
                   setActivePositions(['PG'])
                 }}
-                className="w-full rounded-xl bg-kings-green py-3 text-xs font-black uppercase tracking-widest text-slate-950 shadow-[0_0_15px_rgba(46,196,182,0.2)] transition-all hover:bg-opacity-95"
+                className="kh-btn-primary w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest"
               >
                 Iniciar Partida
               </button>
@@ -234,159 +234,82 @@ export default function App() {
           </div>
         </section>
 
-        {/* Coluna central — Quadra + Simulador */}
-        <section className="flex h-full w-1/2 min-w-0 flex-col justify-between bg-dark-bg p-5">
-          <div className="relative flex max-h-[50%] min-h-[220px] flex-1 items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <svg viewBox="0 0 400 240" className="h-full w-full opacity-80">
+        <section className="flex h-full w-1/2 min-w-0 flex-col justify-between p-5">
+          <div className="kh-panel relative flex max-h-[50%] min-h-[220px] flex-1 items-center justify-center overflow-hidden p-4">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-90"
+              style={{
+                background:
+                  'radial-gradient(ellipse 55% 45% at 72% 42%, rgba(23,64,139,0.08), transparent 65%), radial-gradient(ellipse 35% 30% at 18% 65%, rgba(201,8,42,0.05), transparent 55%)',
+              }}
+            />
+            <svg viewBox="0 0 400 240" className="relative z-[1] h-full w-full">
               <rect
                 x="10"
                 y="10"
                 width="380"
                 height="220"
-                fill="none"
-                stroke="#334155"
+                fill="url(#courtFill)"
+                stroke="#17408b"
                 strokeWidth="2"
+                rx="8"
               />
-              <line
-                x1="200"
-                y1="10"
-                x2="200"
-                y2="230"
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <circle
-                cx="200"
-                cy="120"
-                r="30"
-                fill="none"
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <path
-                d="M 10 30 A 100 100 0 0 1 10 210"
-                fill="none"
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <path
-                d="M 390 30 A 100 100 0 0 0 390 210"
-                fill="none"
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <rect
-                x="10"
-                y="85"
-                width="60"
-                height="70"
-                fill="none"
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <rect
-                x="330"
-                y="85"
-                width="60"
-                height="70"
-                fill="none"
-                stroke="#334155"
-                strokeWidth="2"
-              />
+              <defs>
+                <linearGradient id="courtFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fff8f0" />
+                  <stop offset="100%" stopColor="#f0e0cc" />
+                </linearGradient>
+              </defs>
+              <line x1="200" y1="10" x2="200" y2="230" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
+              <circle cx="200" cy="120" r="30" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
+              <path d="M 10 30 A 100 100 0 0 1 10 210" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.4" />
+              <path d="M 390 30 A 100 100 0 0 0 390 210" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.4" />
+              <rect x="10" y="85" width="60" height="70" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
+              <rect x="330" y="85" width="60" height="70" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
 
               {homeLineup && (
                 <>
-                  <g
-                    className={`transition-all duration-500 ${
-                      activePositions.includes('PG') ? 'opacity-100' : 'opacity-20'
-                    }`}
-                  >
-                    <circle cx="150" cy="120" r="11" fill="#e07a5f" />
-                    <text
-                      x="150"
-                      y="123"
-                      textAnchor="middle"
-                      fill="black"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      PG
-                    </text>
-                  </g>
-                  <g
-                    className={`transition-all duration-500 ${
-                      activePositions.includes('SG') ? 'opacity-100' : 'opacity-20'
-                    }`}
-                  >
-                    <circle cx="110" cy="65" r="11" fill="#e07a5f" />
-                    <text
-                      x="110"
-                      y="68"
-                      textAnchor="middle"
-                      fill="black"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      SG
-                    </text>
-                  </g>
-                  <g
-                    className={`transition-all duration-500 ${
-                      activePositions.includes('SF') ? 'opacity-100' : 'opacity-20'
-                    }`}
-                  >
-                    <circle cx="110" cy="175" r="11" fill="#e07a5f" />
-                    <text
-                      x="110"
-                      y="178"
-                      textAnchor="middle"
-                      fill="black"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      SF
-                    </text>
-                  </g>
-                  <g
-                    className={`transition-all duration-500 ${
-                      activePositions.includes('PF') ? 'opacity-100' : 'opacity-20'
-                    }`}
-                  >
-                    <circle cx="65" cy="80" r="11" fill="#e07a5f" />
-                    <text
-                      x="65"
-                      y="83"
-                      textAnchor="middle"
-                      fill="black"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      PF
-                    </text>
-                  </g>
-                  <g
-                    className={`transition-all duration-500 ${
-                      activePositions.includes('C') ? 'opacity-100' : 'opacity-20'
-                    }`}
-                  >
-                    <circle cx="50" cy="120" r="11" fill="#e07a5f" />
-                    <text
-                      x="50"
-                      y="123"
-                      textAnchor="middle"
-                      fill="black"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      C
-                    </text>
-                  </g>
+                  {[
+                    { pos: 'PG', cx: 150, cy: 120 },
+                    { pos: 'SG', cx: 110, cy: 65 },
+                    { pos: 'SF', cx: 110, cy: 175 },
+                    { pos: 'PF', cx: 65, cy: 80 },
+                    { pos: 'C', cx: 50, cy: 120 },
+                  ].map(({ pos, cx, cy }) => {
+                    const on = activePositions.includes(pos)
+                    return (
+                      <g
+                        key={pos}
+                        className={`transition-all duration-500 ${on ? 'opacity-100' : 'opacity-25'}`}
+                      >
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r="12"
+                          fill={on ? '#17408b' : '#94a3b8'}
+                          stroke="#f5b731"
+                          strokeWidth={on ? 2 : 1}
+                        />
+                        <text
+                          x={cx}
+                          y={cy + 3}
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="9"
+                          fontWeight="bold"
+                          fontFamily="Barlow Condensed, sans-serif"
+                        >
+                          {pos}
+                        </text>
+                      </g>
+                    )
+                  })}
                 </>
               )}
             </svg>
             {!homeLineup && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/80">
-                <p className="animate-pulse text-xs font-bold uppercase tracking-widest text-slate-400">
+              <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-[18px] bg-white/75 backdrop-blur-sm">
+                <p className="animate-pulse text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                   Revele o Elenco para Ver a Quadra
                 </p>
               </div>
@@ -412,8 +335,10 @@ export default function App() {
                 onMatchEnd={() => setGamePhase('Finalizado')}
               />
             ) : (
-              <div className="flex h-full flex-col items-center justify-center rounded-xl border border-slate-800 bg-card-dark/20 p-6 text-center">
-                <h3 className="mb-1 font-bold text-slate-300">Simulador de Partida</h3>
+              <div className="kh-panel flex h-full flex-col items-center justify-center p-6 text-center">
+                <h3 className="mb-1 font-display text-2xl font-bold tracking-wide text-nba-navy">
+                  Simulador de Partida
+                </h3>
                 <p className="max-w-xs text-xs leading-relaxed text-slate-500">
                   Defina as táticas, escolha uma carta secreta e aperte Iniciar
                   Partida para o tip-off.
@@ -423,36 +348,43 @@ export default function App() {
           </div>
         </section>
 
-        {/* Coluna direita — Lineups */}
-        <section className="flex w-1/4 min-w-0 flex-col justify-between overflow-y-auto border-l border-slate-800/80 bg-card-dark/40 p-5">
+        <section className="flex w-1/4 min-w-0 flex-col justify-between overflow-y-auto border-l border-slate-200/80 bg-white/55 p-5 backdrop-blur-sm">
           {homeLineup ? (
             <div className="flex flex-col gap-6">
               <div>
-                <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                   Métricas do Seu Time
                 </h2>
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-lg border border-slate-700/40 bg-card-dark/80 p-2">
-                    <span className="block text-xs text-slate-400">ATAQUE</span>
-                    <span className="text-lg font-extrabold text-court-orange">
+                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                      Ataque
+                    </span>
+                    <span className="font-display text-2xl font-extrabold text-nba-orange">
                       {metricasCasa.att}
                     </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/40 bg-card-dark/80 p-2">
-                    <span className="block text-xs text-slate-400">DEFESA</span>
-                    <span className="text-lg font-extrabold text-sky-400">
+                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                      Defesa
+                    </span>
+                    <span className="font-display text-2xl font-extrabold text-nba-navy">
                       {metricasCasa.def}
                     </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/40 bg-card-dark/80 p-2">
-                    <span className="block text-xs text-slate-400">GERAL (OVR)</span>
-                    <span className="text-lg font-extrabold text-kings-green">
+                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                      Geral
+                    </span>
+                    <span className="font-display text-2xl font-extrabold text-nba-navy">
                       {metricasCasa.ovr}
                     </span>
                   </div>
-                  <div className="rounded-lg border border-slate-700/40 bg-card-dark/80 p-2">
-                    <span className="block text-xs text-slate-400">QUÍMICA</span>
-                    <span className="text-lg font-extrabold text-yellow-400">
+                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                      Química
+                    </span>
+                    <span className="font-display text-2xl font-extrabold text-nba-gold">
                       {metricasCasa.chem}%
                     </span>
                   </div>
@@ -460,7 +392,7 @@ export default function App() {
               </div>
 
               <div>
-                <h2 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <h2 className="mb-2.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                   Starting Five
                 </h2>
                 <div className="flex flex-col gap-2">
@@ -469,28 +401,28 @@ export default function App() {
                     return (
                       <div
                         key={pos}
-                        className={`flex items-center justify-between rounded-lg border px-3 py-2 transition-opacity ${
+                        className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
                           onCourt
-                            ? 'border-slate-700/40 bg-card-dark opacity-100'
-                            : 'border-slate-800 bg-card-dark/50 opacity-40'
+                            ? 'border-slate-200 bg-white shadow-pf-sm opacity-100'
+                            : 'border-slate-100 bg-slate-50 opacity-45'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-950/60 font-mono text-xs font-black text-kings-green">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-nba-navy/10 font-display text-xs font-black text-nba-navy">
                             {pos}
                           </span>
                           <div>
-                            <p className="text-xs font-bold text-slate-200">
+                            <p className="text-xs font-bold text-slate-800">
                               {player?.name ?? 'Vazio'}
                             </p>
-                            <span className="text-[9px] uppercase tracking-wider text-slate-400">
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">
                               {!onCourt && gameStarted
                                 ? 'No banco'
                                 : (player?.archetype ?? '')}
                             </span>
                           </div>
                         </div>
-                        <span className="rounded border border-slate-700/50 bg-slate-800/80 px-2 py-0.5 font-mono text-xs font-bold text-slate-300">
+                        <span className="rounded-lg border border-slate-200 bg-pf-muted px-2 py-0.5 font-display text-sm font-bold text-slate-700">
                           {player?.overall ?? '—'}
                         </span>
                       </div>
@@ -500,17 +432,17 @@ export default function App() {
               </div>
 
               {awayLineup && (
-                <div className="border-t border-slate-800/80 pt-4">
-                  <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <div className="border-t border-slate-200/80 pt-4">
+                  <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                     Elenco Rival
                   </h2>
-                  <div className="grid grid-cols-5 gap-1 rounded-lg border border-slate-800/60 bg-slate-950/40 p-2 text-center">
+                  <div className="grid grid-cols-5 gap-1 rounded-xl border border-slate-200 bg-white p-2 text-center shadow-pf-sm">
                     {Object.entries(awayLineup).map(([pos, player]) => (
                       <div key={pos}>
-                        <span className="block text-[10px] font-bold text-slate-500">
+                        <span className="block text-[10px] font-bold text-slate-400">
                           {pos}
                         </span>
-                        <span className="block font-mono text-xs font-black leading-tight text-slate-300">
+                        <span className="block font-display text-sm font-black leading-tight text-nba-navy">
                           {player?.overall ?? '—'}
                         </span>
                       </div>
