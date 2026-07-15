@@ -1,39 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { computeTeamRatings } from '../lib/tactics'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
-
-function teamStrength(lineup, activePositions, boostPositions = null) {
-  const onCourt = activePositions
-    .map((pos) => {
-      const p = lineup?.[pos]
-      if (!p) return null
-      if (boostPositions?.has(pos)) {
-        return {
-          ...p,
-          attack: p.attack + 10,
-          defense: p.defense + 10,
-          overall: p.overall + 10,
-        }
-      }
-      return p
-    })
-    .filter(Boolean)
-  if (onCourt.length === 0) return { attack: 0, defense: 0 }
-  return {
-    attack: Math.round(onCourt.reduce((s, p) => s + p.attack, 0) / onCourt.length),
-    defense: Math.round(onCourt.reduce((s, p) => s + p.defense, 0) / onCourt.length),
-  }
-}
 
 export default function MatchSimulator({
   homeLineup,
   awayLineup,
   homePresident = null,
   activeCard = null,
+  formation = 'Equilibrada',
+  playstyle = 'Run & Gun',
   onMatchEnd,
   onScoreUpdate,
   onActiveChange,
   onPhaseChange,
+  onRequestRematch,
 }) {
   const [quarter, setQuarter] = useState(1)
   const [minutes, setMinutes] = useState(5)
@@ -61,6 +42,7 @@ export default function MatchSimulator({
   const targetScoreRef = useRef(null)
   const chaosDiceResultRef = useRef(null)
   const benchBoostRef = useRef(new Set())
+  const matchballTickRef = useRef(0)
 
   useEffect(() => {
     homeScoreRef.current = homeScore
@@ -125,34 +107,30 @@ export default function MatchSimulator({
 
   const simularPosseDeBola = useCallback(() => {
     const positions = activePositionsRef.current
-    const q = quarter // from closure — updated each render via deps
+    const q = quarter
     const timeAtacando = Math.random() < 0.52 ? 'home' : 'away'
 
-    const calcularPoder = (lineup, tipo) => {
-      if (!lineup) return 50
-      let total = 0
-      let ativosCount = 0
-      positions.forEach((pos) => {
-        if (lineup[pos]) {
-          let val = lineup[pos][tipo]
-          if (
-            activeCard?.effect === 'BENCH_BOOST' &&
-            benchBoostRef.current.has(pos) &&
-            lineup === homeLineup
-          ) {
-            val += 10
-          }
-          total += val
-          ativosCount++
-        }
-      })
-      return ativosCount > 0 ? total / ativosCount : 50
-    }
+    const homeBoost =
+      activeCard?.effect === 'BENCH_BOOST' ? benchBoostRef.current : null
 
-    let homeAttack = calcularPoder(homeLineup, 'attack')
-    let homeDefense = calcularPoder(homeLineup, 'defense')
-    let awayAttack = calcularPoder(awayLineup, 'attack')
-    let awayDefense = calcularPoder(awayLineup, 'defense')
+    const homeRatings = computeTeamRatings(
+      homeLineup,
+      positions,
+      formation,
+      playstyle,
+      { boostPositions: homeBoost ?? undefined },
+    )
+    const awayRatings = computeTeamRatings(
+      awayLineup,
+      positions,
+      'Equilibrada',
+      'Meia Quadra',
+    )
+
+    let homeAttack = homeRatings.attack
+    let homeDefense = homeRatings.defense
+    let awayAttack = awayRatings.attack
+    let awayDefense = awayRatings.defense
 
     if (activeCard?.effect === 'ZONE_LOCK' && q === 3) {
       homeDefense *= 1.25
@@ -166,7 +144,9 @@ export default function MatchSimulator({
     const converteu = Math.random() < probabilidadeSucesso * 0.95
 
     if (converteu) {
-      const tipoPonto = Math.random() < 0.35 ? 3 : 2
+      const threeChance =
+        timeAtacando === 'home' ? homeRatings.threeRate : awayRatings.threeRate
+      const tipoPonto = Math.random() < threeChance ? 3 : 2
       let pontosGanhos = tipoPonto
 
       if (
@@ -192,6 +172,12 @@ export default function MatchSimulator({
         if (craque && Math.random() < 0.6) {
           cestinha = craque
         }
+      }
+
+      // Iso Star: craque da casa toma mais finalizações
+      if (timeAtacando === 'home' && playstyle === 'Iso Star') {
+        const craque = getHomeStar()
+        if (craque && Math.random() < 0.45) cestinha = craque
       }
 
       const nomeJogador = cestinha ? cestinha.shortName : 'Atleta'
@@ -228,8 +214,10 @@ export default function MatchSimulator({
     activeCard,
     adicionarAoFeed,
     awayLineup,
+    formation,
     getHomeStar,
     homeLineup,
+    playstyle,
     quarter,
     verificarMatchballFim,
   ])
@@ -296,6 +284,10 @@ export default function MatchSimulator({
         adicionarAoFeed(`Fim do ${q}º Quarto. Iniciando o ${q + 1}º Quarto!`)
         setMinutes(5)
         setSeconds(0)
+        if (q === 1) {
+          setActivePositions(['PG', 'SG', 'SF', 'PF', 'C'])
+          setPhase('Jogo 5v5')
+        }
         return q + 1
       }
       encerrarPartida()
@@ -306,18 +298,13 @@ export default function MatchSimulator({
   const rodarDadoDoCaos = () => {
     setIsDiceSpinning(true)
     window.setTimeout(() => {
-      const lados = [1, 2, 3, 5]
+      const lados = [1, 2, 3, 4, 5]
       const sorteado = lados[Math.floor(Math.random() * lados.length)]
       setChaosDiceResult(sorteado)
       chaosDiceResultRef.current = sorteado
       setIsDiceSpinning(false)
 
-      let posicoesSorteados = ['PG']
-      if (sorteado >= 2) posicoesSorteados.push('SG')
-      if (sorteado >= 3) posicoesSorteados.push('SF')
-      if (sorteado === 5) {
-        posicoesSorteados = ['PG', 'SG', 'SF', 'PF', 'C']
-      }
+      const posicoesSorteados = POSITIONS.slice(0, sorteado)
 
       setActivePositions(posicoesSorteados)
       setPhase(`Caos ${sorteado}v${sorteado}`)
@@ -354,9 +341,11 @@ export default function MatchSimulator({
         )
       }
       setShowPresidentModal(false)
+      setPresidentShotSuccess(null)
       setQuarter(3)
       setMinutes(5)
       setSeconds(0)
+      setActivePositions(['PG', 'SG', 'SF', 'PF', 'C'])
       setPhase('Jogo 5v5')
       setIsPlaying(true)
     }, 2000)
@@ -380,9 +369,22 @@ export default function MatchSimulator({
   useEffect(() => {
     if (!isPlaying || phase === 'Intervalo' || phase === 'Fim') return undefined
 
+    const homePace = computeTeamRatings(
+      homeLineup,
+      activePositionsRef.current,
+      formation,
+      playstyle,
+    ).pace
+    // Base 22%; pace alto acelera posses um pouco
+    const posessionChance = Math.min(0.32, Math.max(0.14, 0.22 + homePace * 0.03))
+
     const interval = window.setInterval(() => {
       if (phaseRef.current === 'Matchball') {
-        simularPosseDeBola()
+        // Matchball: ~1 posse a cada ~4 ticks (~180ms), nao a cada frame
+        matchballTickRef.current += 1
+        if (matchballTickRef.current % 4 === 0) {
+          simularPosseDeBola()
+        }
         return
       }
 
@@ -428,7 +430,7 @@ export default function MatchSimulator({
       ) {
         const diff = Math.abs(homeScoreRef.current - awayScoreRef.current)
         if (diff <= 8) {
-          // Preserva activePositions atuais (formato do Dado)
+          matchballTickRef.current = 0
           setPhase('Matchball')
           const target =
             Math.max(homeScoreRef.current, awayScoreRef.current) + 7
@@ -439,7 +441,7 @@ export default function MatchSimulator({
         }
       }
 
-      if (Math.random() < 0.22) {
+      if (Math.random() < posessionChance) {
         simularPosseDeBola()
       }
     }, 45)
@@ -448,11 +450,17 @@ export default function MatchSimulator({
   }, [
     adicionarAoFeed,
     atualizarEscaladaDoJogo,
+    formation,
+    homeLineup,
     isPlaying,
     phase,
+    playstyle,
     simularPosseDeBola,
     tratarFimDeQuarto,
   ])
+
+  const tipOffLocked =
+    showPresidentModal || showDiceModal || phase === 'Intervalo'
 
   return (
     <div className="kh-panel flex h-full flex-col justify-between p-4 text-slate-300 shadow-pf-md">
@@ -474,7 +482,9 @@ export default function MatchSimulator({
               ? 'MATCHBALL'
               : `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`}
           </span>
-          <span className="mt-0.5 block text-xs text-slate-400">Q{quarter}</span>
+          <span className="mt-0.5 block text-xs text-slate-400">
+            {phase === 'Intervalo' ? 'HT' : `Q${quarter}`}
+          </span>
           {targetScore != null && phase === 'Matchball' && (
             <span className="mt-0.5 block text-[10px] font-semibold text-court-orange">
               Alvo {targetScore}
@@ -554,11 +564,20 @@ export default function MatchSimulator({
       </div>
 
       <div className="mt-3 flex gap-2">
-        {phase !== 'Fim' && (
+        {phase === 'Fim' ? (
           <button
             type="button"
+            onClick={() => onRequestRematch?.()}
+            className="kh-btn-primary w-full rounded-xl py-2.5 text-xs font-black uppercase tracking-widest"
+          >
+            Nova Partida / Ajustar Táticas
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={tipOffLocked}
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`w-full rounded-xl border py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+            className={`w-full rounded-xl border py-2.5 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 ${
               isPlaying
                 ? 'border-kings-red/30 bg-kings-red/10 text-kings-red hover:bg-kings-red/15'
                 : 'kh-btn-primary border-transparent font-black'
@@ -617,14 +636,14 @@ export default function MatchSimulator({
                 isDiceSpinning ? 'animate-dice-spin' : ''
               }`}
             >
-              {isDiceSpinning ? '?' : 'D4'}
+              {isDiceSpinning ? '?' : 'D5'}
             </div>
             <h3 className="mb-2 font-display text-2xl tracking-wide text-court-orange">
               Dado do Caos!
             </h3>
             <p className="mb-6 text-xs leading-relaxed text-slate-400">
               Cronometro travado aos 2:00 do ultimo quarto. O dado define o
-              formato ate o fim!
+              formato (1v1 a 5v5) ate o fim!
             </p>
 
             <button
@@ -642,4 +661,4 @@ export default function MatchSimulator({
   )
 }
 
-export { POSITIONS, teamStrength }
+export { POSITIONS }

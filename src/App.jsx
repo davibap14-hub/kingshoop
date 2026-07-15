@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MatchSimulator from './components/MatchSimulator'
 import { secretCards } from './data/cards'
 import { players } from './data/players'
+import { computeDisplayMetrics } from './lib/tactics'
 
 export default function App() {
   const [homeLineup, setHomeLineup] = useState(null)
@@ -10,6 +11,7 @@ export default function App() {
   const [selectedCard, setSelectedCard] = useState(null)
 
   const [gameStarted, setGameStarted] = useState(false)
+  const [matchEnded, setMatchEnded] = useState(false)
   const [matchKey, setMatchKey] = useState(0)
   const [activePositions, setActivePositions] = useState(['PG'])
   const [globalScores, setGlobalScores] = useState({ homeScore: 0, awayScore: 0 })
@@ -17,6 +19,16 @@ export default function App() {
 
   const [formation, setFormation] = useState('Equilibrada')
   const [playstyle, setPlaystyle] = useState('Run & Gun')
+
+  const controlsLocked = gameStarted && !matchEnded
+
+  const voltarAoVestiario = () => {
+    setGameStarted(false)
+    setMatchEnded(false)
+    setGamePhase('Pronto para o jogo')
+    setActivePositions(['PG'])
+    setGlobalScores({ homeScore: 0, awayScore: 0 })
+  }
 
   const realizarDraft = () => {
     const atletasDisponiveis = players.filter((p) => !p.isPresident)
@@ -36,54 +48,51 @@ export default function App() {
       C: obterJogadorPorPosicao('C', atletasDisponiveis),
     }
 
+    const idsCasa = new Set(
+      Object.values(timeCasa).filter(Boolean).map((p) => p.id),
+    )
+
     const timeFora = {
       PG: obterJogadorPorPosicao(
         'PG',
-        atletasDisponiveis.filter((p) => p.id !== timeCasa.PG?.id),
+        atletasDisponiveis.filter((p) => !idsCasa.has(p.id)),
       ),
       SG: obterJogadorPorPosicao(
         'SG',
-        atletasDisponiveis.filter((p) => p.id !== timeCasa.SG?.id),
+        atletasDisponiveis.filter((p) => !idsCasa.has(p.id)),
       ),
       SF: obterJogadorPorPosicao(
         'SF',
-        atletasDisponiveis.filter((p) => p.id !== timeCasa.SF?.id),
+        atletasDisponiveis.filter((p) => !idsCasa.has(p.id)),
       ),
       PF: obterJogadorPorPosicao(
         'PF',
-        atletasDisponiveis.filter((p) => p.id !== timeCasa.PF?.id),
+        atletasDisponiveis.filter((p) => !idsCasa.has(p.id)),
       ),
       C: obterJogadorPorPosicao(
         'C',
-        atletasDisponiveis.filter((p) => p.id !== timeCasa.C?.id),
+        atletasDisponiveis.filter((p) => !idsCasa.has(p.id)),
       ),
     }
 
     const presidente =
       presidentes[Math.floor(Math.random() * presidentes.length)] ?? null
 
+    const cartaAleatoria =
+      secretCards[Math.floor(Math.random() * secretCards.length)] ?? null
+
     setHomeLineup(timeCasa)
     setAwayLineup(timeFora)
     setHomePresident(presidente)
-    setSelectedCard(secretCards[0] ?? null)
+    setSelectedCard(cartaAleatoria)
     setGlobalScores({ homeScore: 0, awayScore: 0 })
     setGameStarted(false)
+    setMatchEnded(false)
     setGamePhase('Pronto para o jogo')
     setActivePositions(['PG'])
   }
 
-  const calcularMetricasTime = (lineup) => {
-    if (!lineup) return { att: 0, def: 0, ovr: 0, chem: 0 }
-    const ativos = Object.values(lineup).filter(Boolean)
-    if (!ativos.length) return { att: 0, def: 0, ovr: 0, chem: 0 }
-    const att = Math.round(ativos.reduce((acc, p) => acc + p.attack, 0) / ativos.length)
-    const def = Math.round(ativos.reduce((acc, p) => acc + p.defense, 0) / ativos.length)
-    const ovr = Math.round(ativos.reduce((acc, p) => acc + p.overall, 0) / ativos.length)
-    const chem = 85
-    return { att, def, ovr, chem }
-  }
-
-  const metricasCasa = calcularMetricasTime(homeLineup)
+  const metricasCasa = computeDisplayMetrics(homeLineup, formation, playstyle)
 
   return (
     <div className="flex h-screen w-screen select-none flex-col overflow-hidden bg-dark-bg font-body text-slate-300">
@@ -137,7 +146,7 @@ export default function App() {
                   <select
                     value={formation}
                     onChange={(e) => setFormation(e.target.value)}
-                    disabled={gameStarted}
+                    disabled={controlsLocked}
                     className="w-full rounded-xl border border-white/10 bg-panel p-2.5 text-sm font-semibold text-slate-200 shadow-pf-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
                   >
                     <option value="Equilibrada">Equilibrada (Padrão)</option>
@@ -153,7 +162,7 @@ export default function App() {
                   <select
                     value={playstyle}
                     onChange={(e) => setPlaystyle(e.target.value)}
-                    disabled={gameStarted}
+                    disabled={controlsLocked}
                     className="w-full rounded-xl border border-white/10 bg-panel p-2.5 text-sm font-semibold text-slate-200 shadow-pf-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
                   >
                     <option value="Run & Gun">Run & Gun (Transição Rápida)</option>
@@ -177,7 +186,7 @@ export default function App() {
                       <button
                         key={card.id}
                         type="button"
-                        disabled={gameStarted}
+                        disabled={controlsLocked}
                         onClick={() => setSelectedCard(card)}
                         className={`flex flex-col justify-between rounded-xl border p-2.5 text-left transition-all duration-200 disabled:opacity-50 ${
                           isSelected
@@ -212,7 +221,7 @@ export default function App() {
             <button
               type="button"
               onClick={realizarDraft}
-              disabled={gameStarted}
+              disabled={controlsLocked}
               className="w-full rounded-xl border border-white/10 bg-panel py-3 text-xs font-bold uppercase tracking-wider text-slate-300 shadow-pf-sm transition-all hover:border-kings-green/30 disabled:opacity-50"
             >
               Revelar Elenco / Draft Auto
@@ -223,6 +232,7 @@ export default function App() {
                 onClick={() => {
                   setMatchKey((k) => k + 1)
                   setGameStarted(true)
+                  setMatchEnded(false)
                   setGamePhase('Partida Ativa')
                   setGlobalScores({ homeScore: 0, awayScore: 0 })
                   setActivePositions(['PG'])
@@ -230,6 +240,15 @@ export default function App() {
                 className="kh-btn-primary w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest"
               >
                 Iniciar Partida
+              </button>
+            )}
+            {matchEnded && (
+              <button
+                type="button"
+                onClick={voltarAoVestiario}
+                className="w-full rounded-xl border border-kings-green/30 bg-kings-green/10 py-3 text-xs font-bold uppercase tracking-wider text-kings-green shadow-pf-sm transition-all hover:bg-kings-green/15"
+              >
+                Voltar ao Vestiário
               </button>
             )}
           </div>
@@ -325,6 +344,8 @@ export default function App() {
                 awayLineup={awayLineup}
                 homePresident={homePresident}
                 activeCard={selectedCard}
+                formation={formation}
+                playstyle={playstyle}
                 onScoreUpdate={(scores) =>
                   setGlobalScores({
                     homeScore: scores.homeScore ?? scores.home ?? 0,
@@ -333,7 +354,11 @@ export default function App() {
                 }
                 onActiveChange={(positions) => setActivePositions(positions)}
                 onPhaseChange={(fase) => setGamePhase(fase)}
-                onMatchEnd={() => setGamePhase('Finalizado')}
+                onMatchEnd={() => {
+                  setMatchEnded(true)
+                  setGamePhase('Finalizado')
+                }}
+                onRequestRematch={voltarAoVestiario}
               />
             ) : (
               <div className="kh-panel flex h-full flex-col items-center justify-center p-6 text-center">
