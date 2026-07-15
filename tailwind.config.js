@@ -4,33 +4,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Pick Five / 4-0-court tokens (espelhados)
-        'pf-bg': '#f3f5f9',
-        'pf-subtle': '#e8ecf4',
-        'pf-surface': '#ffffff',
-        'pf-muted': '#f8fafc',
-        'nba-navy': '#17408b',
-        'nba-navy-hover': '#1e4f9c',
-        'nba-red': '#c9082a',
+        // Kings League / KingsHoop
+        'court-orange': '#e07a5f',
+        'kings-green': '#2ec4b6',
+        'kings-gold': '#f5b731',
+        'kings-red': '#e63946',
+        'dark-bg': '#0b1220',
+        'card-dark': '#151e2e',
+        'panel': '#1a2436',
+        // aliases de layout (mesmo tom KL, evita classes NBA)
+        'pf-bg': '#0b1220',
+        'pf-subtle': '#111827',
+        'pf-surface': '#151e2e',
+        'pf-muted': '#1a2436',
+        'nba-navy': '#2ec4b6',
+        'nba-navy-hover': '#3dd9ca',
+        'nba-red': '#e63946',
         'nba-gold': '#f5b731',
-        'nba-orange': '#ff8c00',
-        // aliases legados (apontam para o mesmo visual)
-        'court-orange': '#ff8c00',
-        'kings-green': '#17408b',
-        'dark-bg': '#f3f5f9',
-        'card-dark': '#ffffff',
+        'nba-orange': '#e07a5f',
       },
       fontFamily: {
         display: ['"Barlow Condensed"', 'Outfit', 'system-ui', 'sans-serif'],
         body: ['Outfit', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'pf-sm': '0 1px 2px rgba(15,23,42,0.04), 0 2px 6px rgba(15,23,42,0.05)',
-        'pf-md':
-          '0 4px 6px -1px rgba(15,23,42,0.06), 0 10px 20px -4px rgba(15,23,42,0.08)',
-        'pf-lg':
-          '0 10px 15px -3px rgba(15,23,42,0.07), 0 20px 36px -8px rgba(15,23,42,0.1)',
-        'pf-navy': '0 0 40px rgba(23,64,139,0.15)',
+        'pf-sm': '0 1px 2px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)',
+        'pf-md': '0 8px 24px rgba(0,0,0,0.35)',
+        'pf-lg': '0 16px 40px rgba(0,0,0,0.45)',
+        'pf-navy': '0 0 28px rgba(46,196,182,0.28)',
       },
       borderRadius: {
         pf: '14px',

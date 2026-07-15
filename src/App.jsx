@@ -86,28 +86,29 @@ export default function App() {
   const metricasCasa = calcularMetricasTime(homeLineup)
 
   return (
-    <div className="flex h-screen w-screen select-none flex-col overflow-hidden font-body text-slate-800">
+    <div className="flex h-screen w-screen select-none flex-col overflow-hidden bg-dark-bg font-body text-slate-300">
       <header className="kh-header relative z-10 flex items-center justify-between px-6 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-gradient-to-br from-nba-navy to-nba-navy-hover font-display text-xl text-white shadow-pf-sm ring-1 ring-nba-navy/10">
+          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-gradient-to-br from-kings-green to-kings-gold font-display text-xl font-black text-dark-bg shadow-pf-sm ring-1 ring-kings-gold/30">
             KH
           </div>
-          <h1 className="font-display text-3xl font-extrabold tracking-[0.12em] text-nba-navy">
-            KINGS<span className="text-nba-red">HOOP</span>
+          <h1 className="font-display text-3xl font-extrabold tracking-[0.12em]">
+            <span className="text-kings-green">KINGS</span>
+            <span className="text-court-orange">HOOP</span>
           </h1>
         </div>
 
         {gameStarted && (
           <div className="flex items-center gap-3">
-            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:inline">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:inline">
               {gamePhase}
             </span>
-            <div className="flex gap-4 rounded-full border border-slate-200/80 bg-white px-4 py-1 font-display text-xl shadow-pf-sm">
-              <span className="font-extrabold text-nba-orange">
+            <div className="flex gap-4 rounded-full border border-white/10 bg-card-dark px-4 py-1 font-display text-xl shadow-pf-sm">
+              <span className="font-extrabold text-court-orange">
                 {globalScores.homeScore}
               </span>
-              <span className="text-slate-300">:</span>
-              <span className="font-extrabold text-nba-navy">
+              <span className="text-slate-600">:</span>
+              <span className="font-extrabold text-kings-green">
                 {globalScores.awayScore}
               </span>
             </div>
@@ -115,29 +116,29 @@ export default function App() {
         )}
 
         <div className="flex items-center gap-3">
-          <span className="rounded-full bg-nba-navy/8 px-3 py-1 text-xs font-bold uppercase tracking-wider text-nba-navy">
+          <span className="rounded-full bg-kings-green/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-kings-green">
             PRO MODE
           </span>
         </div>
       </header>
 
       <main className="flex min-h-0 flex-1 overflow-hidden">
-        <section className="flex w-1/4 min-w-0 flex-col justify-between border-r border-slate-200/80 bg-white/55 p-5 backdrop-blur-sm">
+        <section className="flex w-1/4 min-w-0 flex-col justify-between border-r border-white/10 bg-card-dark/80 p-5 backdrop-blur-sm">
           <div className="flex flex-col gap-5 overflow-y-auto pr-1">
             <div>
-              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+              <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-400">
                 Ajustes Táticos
               </h2>
               <div className="flex flex-col gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-500">
+                  <label className="mb-1 block text-xs font-semibold text-slate-400">
                     Formação
                   </label>
                   <select
                     value={formation}
                     onChange={(e) => setFormation(e.target.value)}
                     disabled={gameStarted}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 shadow-pf-sm focus:border-nba-navy focus:outline-none disabled:opacity-50"
+                    className="w-full rounded-xl border border-white/10 bg-panel p-2.5 text-sm font-semibold text-slate-200 shadow-pf-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
                   >
                     <option value="Equilibrada">Equilibrada (Padrão)</option>
                     <option value="Pace & Space">Pace & Space (Foco em 3PT)</option>
@@ -146,14 +147,14 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-500">
+                  <label className="mb-1 block text-xs font-semibold text-slate-400">
                     Estilo de Jogo
                   </label>
                   <select
                     value={playstyle}
                     onChange={(e) => setPlaystyle(e.target.value)}
                     disabled={gameStarted}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 shadow-pf-sm focus:border-nba-navy focus:outline-none disabled:opacity-50"
+                    className="w-full rounded-xl border border-white/10 bg-panel p-2.5 text-sm font-semibold text-slate-200 shadow-pf-sm focus:border-kings-green focus:outline-none disabled:opacity-50"
                   >
                     <option value="Run & Gun">Run & Gun (Transição Rápida)</option>
                     <option value="Meia Quadra">Meia Quadra (Posicional)</option>
@@ -165,8 +166,8 @@ export default function App() {
             </div>
 
             {homeLineup && (
-              <div className="border-t border-slate-200/80 pt-4">
-                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+              <div className="border-t border-white/10 pt-4">
+                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-400">
                   Carta Secreta
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
@@ -180,14 +181,14 @@ export default function App() {
                         onClick={() => setSelectedCard(card)}
                         className={`flex flex-col justify-between rounded-xl border p-2.5 text-left transition-all duration-200 disabled:opacity-50 ${
                           isSelected
-                            ? 'border-nba-navy bg-nba-navy/8 text-nba-navy shadow-pf-navy'
-                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                            ? 'border-kings-green bg-kings-green/10 text-kings-green shadow-pf-navy'
+                            : 'border-white/10 bg-panel text-slate-300 hover:border-kings-green/30'
                         }`}
                       >
                         <span className="block text-xs font-bold leading-tight">
                           {card.title}
                         </span>
-                        <span className="mt-1 line-clamp-2 text-[9px] leading-snug text-slate-500">
+                        <span className="mt-1 line-clamp-2 text-[9px] leading-snug text-slate-400">
                           {card.description}
                         </span>
                       </button>
@@ -195,9 +196,9 @@ export default function App() {
                   })}
                 </div>
                 {homePresident && (
-                  <p className="mt-3 text-[10px] text-slate-500">
+                  <p className="mt-3 text-[10px] text-slate-400">
                     Presidente:{' '}
-                    <span className="font-semibold text-nba-navy">
+                    <span className="font-semibold text-kings-green">
                       {homePresident.shortName}
                     </span>{' '}
                     (arremesso no intervalo)
@@ -207,12 +208,12 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 border-t border-slate-200/80 pt-4">
+          <div className="flex flex-col gap-2 border-t border-white/10 pt-4">
             <button
               type="button"
               onClick={realizarDraft}
               disabled={gameStarted}
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold uppercase tracking-wider text-slate-700 shadow-pf-sm transition-all hover:border-nba-navy/30 disabled:opacity-50"
+              className="w-full rounded-xl border border-white/10 bg-panel py-3 text-xs font-bold uppercase tracking-wider text-slate-300 shadow-pf-sm transition-all hover:border-kings-green/30 disabled:opacity-50"
             >
               Revelar Elenco / Draft Auto
             </button>
@@ -240,7 +241,7 @@ export default function App() {
               className="pointer-events-none absolute inset-0 opacity-90"
               style={{
                 background:
-                  'radial-gradient(ellipse 55% 45% at 72% 42%, rgba(23,64,139,0.08), transparent 65%), radial-gradient(ellipse 35% 30% at 18% 65%, rgba(201,8,42,0.05), transparent 55%)',
+                  'radial-gradient(ellipse 55% 45% at 72% 42%, rgba(46,196,182,0.1), transparent 65%), radial-gradient(ellipse 35% 30% at 18% 65%, rgba(224,122,95,0.08), transparent 55%)',
               }}
             />
             <svg viewBox="0 0 400 240" className="relative z-[1] h-full w-full">
@@ -250,22 +251,22 @@ export default function App() {
                 width="380"
                 height="220"
                 fill="url(#courtFill)"
-                stroke="#17408b"
+                stroke="#2ec4b6"
                 strokeWidth="2"
                 rx="8"
               />
               <defs>
                 <linearGradient id="courtFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fff8f0" />
-                  <stop offset="100%" stopColor="#f0e0cc" />
+                  <stop offset="0%" stopColor="#d4895a" />
+                  <stop offset="100%" stopColor="#a85c38" />
                 </linearGradient>
               </defs>
-              <line x1="200" y1="10" x2="200" y2="230" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
-              <circle cx="200" cy="120" r="30" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
-              <path d="M 10 30 A 100 100 0 0 1 10 210" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.4" />
-              <path d="M 390 30 A 100 100 0 0 0 390 210" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.4" />
-              <rect x="10" y="85" width="60" height="70" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
-              <rect x="330" y="85" width="60" height="70" fill="none" stroke="#17408b" strokeWidth="1.5" opacity="0.45" />
+              <line x1="200" y1="10" x2="200" y2="230" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.55" />
+              <circle cx="200" cy="120" r="30" fill="none" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.55" />
+              <path d="M 10 30 A 100 100 0 0 1 10 210" fill="none" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.5" />
+              <path d="M 390 30 A 100 100 0 0 0 390 210" fill="none" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.5" />
+              <rect x="10" y="85" width="60" height="70" fill="none" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.55" />
+              <rect x="330" y="85" width="60" height="70" fill="none" stroke="#2ec4b6" strokeWidth="1.5" opacity="0.55" />
 
               {homeLineup && (
                 <>
@@ -286,7 +287,7 @@ export default function App() {
                           cx={cx}
                           cy={cy}
                           r="12"
-                          fill={on ? '#17408b' : '#94a3b8'}
+                          fill={on ? '#2ec4b6' : '#475569'}
                           stroke="#f5b731"
                           strokeWidth={on ? 2 : 1}
                         />
@@ -294,7 +295,7 @@ export default function App() {
                           x={cx}
                           y={cy + 3}
                           textAnchor="middle"
-                          fill="white"
+                          fill="#0b1220"
                           fontSize="9"
                           fontWeight="bold"
                           fontFamily="Barlow Condensed, sans-serif"
@@ -308,8 +309,8 @@ export default function App() {
               )}
             </svg>
             {!homeLineup && (
-              <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-[18px] bg-white/75 backdrop-blur-sm">
-                <p className="animate-pulse text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-[18px] bg-dark-bg/75 backdrop-blur-sm">
+                <p className="animate-pulse text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
                   Revele o Elenco para Ver a Quadra
                 </p>
               </div>
@@ -336,10 +337,10 @@ export default function App() {
               />
             ) : (
               <div className="kh-panel flex h-full flex-col items-center justify-center p-6 text-center">
-                <h3 className="mb-1 font-display text-2xl font-bold tracking-wide text-nba-navy">
+                <h3 className="mb-1 font-display text-2xl font-bold tracking-wide text-kings-green">
                   Simulador de Partida
                 </h3>
-                <p className="max-w-xs text-xs leading-relaxed text-slate-500">
+                <p className="max-w-xs text-xs leading-relaxed text-slate-400">
                   Defina as táticas, escolha uma carta secreta e aperte Iniciar
                   Partida para o tip-off.
                 </p>
@@ -348,43 +349,43 @@ export default function App() {
           </div>
         </section>
 
-        <section className="flex w-1/4 min-w-0 flex-col justify-between overflow-y-auto border-l border-slate-200/80 bg-white/55 p-5 backdrop-blur-sm">
+        <section className="flex w-1/4 min-w-0 flex-col justify-between overflow-y-auto border-l border-white/10 bg-card-dark/80 p-5 backdrop-blur-sm">
           {homeLineup ? (
             <div className="flex flex-col gap-6">
               <div>
-                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+                <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-400">
                   Métricas do Seu Time
                 </h2>
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                  <div className="rounded-xl border border-white/10 bg-panel p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-400">
                       Ataque
                     </span>
-                    <span className="font-display text-2xl font-extrabold text-nba-orange">
+                    <span className="font-display text-2xl font-extrabold text-court-orange">
                       {metricasCasa.att}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                  <div className="rounded-xl border border-white/10 bg-panel p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-400">
                       Defesa
                     </span>
-                    <span className="font-display text-2xl font-extrabold text-nba-navy">
+                    <span className="font-display text-2xl font-extrabold text-kings-green">
                       {metricasCasa.def}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                  <div className="rounded-xl border border-white/10 bg-panel p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-400">
                       Geral
                     </span>
-                    <span className="font-display text-2xl font-extrabold text-nba-navy">
+                    <span className="font-display text-2xl font-extrabold text-kings-green">
                       {metricasCasa.ovr}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-pf-sm">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-500">
+                  <div className="rounded-xl border border-white/10 bg-panel p-2 shadow-pf-sm">
+                    <span className="block text-[10px] font-semibold uppercase text-slate-400">
                       Química
                     </span>
-                    <span className="font-display text-2xl font-extrabold text-nba-gold">
+                    <span className="font-display text-2xl font-extrabold text-kings-gold">
                       {metricasCasa.chem}%
                     </span>
                   </div>
@@ -392,7 +393,7 @@ export default function App() {
               </div>
 
               <div>
-                <h2 className="mb-2.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+                <h2 className="mb-2.5 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-400">
                   Starting Five
                 </h2>
                 <div className="flex flex-col gap-2">
@@ -403,26 +404,26 @@ export default function App() {
                         key={pos}
                         className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition-all ${
                           onCourt
-                            ? 'border-slate-200 bg-white shadow-pf-sm opacity-100'
-                            : 'border-slate-100 bg-slate-50 opacity-45'
+                            ? 'border-white/10 bg-panel shadow-pf-sm opacity-100'
+                            : 'border-white/5 bg-card-dark opacity-45'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-nba-navy/10 font-display text-xs font-black text-nba-navy">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-kings-green/15 font-display text-xs font-black text-kings-green">
                             {pos}
                           </span>
                           <div>
-                            <p className="text-xs font-bold text-slate-800">
+                            <p className="text-xs font-bold text-slate-200">
                               {player?.name ?? 'Vazio'}
                             </p>
-                            <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
                               {!onCourt && gameStarted
                                 ? 'No banco'
                                 : (player?.archetype ?? '')}
                             </span>
                           </div>
                         </div>
-                        <span className="rounded-lg border border-slate-200 bg-pf-muted px-2 py-0.5 font-display text-sm font-bold text-slate-700">
+                        <span className="rounded-lg border border-white/10 bg-pf-muted px-2 py-0.5 font-display text-sm font-bold text-slate-200">
                           {player?.overall ?? '—'}
                         </span>
                       </div>
@@ -432,17 +433,17 @@ export default function App() {
               </div>
 
               {awayLineup && (
-                <div className="border-t border-slate-200/80 pt-4">
-                  <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+                <div className="border-t border-white/10 pt-4">
+                  <h2 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.14em] text-slate-400">
                     Elenco Rival
                   </h2>
-                  <div className="grid grid-cols-5 gap-1 rounded-xl border border-slate-200 bg-white p-2 text-center shadow-pf-sm">
+                  <div className="grid grid-cols-5 gap-1 rounded-xl border border-white/10 bg-panel p-2 text-center shadow-pf-sm">
                     {Object.entries(awayLineup).map(([pos, player]) => (
                       <div key={pos}>
-                        <span className="block text-[10px] font-bold text-slate-400">
+                        <span className="block text-[10px] font-bold text-slate-500">
                           {pos}
                         </span>
-                        <span className="block font-display text-sm font-black leading-tight text-nba-navy">
+                        <span className="block font-display text-sm font-black leading-tight text-kings-green">
                           {player?.overall ?? '—'}
                         </span>
                       </div>
@@ -452,7 +453,7 @@ export default function App() {
               )}
             </div>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
+            <div className="flex h-full flex-col items-center justify-center text-center text-slate-400">
               <p className="text-xs">Faça o draft para revelar as métricas do elenco.</p>
             </div>
           )}
