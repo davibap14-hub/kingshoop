@@ -13,6 +13,7 @@ import {
   createEmptyCareerStats,
   createEmptyHistory,
 } from '../save/history'
+import { createSeasonState } from '../season/state'
 import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
 
@@ -136,6 +137,11 @@ export function createCareerState(overrides = {}) {
     lastWeekResult: overrides.lastWeekResult ?? null,
     history: overrides.history ?? createEmptyHistory(),
     careerStats: overrides.careerStats ?? createEmptyCareerStats(),
+    season:
+      overrides.season ??
+      createSeasonState({
+        seasonNumber: overrides.currentSeason ?? 1,
+      }),
   }
 }
 

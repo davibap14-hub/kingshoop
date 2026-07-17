@@ -45,6 +45,23 @@ src/
  └── assets/
 ```
 
+## Season Engine
+
+`src/engine/season/` — controla a temporada da liga.
+
+- Calendário completo de jogos
+- Classificação por conferência (V/D + sequência)
+- Lesões na liga
+- Simulação dos jogos dos outros times
+- Play-In · Playoffs · Finais · Premiações
+
+```js
+processWeeklySeason(state, { week, seasonRolled, rng })
+// → { season, weekResults, summary, messages }
+```
+
+A Interface apenas exibe os dados (`SeasonPanel` / `getSeasonView`).
+
 ## Save System
 
 `src/engine/save/` + `src/services/saveService.js` — LocalStorage, múltiplos slots.

@@ -20,6 +20,7 @@ export function useCareerSnapshot() {
   const progression = useGameStore((s) => s.progression)
   const history = useGameStore((s) => s.history)
   const careerStats = useGameStore((s) => s.careerStats)
+  const season = useGameStore((s) => s.season)
   const activeSaveId = useGameStore((s) => s.activeSaveId)
   const weekEffects = useGameStore((s) => s.weekEffects)
   const availableActivities = useGameStore((s) => s.availableActivities)
@@ -44,6 +45,7 @@ export function useCareerSnapshot() {
     progression,
     history,
     careerStats,
+    season,
     activeSaveId,
     weekEffects,
     availableActivities,

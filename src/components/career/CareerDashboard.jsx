@@ -1,5 +1,5 @@
 import { ATTRIBUTE_KEYS, ATTRIBUTES } from '../../data/constants/attributes'
-import { TEAMS } from '../../data/teams'
+import { getTeamById } from '../../data/teams'
 import {
   NextMatch,
   PlayerStatus,
@@ -7,19 +7,15 @@ import {
   StatsOverview,
 } from '../dashboard'
 import { SectionHeader } from '../ui'
+import { gameService } from '../../services/gameService'
 import { useCareerSnapshot } from '../../hooks/useCareer'
 import CareerPanel from './CareerPanel'
 import EventChoicePanel from './EventChoicePanel'
 import FinancePanel from './FinancePanel'
 import ProgressionPanel from './ProgressionPanel'
 import SavePanel from './SavePanel'
+import SeasonPanel from './SeasonPanel'
 import WeekControls from './WeekControls'
-
-function pickOpponent(teamId, week) {
-  const others = TEAMS.filter((t) => t.id !== teamId)
-  if (!others.length) return TEAMS[0]
-  return others[(week - 1) % others.length]
-}
 
 function buildTrend(currentWeek, overall, status) {
   const len = Math.min(8, Math.max(3, currentWeek))
@@ -47,11 +43,27 @@ export default function CareerDashboard() {
     playerStats,
     currentWeek,
     currentSeason,
+    currentTeamId,
     finance,
+    season,
   } = useCareerSnapshot()
 
-  const opponent = pickOpponent(team?.id, currentWeek)
-  const isHome = currentWeek % 2 === 1
+  const seasonView = season
+    ? gameService.getSeasonView({
+        season,
+        currentTeamId,
+        currentWeek,
+      })
+    : null
+
+  const next = seasonView?.nextGame
+  const homeTeam = next
+    ? getTeamById(next.game.homeId)
+    : team
+  const awayTeam = next
+    ? getTeamById(next.game.awayId)
+    : null
+  const isHome = next ? next.game.homeId === currentTeamId : true
 
   const attributes = ATTRIBUTE_KEYS.map((key) => ({
     label: ATTRIBUTES[key].label,
@@ -59,6 +71,7 @@ export default function CareerDashboard() {
     value: playerStats?.[key] ?? 0,
   }))
 
+  const record = seasonView?.teamRecord
   const metrics = [
     {
       label: 'Overall',
@@ -68,9 +81,9 @@ export default function CareerDashboard() {
       tone: 'dark',
     },
     {
-      label: 'Caixa',
-      value: `$${Number(status?.dinheiro ?? 0).toLocaleString('en-US')}`,
-      hint: `Patrimônio $${Number(finance?.patrimonio ?? 0).toLocaleString('en-US')}`,
+      label: 'Record',
+      value: record ? `${record.wins}-${record.losses}` : '0-0',
+      hint: record ? `Seq. ${record.streakLabel}` : 'Liga',
       tone: 'blue',
     },
     {
@@ -80,9 +93,9 @@ export default function CareerDashboard() {
       tone: 'blue',
     },
     {
-      label: 'Popularidade',
-      value: status?.popularidade ?? 0,
-      progress: status?.popularidade ?? 0,
+      label: 'Caixa',
+      value: `$${Number(status?.dinheiro ?? 0).toLocaleString('en-US')}`,
+      hint: `Patrimônio $${Number(finance?.patrimonio ?? 0).toLocaleString('en-US')}`,
       tone: 'muted',
     },
   ]
@@ -107,6 +120,7 @@ export default function CareerDashboard() {
 
           <EventChoicePanel />
           <WeekControls />
+          <SeasonPanel />
           <SavePanel />
           <FinancePanel />
           <ProgressionPanel />
@@ -123,9 +137,9 @@ export default function CareerDashboard() {
             injury={injury}
           />
           <NextMatch
-            homeTeam={isHome ? team : opponent}
-            awayTeam={isHome ? opponent : team}
-            week={currentWeek}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            week={next?.week ?? currentWeek}
             venue={isHome ? 'Casa' : 'Visitante'}
           />
           <SeasonCalendar

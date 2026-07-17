@@ -9,6 +9,7 @@ import {
   buildWeekHistoryEntry,
   updateCareerStatsAfterWeek,
 } from '../save'
+import { processWeeklySeason } from '../season'
 import { rollInjury, tickInjury } from './injuries'
 import {
   applyStatusDeltas,
@@ -241,6 +242,27 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...progResult.messages)
 
+  // Season Engine — atualiza toda a liga na semana avançada
+  const seasonResult = processWeeklySeason(
+    {
+      ...state,
+      status,
+      injury,
+      currentWeek: calendar.currentWeek,
+      currentSeason: calendar.currentSeason,
+      season: calendar.seasonRolled
+        ? undefined
+        : state.season,
+    },
+    {
+      week: calendar.currentWeek,
+      seasonNumber: calendar.currentSeason,
+      seasonRolled: calendar.seasonRolled,
+      rng,
+    },
+  )
+  messages.push(...seasonResult.messages)
+
   let nextState = {
     ...state,
     player,
@@ -252,6 +274,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     finance: finance.finance,
     injury,
     progression: progResult.nextProgression,
+    season: seasonResult.season,
     currentWeek: calendar.currentWeek,
     currentSeason: calendar.currentSeason,
     lastEvent: messages[messages.length - 1] ?? activity.label,
@@ -275,7 +298,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     activityType: activity.type,
     weekFrom: state.currentWeek,
     weekTo: calendar.currentWeek,
-    season: calendar.currentSeason,
+    seasonNumber: calendar.currentSeason,
     deltas,
     attributeDeltas,
     messages,
@@ -291,6 +314,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       pointsGained: progResult.pointsGained,
       snapshot: progResult.nextProgression,
     },
+    season: seasonResult.summary,
     pendingEvent: nextState.pendingEvent,
   }
 

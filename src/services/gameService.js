@@ -13,6 +13,8 @@ import {
   chooseBestStyle,
   createInitialCareerState,
   listAvailableActivities,
+  getConferenceTables,
+  getSeasonView,
   investCash,
   listEvolvableGroups,
   rankStylesForRoster,
@@ -126,6 +128,18 @@ export const gameService = {
 
   listLuxuryLevels() {
     return LUXURY_LEVELS
+  },
+
+  /** Season Engine — Interface só lê */
+  getSeasonView(state) {
+    return getSeasonView(state.season, {
+      teamId: state.currentTeamId,
+      week: state.currentWeek,
+    })
+  },
+
+  getConferenceTables(standings) {
+    return getConferenceTables(standings)
   },
 
   /** Save System (LocalStorage) */
