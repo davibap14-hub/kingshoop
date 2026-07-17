@@ -1,11 +1,10 @@
-import { ATTRIBUTES } from '../data/constants'
-import { useGameStore } from '../store/useGameStore'
+import { ATTRIBUTES } from '../../data/constants/attributes'
+import { useGameStore } from '../../store/useGameStore'
 
 export default function StatCard({ statKey }) {
   const value = useGameStore((s) => s.playerStats[statKey])
   const updateStat = useGameStore((s) => s.updateStat)
   const meta = ATTRIBUTES[statKey]
-
   const pct = Math.min(100, Math.max(0, value))
 
   return (

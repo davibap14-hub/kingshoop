@@ -1,5 +1,5 @@
-import { CAREER_VARIABLES } from '../data/constants'
-import { useGameStore } from '../store/useGameStore'
+import { CAREER_VARIABLES } from '../../data/constants/career'
+import { useGameStore } from '../../store/useGameStore'
 
 function formatValue(key, value) {
   if (key === 'dinheiro') {

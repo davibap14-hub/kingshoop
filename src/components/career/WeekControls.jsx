@@ -1,5 +1,6 @@
-import { ARCHETYPE_LIST, TEAMS } from '../data/constants'
-import { useGameStore } from '../store/useGameStore'
+import { ARCHETYPE_LIST } from '../../data/constants/archetypes'
+import { TEAMS } from '../../data/teams'
+import { useGameStore } from '../../store/useGameStore'
 
 export default function WeekControls() {
   const currentWeek = useGameStore((s) => s.currentWeek)
