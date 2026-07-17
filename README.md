@@ -1,16 +1,56 @@
-# React + Vite
+# KingsHoop
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Simulador de basquete ao vivo no espírito **Kings League**: draft automático, táticas, cartas secretas e regras especiais em tempo real.
 
-Currently, two official plugins are available:
+## Como jogar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Entre no **Vestiário**
+2. Clique em **Revelar Elenco / Draft Auto** para montar os times
+3. Ajuste **formação**, **estilo de jogo** e a **carta secreta**
+4. **Iniciar Partida** → **Dar o Tip-Off**
 
-## React Compiler
+### Regras especiais
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Momento | O que acontece |
+| --- | --- |
+| 1º quarto | Escalada 1v1 → 2v2 → 3v3 → 4v4 → 5v5 |
+| Intervalo | Arremesso do Presidente (+4 pts se acertar) |
+| Q4 2:00 | Dado do Caos (trava o formato 1v1–5v5) |
+| Q4 1:00 | Matchball se a diferença for ≤ 8 pontos |
 
-## Expanding the Oxlint configuration
+### Cartas secretas
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- **Linha de 4 Pontos** — 3s viram 4 no 2º quarto
+- **Zona Trancada** — defesa ×1.25 no 3º quarto
+- **Posse do Craque** — o maior OVR finaliza mais no 1º quarto
+- **Energia do Banco** — quem entra ganha +10 OVR
+
+## Stack
+
+- React 19 + Vite
+- Tailwind CSS
+- Motor tático em `src/lib/tactics.js`
+
+## Estrutura
+
+```
+src/
+  App.jsx                 # Welcome → Vestiário
+  context/GameContext.jsx # Estado global do jogo
+  hooks/useMatchEngine.js # Loop de simulação ao vivo
+  lib/draft.js            # Draft automático
+  lib/tactics.js          # Ratings, química, fit
+  data/players.js         # Elenco + presidentes
+  data/cards.js           # Cartas secretas
+  components/             # UI (quadra, táticas, sim, modais)
+```
+
+## Scripts
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build
+npm run lint
+npm run preview
+```
