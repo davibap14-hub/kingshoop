@@ -13,11 +13,13 @@ import {
   chooseBestStyle,
   createInitialCareerState,
   listAvailableActivities,
+  listEvolvableGroups,
   rankStylesForRoster,
   resolveEventChoice,
   rollWeeklyEvent,
   runCareerWeek,
   simulateMatch,
+  spendEvolutionPoint,
   startCareer,
   triggerEvent,
 } from '../engine'
@@ -78,9 +80,6 @@ export const gameService = {
     return rollWeeklyEvent()
   },
 
-  /**
-   * Match Engine — Interface só exibe o retorno.
-   */
   simulateMatch(input, opts) {
     return simulateMatch(input, opts)
   },
@@ -94,12 +93,20 @@ export const gameService = {
     return simulateMatch(matchup)
   },
 
-  /** AI Engine */
   chooseBestStyle(players) {
     return chooseBestStyle(players)
   },
 
   rankStylesForRoster(players) {
     return rankStylesForRoster(players)
+  },
+
+  /** Progression Engine */
+  listEvolvableGroups(player, archetypeId) {
+    return listEvolvableGroups(player, archetypeId)
+  },
+
+  spendEvolutionPoint(state, groupKey) {
+    return spendEvolutionPoint(state, groupKey)
   },
 }

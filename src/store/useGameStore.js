@@ -139,6 +139,55 @@ export const useGameStore = create((set, get) => {
       return result
     },
 
+    /**
+     * Gasta 1 ponto de evolução em um grupo (Físico/Arremesso/Defesa/QI).
+     */
+    spendEvolutionPoint: (groupKey) => {
+      const result = gameService.spendEvolutionPoint(get(), groupKey)
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+
+      const playerStats = {
+        fisico: Math.round(
+          (result.nextState.player.fisico.velocidade +
+            result.nextState.player.fisico.impulsao +
+            result.nextState.player.fisico.forca +
+            result.nextState.player.fisico.resistencia) /
+            4,
+        ),
+        arremesso: Math.round(
+          (result.nextState.player.arremesso.bandeja +
+            result.nextState.player.arremesso.midRange +
+            result.nextState.player.arremesso.tresPontos +
+            result.nextState.player.arremesso.lanceLivre) /
+            4,
+        ),
+        defesa: Math.round(
+          (result.nextState.player.defesa.perimetro +
+            result.nextState.player.defesa.garrafao +
+            result.nextState.player.defesa.roubo +
+            result.nextState.player.defesa.toco) /
+            4,
+        ),
+        inteligencia: Math.round(
+          (result.nextState.player.qi.passe +
+            result.nextState.player.qi.visao +
+            result.nextState.player.qi.tomadaDecisao) /
+            3,
+        ),
+      }
+
+      set({
+        ...result.nextState,
+        playerStats,
+        lastEvent: result.effects.messages[0],
+      })
+
+      return result
+    },
+
     /** Compat: avança com a atividade selecionada */
     advanceWeek: () => get().runWeek(get().selectedActivityId),
 

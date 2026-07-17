@@ -45,6 +45,18 @@ src/
  └── assets/
 ```
 
+## Progression Engine
+
+`src/engine/progression/` — XP semanal, level-up e pontos de evolução.
+
+```js
+processWeeklyProgression(state, activity)
+spendEvolutionPoint(state, 'arremesso')
+// nunca ultrapassa caps do arquétipo; +1 gradual no attr mais baixo
+```
+
+Grupos: Físico · Arremesso · Defesa · QI
+
 ## AI Engine
 
 `src/engine/ai/` — estilos de equipe e decisões automáticas.

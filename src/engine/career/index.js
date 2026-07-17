@@ -102,6 +102,7 @@ export function applyArchetypeChange(archetypeId) {
     archetypeId: archetype.id,
     player: state.player,
     playerStats: state.playerStats,
+    progression: state.progression,
     lastEvent: `Arquétipo definido: ${archetype.label}.`,
   }
 }

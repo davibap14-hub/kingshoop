@@ -1,6 +1,7 @@
 import { ATTRIBUTE_KEYS } from '../../data/constants/attributes'
 import CareerPanel from './CareerPanel'
 import EventChoicePanel from './EventChoicePanel'
+import ProgressionPanel from './ProgressionPanel'
 import WeekControls from './WeekControls'
 import StatCard from '../stats/StatCard'
 import { useCareerSnapshot } from '../../hooks/useCareer'
@@ -26,6 +27,7 @@ export default function CareerDashboard() {
 
       <EventChoicePanel />
       <WeekControls />
+      <ProgressionPanel />
       <CareerPanel />
 
       <section>

@@ -1,6 +1,7 @@
 import { getActivity, WEEKLY_ACTIVITIES } from '../../data/career/activities'
 import { WEEKS_PER_SEASON } from '../../data/constants/career'
 import { triggerEvent } from '../events'
+import { processWeeklyProgression } from '../progression'
 import { applyTraining, rangeRoll } from './activities'
 import { resolveWeeklyFinance, trySignSponsorship } from './finance'
 import { rollInjury, tickInjury } from './injuries'
@@ -220,6 +221,14 @@ export function runCareerWeek(state, activityId, opts = {}) {
   const careerVariables = syncLegacyCareerVariables(status)
   const playerStats = syncPlayerStatsFromDetailed(player)
 
+  // Progression Engine — XP semanal + level-up gradual
+  const progResult = processWeeklyProgression(
+    { ...state, status, injury, player },
+    activity,
+    rng,
+  )
+  messages.push(...progResult.messages)
+
   let nextState = {
     ...state,
     player,
@@ -229,6 +238,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     contract,
     sponsorships,
     injury,
+    progression: progResult.nextProgression,
     currentWeek: calendar.currentWeek,
     currentSeason: calendar.currentSeason,
     lastEvent: messages[messages.length - 1] ?? activity.label,
@@ -265,6 +275,13 @@ export function runCareerWeek(state, activityId, opts = {}) {
     },
     sponsorships,
     contract,
+    progression: {
+      xpGain: progResult.xpGain,
+      leveledUp: progResult.leveledUp,
+      levelsGained: progResult.levelsGained,
+      pointsGained: progResult.pointsGained,
+      snapshot: progResult.nextProgression,
+    },
     pendingEvent: nextState.pendingEvent,
   }
 

@@ -8,6 +8,7 @@ import { DEFAULT_ARCHETYPE_ID, ARCHETYPES } from '../../data/constants/archetype
 import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
+import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
 
 export function buildStatsFromArchetype(archetypeId = DEFAULT_ARCHETYPE_ID) {
@@ -105,6 +106,7 @@ export function createCareerState(overrides = {}) {
     },
     // aliases legados
     careerVariables: null, // preenchido abaixo
+    progression: createProgressionState(overrides.progression),
     contract: overrides.contract ?? createDefaultContract(overrides.currentTeamId),
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,
