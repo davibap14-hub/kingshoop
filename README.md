@@ -45,6 +45,23 @@ src/
  └── assets/
 ```
 
+## AI Engine
+
+`src/engine/ai/` — estilos de equipe e decisões automáticas.
+
+Estilos: **Fast Pace · Defensivo · Especialista em 3PT · Garrafão · Transição**
+
+```js
+import { chooseBestStyle, simulateMatch, buildDefaultMatchup } from './engine'
+
+const matchup = buildDefaultMatchup('gsw', 'bos')
+// cada lado já vem com styleId escolhido pelo elenco
+const result = simulateMatch(matchup)
+// result.styles.home / result.styles.away
+```
+
+A IA altera ritmo, taxa de 3PT/2PT, turnovers, roubos e agressão por posse.
+
 ## Match Engine
 
 `src/engine/match/` — simulação posse a posse.

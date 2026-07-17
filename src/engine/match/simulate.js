@@ -2,6 +2,7 @@ import {
   POSSESSIONS_PER_QUARTER,
   QUARTERS,
 } from '../../data/match/constants'
+import { decidePossessionPlan, resolveTeamStyle } from '../ai'
 import { applyPossessionToBox, computeMvp, createTeamBox } from './boxscore'
 import { simulatePossession } from './possession'
 import { computeTeamRatings, resolveMomentKey } from './ratings'
@@ -11,6 +12,8 @@ function normalizeSide(side, { isHome }) {
   if (players.length < 5) {
     throw new Error('Cada time precisa de 5 jogadores para a Match Engine.')
   }
+
+  const styleDecision = resolveTeamStyle(side)
 
   return {
     team: {
@@ -22,23 +25,28 @@ function normalizeSide(side, { isHome }) {
     chemistry: side.chemistry ?? 55,
     fatigue: side.fatigue ?? 0,
     isHome,
+    styleId: styleDecision.styleId,
+    style: styleDecision.style,
+    styleFit: styleDecision.fit,
+    styleAuto: styleDecision.auto,
+    styleReason: styleDecision.reason,
+    styleRanked: styleDecision.ranked,
   }
+}
+
+function possessionsForStyle(base, style) {
+  const pace = style?.match?.pace ?? 1
+  return Math.max(18, Math.round(base * pace))
 }
 
 /**
  * Match Engine — simula partida posse a posse.
- *
- * Fatores por posse: ataque, defesa, fadiga, química, overall,
- * momento da partida, mando de quadra.
- *
- * Retorno para a Interface (somente leitura):
- * pontos, rebotes, assistências, roubos, tocos, turnovers, faltas,
- * MVP e placar final.
+ * Estilos da AI Engine alteram decisões automaticamente.
  */
 export function simulateMatch(input = {}, opts = {}) {
   const rng = opts.rng ?? input.rng ?? Math.random
   const quarters = opts.quarters ?? QUARTERS
-  const possessionsPerQuarter =
+  const basePossessions =
     opts.possessionsPerQuarter ?? POSSESSIONS_PER_QUARTER
 
   const home = normalizeSide(input.home ?? {}, { isHome: true })
@@ -50,17 +58,23 @@ export function simulateMatch(input = {}, opts = {}) {
   const quarterScores = []
   let homeScore = 0
   let awayScore = 0
-  let possessionLog = []
+  const possessionLog = []
   let offenseIsHome = rng() < 0.5
 
   for (let q = 1; q <= quarters; q++) {
     let qHome = 0
     let qAway = 0
-
-    // fadiga cresce ao longo do jogo
     const fatigueBase = (q - 1) * 6
 
-    for (let p = 0; p < possessionsPerQuarter; p++) {
+    // Média de pace dos dois times define volume do quarto
+    const avgPace =
+      ((home.style.match.pace ?? 1) + (away.style.match.pace ?? 1)) / 2
+    const possessionsThisQuarter = Math.max(
+      18,
+      Math.round(basePossessions * avgPace),
+    )
+
+    for (let p = 0; p < possessionsThisQuarter; p++) {
       const momentKey = resolveMomentKey(q, homeScore, awayScore)
       const offense = offenseIsHome ? home : away
       const defense = offenseIsHome ? away : home
@@ -71,24 +85,49 @@ export function simulateMatch(input = {}, opts = {}) {
         ? homeScore - awayScore
         : awayScore - homeScore
 
+      const offenseFatigue =
+        (fatigueBase + offense.fatigue) * (offense.style.match.fatigueMult ?? 1)
+      const defenseFatigue =
+        (fatigueBase + defense.fatigue) * (defense.style.match.fatigueMult ?? 1)
+
+      const offensePlan = decidePossessionPlan({
+        styleId: offense.styleId,
+        scoreDiff,
+        quarter: q,
+        fatigue: offenseFatigue,
+        momentKey,
+      })
+
+      const defensePlan = decidePossessionPlan({
+        styleId: defense.styleId,
+        scoreDiff: -scoreDiff,
+        quarter: q,
+        fatigue: defenseFatigue,
+        momentKey,
+      })
+
       const offenseRatings = computeTeamRatings('offense', {
         players: offense.players,
         chemistry: offense.chemistry,
-        fatigue: fatigueBase + offense.fatigue,
+        fatigue: offenseFatigue,
         isHome: offense.isHome,
         quarter: q,
         scoreDiff,
         momentKey,
+        styleId: offense.styleId,
+        plan: offensePlan,
       })
 
       const defenseRatings = computeTeamRatings('defense', {
         players: defense.players,
         chemistry: defense.chemistry,
-        fatigue: fatigueBase + defense.fatigue,
+        fatigue: defenseFatigue,
         isHome: defense.isHome,
         quarter: q,
         scoreDiff: -scoreDiff,
         momentKey,
+        styleId: defense.styleId,
+        plan: defensePlan,
       })
 
       const result = simulatePossession({
@@ -114,11 +153,11 @@ export function simulateMatch(input = {}, opts = {}) {
       possessionLog.push({
         quarter: q,
         offense: offense.team.short,
+        styleId: offense.styleId,
         outcome: result.outcome,
         points: result.points,
       })
 
-      // troca de posse (exceto ORB → mantém)
       if (result.outcome !== 'orb') {
         offenseIsHome = !offenseIsHome
       }
@@ -133,7 +172,6 @@ export function simulateMatch(input = {}, opts = {}) {
     })
   }
 
-  // prorrogação simples se empatar
   let overtime = false
   let otPeriod = 0
   while (homeScore === awayScore && otPeriod < 3) {
@@ -141,7 +179,11 @@ export function simulateMatch(input = {}, opts = {}) {
     otPeriod += 1
     let qHome = 0
     let qAway = 0
-    for (let p = 0; p < Math.round(possessionsPerQuarter / 2); p++) {
+    const otPossessions = Math.round(
+      possessionsForStyle(basePossessions / 2, home.style),
+    )
+
+    for (let p = 0; p < otPossessions; p++) {
       const offense = offenseIsHome ? home : away
       const defense = offenseIsHome ? away : home
       const offenseBox = offenseIsHome ? homeBox : awayBox
@@ -149,6 +191,21 @@ export function simulateMatch(input = {}, opts = {}) {
       const scoreDiff = offenseIsHome
         ? homeScore - awayScore
         : awayScore - homeScore
+
+      const offensePlan = decidePossessionPlan({
+        styleId: offense.styleId,
+        scoreDiff,
+        quarter: 4,
+        fatigue: 28,
+        momentKey: 'q4_close',
+      })
+      const defensePlan = decidePossessionPlan({
+        styleId: defense.styleId,
+        scoreDiff: -scoreDiff,
+        quarter: 4,
+        fatigue: 28,
+        momentKey: 'q4_close',
+      })
 
       const offenseRatings = computeTeamRatings('offense', {
         players: offense.players,
@@ -158,6 +215,8 @@ export function simulateMatch(input = {}, opts = {}) {
         quarter: 4,
         scoreDiff,
         momentKey: 'q4_close',
+        styleId: offense.styleId,
+        plan: offensePlan,
       })
       const defenseRatings = computeTeamRatings('defense', {
         players: defense.players,
@@ -167,6 +226,8 @@ export function simulateMatch(input = {}, opts = {}) {
         quarter: 4,
         scoreDiff: -scoreDiff,
         momentKey: 'q4_close',
+        styleId: defense.styleId,
+        plan: defensePlan,
       })
 
       const result = simulatePossession({
@@ -197,7 +258,6 @@ export function simulateMatch(input = {}, opts = {}) {
     })
   }
 
-  // sync totals
   for (const box of [homeBox, awayBox]) {
     box.totals = {
       points: box.players.reduce((s, p) => s + p.points, 0),
@@ -211,13 +271,29 @@ export function simulateMatch(input = {}, opts = {}) {
   }
 
   const mvp = computeMvp(homeBox, awayBox)
-
   const winner =
     homeScore === awayScore
       ? null
       : homeScore > awayScore
         ? home.team
         : away.team
+
+  const styles = {
+    home: {
+      id: home.styleId,
+      label: home.style.label,
+      fit: home.styleFit,
+      auto: home.styleAuto,
+      reason: home.styleReason,
+    },
+    away: {
+      id: away.styleId,
+      label: away.style.label,
+      fit: away.styleFit,
+      auto: away.styleAuto,
+      reason: away.styleReason,
+    },
+  }
 
   return {
     homeScore,
@@ -234,7 +310,7 @@ export function simulateMatch(input = {}, opts = {}) {
       home: homeBox,
       away: awayBox,
     },
-    // atalhos pedidos pela Interface
+    styles,
     pontos: {
       home: homeBox.totals.points,
       away: awayBox.totals.points,
@@ -265,10 +341,9 @@ export function simulateMatch(input = {}, opts = {}) {
     },
     mvp,
     summary: winner
-      ? `${winner.short} vence ${homeScore}–${awayScore}${overtime ? ' (OT)' : ''}. MVP: ${mvp?.nome ?? '—'}.`
+      ? `${winner.short} vence ${homeScore}–${awayScore}${overtime ? ' (OT)' : ''}. MVP: ${mvp?.nome ?? '—'}. Estilos: ${styles.home.label} vs ${styles.away.label}.`
       : `Empate ${homeScore}–${awayScore}.`,
     possessionCount: possessionLog.length,
-    // log resumido (Interface pode ignorar)
     possessionLog: possessionLog.slice(-20),
   }
 }

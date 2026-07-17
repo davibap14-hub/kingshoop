@@ -10,8 +10,10 @@ import {
   buildDefaultMatchup,
   buildInitialStats,
   calcOverall,
+  chooseBestStyle,
   createInitialCareerState,
   listAvailableActivities,
+  rankStylesForRoster,
   resolveEventChoice,
   rollWeeklyEvent,
   runCareerWeek,
@@ -90,5 +92,14 @@ export const gameService = {
   runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
     const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
     return simulateMatch(matchup)
+  },
+
+  /** AI Engine */
+  chooseBestStyle(players) {
+    return chooseBestStyle(players)
+  },
+
+  rankStylesForRoster(players) {
+    return rankStylesForRoster(players)
   },
 }

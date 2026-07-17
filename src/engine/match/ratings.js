@@ -4,6 +4,7 @@ import {
   HOME_COURT,
   MOMENT_MODS,
 } from '../../data/match/constants'
+import { TEAM_STYLES, DEFAULT_TEAM_STYLE } from '../../data/ai/styles'
 import { calcGroupRating, calcOverall } from '../../data/players/utils'
 import { clamp } from '../utils/math'
 
@@ -37,7 +38,7 @@ export function playerSideRating(player, side = 'attack') {
 /**
  * Ratings de time para a posse atual.
  *
- * Considera: ataque, defesa, fadiga, química, overall, momento, mando.
+ * Considera: ataque, defesa, fadiga, química, overall, momento, mando + estilo IA.
  */
 export function computeTeamRatings(side, context) {
   const {
@@ -48,14 +49,19 @@ export function computeTeamRatings(side, context) {
     quarter = 1,
     scoreDiff = 0,
     momentKey,
+    styleId = DEFAULT_TEAM_STYLE,
+    plan = null,
   } = context
+
+  const style = TEAM_STYLES[styleId] ?? TEAM_STYLES[DEFAULT_TEAM_STYLE]
+  const mods = style.match
 
   const attack = avg(players.map((p) => playerSideRating(p, 'attack')))
   const defense = avg(players.map((p) => playerSideRating(p, 'defense')))
   const overall = avg(players.map((p) => p.overall ?? calcOverall(p)))
 
   const chemMod = (chemistry - 50) * 0.08
-  const fatiguePenalty = fatigue * 0.12
+  const fatiguePenalty = fatigue * 0.12 * (mods.fatigueMult ?? 1)
 
   let moment = MOMENT_MODS[`q${quarter}`] ?? MOMENT_MODS.q1
   if (momentKey && MOMENT_MODS[momentKey]) {
@@ -64,28 +70,36 @@ export function computeTeamRatings(side, context) {
     moment = MOMENT_MODS.q4_close
   }
 
-  let atk = attack + chemMod - fatiguePenalty + overall * 0.05
-  let def = defense + chemMod * 0.7 - fatiguePenalty * 0.8 + overall * 0.04
+  let atk = attack + chemMod - fatiguePenalty + overall * 0.05 + (mods.attack ?? 0)
+  let def = defense + chemMod * 0.7 - fatiguePenalty * 0.8 + overall * 0.04 + (mods.defense ?? 0)
+
+  if (plan) {
+    atk += (plan.aggression - 1) * 8
+    def += plan.protectBall * 20
+  }
 
   if (isHome) {
     atk += HOME_COURT.attack
     def += HOME_COURT.defense
   }
 
-  // clutch: time atrás no Q4 close ganha um pouco de urgência ofensiva
   if (moment.clutch > 0) {
     if (scoreDiff < 0) atk += moment.clutch * 40
     if (scoreDiff > 0) def += moment.clutch * 20
   }
 
   return {
-    attack: clamp(atk, 30, 110),
-    defense: clamp(def, 30, 110),
+    attack: clamp(atk, 30, 115),
+    defense: clamp(def, 30, 115),
     overall,
     chemistry,
     fatigue,
     moment,
     isHome,
+    styleId: style.id,
+    styleLabel: style.label,
+    styleMods: mods,
+    plan,
   }
 }
 

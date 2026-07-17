@@ -26,8 +26,8 @@ export default function MatchPanel() {
               Simulação por Posses
             </h2>
             <p className="mt-1 max-w-xl text-sm text-slate-500">
-              Ataque, defesa, fadiga, química, overall, momento e mando de
-              quadra — a Interface só exibe o resultado.
+              A AI Engine escolhe o estilo do elenco (Fast Pace, Defensivo, 3PT,
+              Garrafão, Transição) e altera as decisões da Match Engine.
             </p>
           </div>
 

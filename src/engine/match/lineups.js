@@ -1,12 +1,14 @@
 import { playerDb } from '../../data/players'
 import { getTeamById, TEAMS } from '../../data/teams'
+import { chooseBestStyle } from '../ai'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
 
 /**
  * Monta um quinteto a partir do banco local (melhor OVR por posição).
+ * A AI Engine escolhe o estilo automaticamente.
  */
-export function buildLineupFromDb(teamId, { excludeIds = [] } = {}) {
+export function buildLineupFromDb(teamId, { excludeIds = [], styleId } = {}) {
   const excluded = new Set(excludeIds)
   const lineup = []
 
@@ -36,8 +38,13 @@ export function buildLineupFromDb(teamId, { excludeIds = [] } = {}) {
   const chem =
     55 +
     Math.round(
-      lineup.reduce((s, p) => s + (p.overall - 70), 0) / Math.max(1, lineup.length),
+      lineup.reduce((s, p) => s + (p.overall - 70), 0) /
+        Math.max(1, lineup.length),
     )
+
+  const ai = styleId
+    ? { styleId, auto: false }
+    : chooseBestStyle(lineup)
 
   return {
     teamId: team.id,
@@ -47,6 +54,7 @@ export function buildLineupFromDb(teamId, { excludeIds = [] } = {}) {
     players: lineup,
     chemistry: Math.max(35, Math.min(90, chem)),
     fatigue: 0,
+    styleId: ai.styleId,
   }
 }
 

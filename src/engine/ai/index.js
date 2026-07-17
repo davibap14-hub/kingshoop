@@ -1,15 +1,22 @@
 /**
- * IA de adversários / decisões de NPC.
- * Placeholder — não depende de UI.
+ * AI Engine — API pública.
+ *
+ * Cada equipe tem um estilo (Fast Pace, Defensivo, 3PT, Garrafão, Transição).
+ * A IA escolhe o melhor estilo pelo elenco e altera decisões da Match Engine.
  */
 
-export function chooseAiPlaystyle(teamOvr, playerOvr) {
-  const delta = teamOvr - playerOvr
-  if (delta >= 8) return 'pace'
-  if (delta <= -8) return 'grind'
-  return 'balanced'
-}
+export {
+  analyzeRoster,
+  scoreStyleFit,
+  rankStylesForRoster,
+} from './profile'
 
-export function estimateAiDifficulty(season = 1) {
-  return Math.min(99, 55 + season * 3)
-}
+export {
+  chooseBestStyle,
+  decidePossessionPlan,
+  resolveTeamStyle,
+  chooseAiPlaystyle,
+  estimateAiDifficulty,
+} from './decide'
+
+export { TEAM_STYLES, TEAM_STYLE_LIST, DEFAULT_TEAM_STYLE } from '../../data/ai/styles'

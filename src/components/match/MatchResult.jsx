@@ -79,7 +79,7 @@ export default function MatchResult({ result }) {
     )
   }
 
-  const { placarFinal, mvp, quarters, boxScore, summary } = result
+  const { placarFinal, mvp, quarters, boxScore, summary, styles } = result
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,6 +107,29 @@ export default function MatchResult({ result }) {
           </div>
         </div>
         <p className="mt-3 text-sm text-slate-600">{summary}</p>
+
+        {styles && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {[styles.home, styles.away].map((s, idx) => (
+              <div
+                key={s.id + idx}
+                className="rounded-lg bg-slate-50 px-3 py-2 text-left ring-1 ring-slate-200"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {idx === 0 ? 'Casa' : 'Fora'} · AI Engine
+                  {s.auto ? ' (auto)' : ''}
+                </p>
+                <p className="font-display text-base font-bold text-navy">
+                  {s.label}{' '}
+                  <span className="text-sm font-semibold text-slate-500">
+                    fit {s.fit}
+                  </span>
+                </p>
+                <p className="text-[11px] text-slate-500">{s.reason}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           {quarters.map((q) => (
