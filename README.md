@@ -45,6 +45,21 @@ src/
  └── assets/
 ```
 
+## Banco local de jogadores
+
+`src/data/players/` — 40 jogadores fictícios com atributos detalhados.
+
+```js
+import { playerDb } from './data/players'
+
+playerDb.getAll()
+playerDb.getById('pl_009')
+playerDb.query({ posicao: 'PG', minOverall: 75 })
+playerDb.getTop(10)
+```
+
+Cada jogador: `id`, `nome`, `idade`, `posicao`, `overall`, grupos **Físico / Arremesso / Defesa / QI**, `potencial`, `popularidade`, `arquetipo`, `valorMercado`, `salario`.
+
 ## Stack
 
 - React 19 + Vite + React Router
