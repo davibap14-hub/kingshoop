@@ -36,7 +36,7 @@ export function buildWeekHistoryEntry(state, effects) {
   return {
     type: 'week',
     at: Date.now(),
-    season: effects?.season ?? state.currentSeason,
+    season: effects?.seasonNumber ?? state.currentSeason,
     week: effects?.weekFrom ?? state.currentWeek,
     activityId: effects?.activityId ?? null,
     activityLabel: effects?.activityLabel ?? null,
