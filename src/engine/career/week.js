@@ -4,6 +4,11 @@ import { triggerEvent } from '../events'
 import { processWeeklyProgression } from '../progression'
 import { applyTraining, rangeRoll } from './activities'
 import { processWeeklyFinance, trySignSponsorship } from '../finance'
+import {
+  appendHistory,
+  buildWeekHistoryEntry,
+  updateCareerStatsAfterWeek,
+} from '../save'
 import { rollInjury, tickInjury } from './injuries'
 import {
   applyStatusDeltas,
@@ -291,6 +296,15 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   nextState.lastWeekResult = effects
 
+  // Save System — histórico + estatísticas da carreira
+  const historyEntry = buildWeekHistoryEntry(nextState, effects)
+  nextState.history = appendHistory(state.history, historyEntry)
+  nextState.careerStats = updateCareerStatsAfterWeek(
+    state.careerStats,
+    nextState,
+    effects,
+  )
+
   return {
     ok: true,
     error: null,
@@ -305,7 +319,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
 /** Bootstrap: estado inicial + atividades da semana 1 */
 export function startCareer(overrides = {}) {
   const state = createCareerState(overrides)
-  state.careerVariables = syncLegacyCareerVariables(state.status)
+  state.careerVariables =
+    overrides.careerVariables ?? syncLegacyCareerVariables(state.status)
   return {
     state,
     availableActivities: listAvailableActivities(state),

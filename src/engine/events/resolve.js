@@ -2,6 +2,11 @@ import {
   applyStatusDeltas,
   syncLegacyCareerVariables,
 } from '../career/state'
+import {
+  appendHistory,
+  buildEventHistoryEntry,
+  updateCareerStatsAfterEvent,
+} from '../save'
 import { getEventById, summarizeEventForUi } from './eligibility'
 
 /**
@@ -76,7 +81,7 @@ export function resolveEventChoice(state, eventId, choiceId) {
     messages,
   }
 
-  const nextState = {
+  let nextState = {
     ...state,
     status,
     careerVariables,
@@ -84,6 +89,12 @@ export function resolveEventChoice(state, eventId, choiceId) {
     lastEvent: messages[messages.length - 1],
     lastEventResult: effects,
   }
+
+  nextState.history = appendHistory(
+    state.history,
+    buildEventHistoryEntry(nextState, effects),
+  )
+  nextState.careerStats = updateCareerStatsAfterEvent(state.careerStats)
 
   return {
     ok: true,

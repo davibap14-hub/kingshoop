@@ -3,20 +3,51 @@ import { DEFAULT_ARCHETYPE_ID } from '../data/constants/archetypes'
 import { DEFAULT_TEAM_ID, getTeamById } from '../data/teams'
 import { gameService } from '../services/gameService'
 
+function pickCareerFields(state) {
+  return {
+    playerName: state.playerName,
+    archetypeId: state.archetypeId,
+    player: state.player,
+    playerStats: state.playerStats,
+    status: state.status,
+    careerVariables: state.careerVariables,
+    progression: state.progression,
+    finance: state.finance,
+    contract: state.contract,
+    sponsorships: state.sponsorships,
+    injury: state.injury,
+    pendingEvent: state.pendingEvent,
+    lastEventResult: state.lastEventResult,
+    lastWeekResult: state.lastWeekResult,
+    currentWeek: state.currentWeek,
+    currentSeason: state.currentSeason,
+    currentTeamId: state.currentTeamId,
+    lastEvent: state.lastEvent,
+    history: state.history,
+    careerStats: state.careerStats,
+  }
+}
+
 /**
  * Store Zustand — estado da Interface.
  * Lógica de carreira vive na Engine; aqui só aplica `nextState` / `effects`.
  */
 export const useGameStore = create((set, get) => {
-  const boot = gameService.startCareer()
+  const boot = gameService.bootCareer()
 
   return {
     ...boot.state,
     availableActivities: boot.availableActivities,
     selectedActivityId: boot.availableActivities[0]?.id ?? 'rest',
-    weekEffects: null,
+    weekEffects: boot.state.lastWeekResult ?? null,
     pendingEvent: boot.state.pendingEvent ?? null,
-    lastEventResult: null,
+    lastEventResult: boot.state.lastEventResult ?? null,
+    activeSaveId: boot.activeSaveId ?? null,
+    saveList: gameService.listSaves(),
+    lastSaveAt: boot.payload?.updatedAt ?? null,
+    lastSaveMessage: boot.isNew
+      ? 'Nova carreira — será salva automaticamente após a 1ª semana.'
+      : `Save carregado: ${boot.payload?.name ?? 'Carreira'}.`,
 
     getCurrentTeam: () => getTeamById(get().currentTeamId),
 
@@ -25,6 +56,8 @@ export const useGameStore = create((set, get) => {
       if (player?.overall) return player.overall
       return gameService.calcOverall(playerStats)
     },
+
+    refreshSaveList: () => set({ saveList: gameService.listSaves() }),
 
     setPlayerName: (name) =>
       set({
@@ -84,6 +117,7 @@ export const useGameStore = create((set, get) => {
 
     /**
      * Uma atividade por semana → Career Engine → efeitos na UI.
+     * Auto-save no LocalStorage após sucesso.
      */
     runWeek: (activityId) => {
       const id = activityId ?? get().selectedActivityId
@@ -111,11 +145,21 @@ export const useGameStore = create((set, get) => {
         lastEvent: result.effects.messages[result.effects.messages.length - 1],
       })
 
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: `Auto-save · Semana ${result.nextState.currentWeek}`,
+          saveList: gameService.listSaves(),
+        })
+      }
+
       return result
     },
 
     /**
-     * Resolve escolha do Event Engine.
+     * Resolve escolha do Event Engine + auto-save.
      */
     resolveEventChoice: (choiceId) => {
       const pending = get().pendingEvent
@@ -136,12 +180,19 @@ export const useGameStore = create((set, get) => {
         lastEvent: result.effects.messages[result.effects.messages.length - 1],
       })
 
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: 'Auto-save · evento resolvido',
+          saveList: gameService.listSaves(),
+        })
+      }
+
       return result
     },
 
-    /**
-     * Gasta 1 ponto de evolução em um grupo (Físico/Arremesso/Defesa/QI).
-     */
     spendEvolutionPoint: (groupKey) => {
       const result = gameService.spendEvolutionPoint(get(), groupKey)
       if (!result.ok) {
@@ -188,9 +239,6 @@ export const useGameStore = create((set, get) => {
       return result
     },
 
-    /**
-     * Finance Engine — define estilo de vida (luxo).
-     */
     setLuxuryLevel: (luxuryLevel) => {
       const result = gameService.setLuxuryLevel(get(), luxuryLevel)
       if (!result.ok) {
@@ -204,9 +252,6 @@ export const useGameStore = create((set, get) => {
       return result
     },
 
-    /**
-     * Finance Engine — aporta caixa em investimento.
-     */
     investCash: (productId, amount) => {
       const result = gameService.investCash(get(), productId, amount)
       if (!result.ok) {
@@ -224,7 +269,88 @@ export const useGameStore = create((set, get) => {
       return result
     },
 
-    /** Compat: avança com a atividade selecionada */
+    /** Cria um novo slot de save a partir do estado atual. */
+    createSaveSlot: (name) => {
+      const result = gameService.createSave(pickCareerFields(get()), name)
+      if (!result.ok) {
+        set({ lastSaveMessage: result.error })
+        return result
+      }
+      set({
+        activeSaveId: result.payload.id,
+        lastSaveAt: result.payload.updatedAt,
+        lastSaveMessage: `Save criado: ${result.payload.name}`,
+        saveList: gameService.listSaves(),
+      })
+      return result
+    },
+
+    /** Salva manualmente no slot ativo (ou cria). */
+    saveNow: (name) => {
+      const result = gameService.saveCurrent(pickCareerFields(get()), name)
+      if (!result.ok) {
+        set({ lastSaveMessage: result.error })
+        return result
+      }
+      set({
+        activeSaveId: result.payload.id,
+        lastSaveAt: result.payload.updatedAt,
+        lastSaveMessage: `Salvo: ${result.payload.name}`,
+        saveList: gameService.listSaves(),
+      })
+      return result
+    },
+
+    /** Carrega um save existente. */
+    loadSaveSlot: (id) => {
+      const result = gameService.loadSave(id)
+      if (!result.ok) {
+        set({ lastSaveMessage: result.error })
+        return result
+      }
+      set({
+        ...result.state,
+        availableActivities: result.availableActivities,
+        selectedActivityId: result.availableActivities[0]?.id ?? 'rest',
+        weekEffects: result.state.lastWeekResult ?? null,
+        pendingEvent: result.state.pendingEvent ?? null,
+        lastEventResult: result.state.lastEventResult ?? null,
+        activeSaveId: result.activeSaveId,
+        lastSaveAt: result.payload.updatedAt,
+        lastSaveMessage: `Carregado: ${result.payload.name}`,
+        saveList: gameService.listSaves(),
+      })
+      return result
+    },
+
+    deleteSaveSlot: (id) => {
+      const result = gameService.deleteSave(id)
+      if (!result.ok) {
+        set({ lastSaveMessage: result.error })
+        return result
+      }
+      const activeSaveId = gameService.getActiveSaveId()
+      set({
+        activeSaveId,
+        saveList: gameService.listSaves(),
+        lastSaveMessage: 'Save excluído.',
+      })
+      return result
+    },
+
+    renameSaveSlot: (id, name) => {
+      const result = gameService.renameSave(id, name)
+      if (!result.ok) {
+        set({ lastSaveMessage: result.error })
+        return result
+      }
+      set({
+        saveList: gameService.listSaves(),
+        lastSaveMessage: `Renomeado: ${name}`,
+      })
+      return result
+    },
+
     advanceWeek: () => get().runWeek(get().selectedActivityId),
 
     resetCareer: (archetypeId = DEFAULT_ARCHETYPE_ID) => {
@@ -233,6 +359,7 @@ export const useGameStore = create((set, get) => {
         currentTeamId: DEFAULT_TEAM_ID,
         lastEvent: 'Nova carreira iniciada.',
       })
+      gameService.clearActiveSave()
       set({
         ...bootNext.state,
         availableActivities: bootNext.availableActivities,
@@ -240,6 +367,11 @@ export const useGameStore = create((set, get) => {
         weekEffects: null,
         pendingEvent: null,
         lastEventResult: null,
+        activeSaveId: null,
+        lastSaveAt: null,
+        lastSaveMessage:
+          'Nova carreira — escolha "Novo save" ou avance a semana para auto-salvar.',
+        saveList: gameService.listSaves(),
       })
     },
   }

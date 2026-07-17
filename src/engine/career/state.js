@@ -9,6 +9,10 @@ import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
+import {
+  createEmptyCareerStats,
+  createEmptyHistory,
+} from '../save/history'
 import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
 
@@ -74,7 +78,7 @@ export function createCareerState(overrides = {}) {
     archetypeId,
     player,
     // compat UI antiga (médias por grupo)
-    playerStats: {
+    playerStats: overrides.playerStats ?? {
       fisico: Math.round(
         (player.fisico.velocidade +
           player.fisico.impulsao +
@@ -130,6 +134,8 @@ export function createCareerState(overrides = {}) {
     currentTeamId: overrides.currentTeamId ?? DEFAULT_TEAM_ID,
     lastEvent: overrides.lastEvent ?? 'Bem-vindo à carreira. Escolha uma atividade para a Semana 1.',
     lastWeekResult: overrides.lastWeekResult ?? null,
+    history: overrides.history ?? createEmptyHistory(),
+    careerStats: overrides.careerStats ?? createEmptyCareerStats(),
   }
 }
 

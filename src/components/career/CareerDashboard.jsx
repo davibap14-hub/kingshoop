@@ -12,6 +12,7 @@ import CareerPanel from './CareerPanel'
 import EventChoicePanel from './EventChoicePanel'
 import FinancePanel from './FinancePanel'
 import ProgressionPanel from './ProgressionPanel'
+import SavePanel from './SavePanel'
 import WeekControls from './WeekControls'
 
 function pickOpponent(teamId, week) {
@@ -106,6 +107,7 @@ export default function CareerDashboard() {
 
           <EventChoicePanel />
           <WeekControls />
+          <SavePanel />
           <FinancePanel />
           <ProgressionPanel />
           <CareerPanel />

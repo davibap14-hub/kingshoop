@@ -45,6 +45,18 @@ src/
  └── assets/
 ```
 
+## Save System
+
+`src/engine/save/` + `src/services/saveService.js` — LocalStorage, múltiplos slots.
+
+Salva: jogador, time, temporada, atributos, eventos, histórico, estatísticas, contratos.
+
+```js
+gameService.autoSave(state)   // após cada semana
+gameService.createSave(state, 'Minha Carreira')
+gameService.loadSave(id)
+```
+
 ## Interface (Dashboard NBA)
 
 Layout Tailwind: **Sidebar · Header · Área principal**.

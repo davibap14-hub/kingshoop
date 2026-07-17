@@ -30,6 +30,8 @@ import { ARCHETYPES } from '../data/constants/archetypes'
 import { WEEKLY_ACTIVITIES } from '../data/career/activities'
 import { CAREER_EVENTS, CAREER_EVENT_COUNT } from '../data/events'
 import { LUXURY_LEVELS } from '../data/finance/constants'
+import { DEFAULT_SAVE_NAME } from '../data/save/constants'
+import { saveService } from './saveService'
 
 export const gameService = {
   createInitialState: createInitialCareerState,
@@ -124,5 +126,85 @@ export const gameService = {
 
   listLuxuryLevels() {
     return LUXURY_LEVELS
+  },
+
+  /** Save System (LocalStorage) */
+  listSaves() {
+    return saveService.listSaves()
+  },
+
+  getActiveSaveId() {
+    return saveService.getActiveSaveId()
+  },
+
+  clearActiveSave() {
+    return saveService.setActiveSaveId(null)
+  },
+
+  createSave(state, name) {
+    return saveService.createSave(state, name)
+  },
+
+  saveCurrent(state, name) {
+    return saveService.saveToSlot(state, saveService.getActiveSaveId(), {
+      name,
+    })
+  },
+
+  autoSave(state) {
+    return saveService.autoSave(state)
+  },
+
+  loadSave(id) {
+    const result = saveService.loadSave(id)
+    if (!result.ok) return result
+    const boot = startCareer(result.overrides)
+    return {
+      ok: true,
+      error: null,
+      payload: result.payload,
+      ...boot,
+      activeSaveId: id,
+    }
+  },
+
+  loadActiveSave() {
+    const result = saveService.loadActiveSave()
+    if (!result.ok) return result
+    const boot = startCareer(result.overrides)
+    return {
+      ok: true,
+      error: null,
+      payload: result.payload,
+      ...boot,
+      activeSaveId: result.payload.id,
+    }
+  },
+
+  /** Boot: restaura save ativo ou inicia carreira nova. */
+  bootCareer() {
+    const restored = this.loadActiveSave()
+    if (restored.ok) return restored
+    const boot = startCareer()
+    return {
+      ok: true,
+      error: null,
+      payload: null,
+      ...boot,
+      activeSaveId: null,
+      isNew: true,
+    }
+  },
+
+  deleteSave(id) {
+    return saveService.deleteSave(id)
+  },
+
+  renameSave(id, name) {
+    return saveService.renameSave(id, name)
+  },
+
+  defaultSaveName() {
+    return DEFAULT_SAVE_NAME
   },
 }

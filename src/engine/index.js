@@ -10,6 +10,7 @@
 export * from './utils'
 export * from './progression'
 export * from './finance'
+export * from './save'
 export * from './career'
 export * from './events'
 export * from './simulation'

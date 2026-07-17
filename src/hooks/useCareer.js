@@ -18,6 +18,9 @@ export function useCareerSnapshot() {
   const sponsorships = useGameStore((s) => s.sponsorships)
   const finance = useGameStore((s) => s.finance)
   const progression = useGameStore((s) => s.progression)
+  const history = useGameStore((s) => s.history)
+  const careerStats = useGameStore((s) => s.careerStats)
+  const activeSaveId = useGameStore((s) => s.activeSaveId)
   const weekEffects = useGameStore((s) => s.weekEffects)
   const availableActivities = useGameStore((s) => s.availableActivities)
   const getOverall = useGameStore((s) => s.getOverall)
@@ -39,6 +42,9 @@ export function useCareerSnapshot() {
     sponsorships,
     finance,
     progression,
+    history,
+    careerStats,
+    activeSaveId,
     weekEffects,
     availableActivities,
     overall: getOverall(),
