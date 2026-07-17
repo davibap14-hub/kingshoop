@@ -10,7 +10,7 @@ const PAGE_META = {
   },
   '/match': {
     title: 'Partida',
-    subtitle: 'Simulação e box score',
+    subtitle: 'Simulation Engine · Play-by-Play',
   },
 }
 

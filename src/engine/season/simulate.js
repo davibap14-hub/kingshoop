@@ -1,5 +1,5 @@
 import { buildLineupFromDb } from '../match/lineups'
-import { simulateMatch } from '../match/simulate'
+import { simulateGame } from '../simulation/game'
 import { applyGameToStandings } from './standings'
 import { injuryFatigueForTeam } from './injuries'
 
@@ -33,7 +33,7 @@ export function simulateGames(games, seasonState, opts = {}) {
     home.fatigue = homeFatigue
     away.fatigue = awayFatigue
 
-    const match = simulateMatch({ home, away }, { rng })
+    const match = simulateGame({ home, away }, { rng })
     const entry = {
       gameId: game.id,
       week: game.week,

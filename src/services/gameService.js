@@ -26,6 +26,7 @@ import {
   rollWeeklyEvent,
   runCareerWeek,
   setLuxuryLevel,
+  simulateGame,
   simulateMatch,
   spendEvolutionPoint,
   startCareer,
@@ -95,13 +96,17 @@ export const gameService = {
     return simulateMatch(input, opts)
   },
 
+  simulateGame(input, opts) {
+    return simulateGame(input, opts)
+  },
+
   buildDefaultMatchup(homeTeamId, awayTeamId) {
     return buildDefaultMatchup(homeTeamId, awayTeamId)
   },
 
   runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
     const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
-    return simulateMatch(matchup)
+    return simulateGame(matchup)
   },
 
   chooseBestStyle(players) {

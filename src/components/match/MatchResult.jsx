@@ -1,6 +1,8 @@
 /**
- * Interface — apenas exibe o resultado da Match Engine.
+ * Interface — exibe o resultado da Simulation Engine (inclui Play-by-Play).
  */
+
+import { Card, CardHeader, Badge } from '../ui'
 
 function StatCell({ value }) {
   return (
@@ -68,24 +70,64 @@ function TeamTable({ box }) {
   )
 }
 
+function PlayByPlay({ events = [] }) {
+  if (!events.length) {
+    return (
+      <p className="text-xs text-slate-500">Play-by-Play indisponível.</p>
+    )
+  }
+
+  return (
+    <ul className="max-h-96 space-y-1.5 overflow-y-auto pr-1 text-xs">
+      {events.map((e) => (
+        <li
+          key={e.id}
+          className="flex gap-2 rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5"
+        >
+          <span className="w-10 shrink-0 font-semibold text-slate-400">
+            {typeof e.quarter === 'number' ? `Q${e.quarter}` : e.quarter}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge tone="neutral">{e.actionLabel ?? e.action}</Badge>
+              {e.points > 0 && (
+                <span className="font-bold text-accent">+{e.points}</span>
+              )}
+              <span className="tabular-nums text-slate-400">
+                {e.score?.home ?? 0}–{e.score?.away ?? 0}
+              </span>
+            </div>
+            <p className="mt-0.5 text-slate-700">{e.text}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function MatchResult({ result }) {
   if (!result) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
         <p className="text-sm text-slate-500">
-          Simule uma partida para ver placar, box score e MVP.
+          Simule uma partida para ver placar, box score, MVP e Play-by-Play.
         </p>
       </div>
     )
   }
 
-  const { placarFinal, mvp, quarters, boxScore, summary, styles } = result
+  const { placarFinal, mvp, quarters, boxScore, summary, styles, playByPlay } =
+    result
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Placar final{result.overtime ? ' · Prorrogação' : ''}
+          Simulation Engine
+          {result.overtime ? ' · Prorrogação' : ''}
+          {result.possessionCount
+            ? ` · ${result.possessionCount} posses`
+            : ''}
         </p>
         <div className="mt-3 flex items-center justify-center gap-6">
           <div>
@@ -145,8 +187,8 @@ export default function MatchResult({ result }) {
       </div>
 
       {mvp && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-700">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             MVP da Partida
           </p>
           <p className="mt-1 font-display text-2xl font-extrabold text-navy">
@@ -167,6 +209,19 @@ export default function MatchResult({ result }) {
         <TeamTable box={boxScore.home} />
         <TeamTable box={boxScore.away} />
       </div>
+
+      <Card padding="lg">
+        <CardHeader
+          subtitle="Play-by-Play"
+          title="Posse a posse"
+          action={
+            <Badge tone="blue">
+              {(playByPlay ?? []).length} eventos
+            </Badge>
+          }
+        />
+        <PlayByPlay events={playByPlay} />
+      </Card>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         {[

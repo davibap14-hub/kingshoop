@@ -16,5 +16,8 @@ export * from './gm'
 export * from './career'
 export * from './events'
 export * from './simulation'
-export * from './match'
+export {
+  buildLineupFromDb,
+  buildDefaultMatchup,
+} from './match/lineups'
 export * from './ai'

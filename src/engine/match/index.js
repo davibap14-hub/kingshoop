@@ -1,20 +1,16 @@
 /**
- * Match Engine — API pública.
+ * Match facade — lineups + ponte para a Simulation Engine.
  *
- * Simula partida por posses considerando ataque, defesa, fadiga,
- * química, overall, momento e mando de quadra.
- *
- * A Interface apenas exibe o resultado de `simulateMatch(...)`.
+ * A simulação de partida vive em `engine/simulation`.
+ * Este módulo mantém buildLineupFromDb / buildDefaultMatchup
+ * e reexporta simulateMatch para compatibilidade.
  */
 
-export { simulateMatch, simulateMatchScoreOnly } from './simulate'
-export { simulatePossession } from './possession'
-export { computeTeamRatings, playerSideRating, resolveMomentKey } from './ratings'
+export { buildLineupFromDb, buildDefaultMatchup } from './lineups'
+export { simulateMatch, simulateGame } from '../simulation/game'
 export {
   createTeamBox,
   createPlayerLine,
   applyPossessionToBox,
   computeMvp,
-} from './boxscore'
-export { createEmptyBoxScore } from './legacy'
-export { buildLineupFromDb, buildDefaultMatchup } from './lineups'
+} from '../simulation/boxscore'

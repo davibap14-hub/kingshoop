@@ -141,23 +141,24 @@ const result = simulateMatch(matchup)
 
 A IA altera ritmo, taxa de 3PT/2PT, turnovers, roubos e agressão por posse.
 
-## Match Engine
+## Simulation Engine
 
-`src/engine/match/` — simulação posse a posse.
+`src/engine/simulation/` — substitui a Match Engine. Simulação **posse a posse** com Play-by-Play completo.
 
-Fatores: ataque, defesa, fadiga, química, overall, momento, mando de quadra.
+Cada posse modela: Ball Handler, defesa individual, ajuda defensiva, Pick and Roll, Isolation, Drive, Kick Out, Corte, Screen, Post Up, Fast Break e Offensive Rebound.
 
-Retorno: pontos, rebotes, assistências, roubos, tocos, turnovers, faltas, MVP, placar final.
+Probabilidades por **pesos combinados** de atributos (`combineScore` + `weightedSelect`) — sem rolagens simples.
 
 ```js
-import { simulateMatch, buildDefaultMatchup } from './engine'
+import { simulateGame, buildDefaultMatchup } from './engine'
 
 const matchup = buildDefaultMatchup('gsw', 'bos')
-const result = simulateMatch(matchup)
-// Interface só exibe `result`
+const result = simulateGame(matchup)
+// result.playByPlay → lista completa de ações
+// result.boxScore, placarFinal, mvp, styles…
 ```
 
-Rota UI: `/match`
+Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
 ## Event Engine
 

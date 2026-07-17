@@ -52,6 +52,11 @@ function bump(box, playerId, field, amount = 1) {
 }
 
 export function applyPossessionToBox(offenseBox, defenseBox, result) {
+  if (result.missedById) {
+    bump(offenseBox, result.missedById, 'fgAtt')
+    if (result.isThree) bump(offenseBox, result.missedById, 'threeAtt')
+  }
+
   if (result.points > 0 && result.scorerId) {
     bump(offenseBox, result.scorerId, 'points', result.points)
     if (result.outcome === 'make2') {
@@ -63,20 +68,12 @@ export function applyPossessionToBox(offenseBox, defenseBox, result) {
       bump(offenseBox, result.scorerId, 'threeMade')
       bump(offenseBox, result.scorerId, 'threeAtt')
     } else if (result.outcome === 'shooting_foul') {
-      // approx FT tracking
       const attempts = result.isThree ? 3 : 2
       const line = findLine(offenseBox, result.scorerId)
       if (line) {
         line.ftAtt += attempts
         line.ftMade += result.points
       }
-    }
-  } else if (result.outcome === 'make2' || result.isThree === false) {
-    if (result.scorerId) bump(offenseBox, result.scorerId, 'fgAtt')
-  } else if (result.isThree) {
-    if (result.scorerId) {
-      bump(offenseBox, result.scorerId, 'fgAtt')
-      bump(offenseBox, result.scorerId, 'threeAtt')
     }
   }
 
@@ -89,15 +86,32 @@ export function applyPossessionToBox(offenseBox, defenseBox, result) {
   if (result.blockerId) bump(defenseBox, result.blockerId, 'blocks')
   if (result.turnoversById) bump(offenseBox, result.turnoversById, 'turnovers')
   if (result.foulerId) bump(defenseBox, result.foulerId, 'fouls')
+}
 
-  offenseBox.totals.points = offenseBox.players.reduce((s, p) => s + p.points, 0)
-  defenseBox.totals.points = defenseBox.players.reduce((s, p) => s + p.points, 0)
+export function recomputeTotals(box) {
+  box.totals = {
+    points: box.players.reduce((s, p) => s + p.points, 0),
+    rebounds: box.players.reduce((s, p) => s + p.rebounds, 0),
+    assists: box.players.reduce((s, p) => s + p.assists, 0),
+    steals: box.players.reduce((s, p) => s + p.steals, 0),
+    blocks: box.players.reduce((s, p) => s + p.blocks, 0),
+    turnovers: box.players.reduce((s, p) => s + p.turnovers, 0),
+    fouls: box.players.reduce((s, p) => s + p.fouls, 0),
+  }
 }
 
 export function computeMvp(homeBox, awayBox) {
   const all = [
-    ...homeBox.players.map((p) => ({ ...p, teamId: homeBox.teamId, teamShort: homeBox.teamShort })),
-    ...awayBox.players.map((p) => ({ ...p, teamId: awayBox.teamId, teamShort: awayBox.teamShort })),
+    ...homeBox.players.map((p) => ({
+      ...p,
+      teamId: homeBox.teamId,
+      teamShort: homeBox.teamShort,
+    })),
+    ...awayBox.players.map((p) => ({
+      ...p,
+      teamId: awayBox.teamId,
+      teamShort: awayBox.teamShort,
+    })),
   ]
 
   let best = null

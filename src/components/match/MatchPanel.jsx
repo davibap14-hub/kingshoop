@@ -18,9 +18,9 @@ export default function MatchPanel() {
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader
-        eyebrow="Match Engine"
-        title="Simulação por Posses"
-        description="A AI Engine escolhe o estilo do elenco e altera as decisões da partida."
+        eyebrow="Simulation Engine"
+        title="Posse a posse"
+        description="Cada posse usa pesos combinados (PnR, isolation, drive, kick out, post, fast break…) e gera Play-by-Play completo."
         action={
           <Button
             variant="accent"
