@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Oswald', 'Segoe UI', sans-serif;
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+  --navy: #0c2340;
+  --navy-hover: #163556;
+  --court: #c8102e;
+  --ice: #f4f7fb;
+  --line: #e2e8f0;
+}
+
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(12, 35, 64, 0.06), transparent 55%),
+    radial-gradient(ellipse 40% 30% at 100% 0%, rgba(200, 16, 46, 0.04), transparent 50%),
+    var(--ice);
+  color: #1e293b;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
