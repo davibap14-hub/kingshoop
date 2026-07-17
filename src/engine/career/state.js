@@ -8,6 +8,7 @@ import { DEFAULT_ARCHETYPE_ID, ARCHETYPES } from '../../data/constants/archetype
 import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
+import { calcPatrimonio, createFinanceState } from '../finance/state'
 import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
 
@@ -107,6 +108,18 @@ export function createCareerState(overrides = {}) {
     // aliases legados
     careerVariables: null, // preenchido abaixo
     progression: createProgressionState(overrides.progression),
+    finance: (() => {
+      const finance = createFinanceState(overrides.finance)
+      const cash =
+        overrides.status?.dinheiro ??
+        DEFAULT_CAREER_STATUS.dinheiro
+      return {
+        ...finance,
+        patrimonio:
+          overrides.finance?.patrimonio ??
+          calcPatrimonio(cash, finance.investments),
+      }
+    })(),
     contract: overrides.contract ?? createDefaultContract(overrides.currentTeamId),
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,

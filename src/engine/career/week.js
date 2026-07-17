@@ -3,7 +3,7 @@ import { WEEKS_PER_SEASON } from '../../data/constants/career'
 import { triggerEvent } from '../events'
 import { processWeeklyProgression } from '../progression'
 import { applyTraining, rangeRoll } from './activities'
-import { resolveWeeklyFinance, trySignSponsorship } from './finance'
+import { processWeeklyFinance, trySignSponsorship } from '../finance'
 import { rollInjury, tickInjury } from './injuries'
 import {
   applyStatusDeltas,
@@ -96,6 +96,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     energia: 0,
     motivacao: 0,
     popularidade: 0,
+    felicidade: 0,
     relTreinador: 0,
     relCompanheiros: 0,
     dinheiro: 0,
@@ -104,6 +105,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
   let player = state.player
   let injury = state.injury
   let sponsorships = [...(state.sponsorships ?? [])]
+  let activityCashBonus = 0
 
   messages.push(`Atividade: ${activity.label}.`)
 
@@ -161,14 +163,13 @@ export function runCareerWeek(state, activityId, opts = {}) {
     messages.push('Sessão com o treinador alinhou expectativas.')
   } else if (activity.type === 'sponsor') {
     deltas.energia += -Math.abs(activity.energyCost)
-    const cash = rangeRoll(activity.cashBonus ?? [3000, 8000], rng)
+    activityCashBonus = rangeRoll(activity.cashBonus ?? [3000, 8000], rng)
     const popGain = rangeRoll(activity.popularityGain ?? [1, 4], rng)
-    deltas.dinheiro += cash
     deltas.popularidade += popGain
     deltas.relTreinador += activity.coachBias ?? 0
     deltas.relCompanheiros += activity.teammatesBias ?? 0
     messages.push(
-      `Evento de marca: +$${cash.toLocaleString('en-US')} e popularidade +${popGain}.`,
+      `Evento de marca: +$${activityCashBonus.toLocaleString('en-US')} e popularidade +${popGain}.`,
     )
 
     const signed = trySignSponsorship(
@@ -191,9 +192,15 @@ export function runCareerWeek(state, activityId, opts = {}) {
     messages.push(...tick.messages)
   }
 
-  const finance = resolveWeeklyFinance({ ...state, sponsorships })
+  // Finance Engine — salário, patrocínios, investimentos, gastos, luxo, impostos, patrimônio
+  const finance = processWeeklyFinance(
+    { ...state, sponsorships },
+    { extraIncome: activityCashBonus, rng },
+  )
   sponsorships = finance.sponsorships
   deltas.dinheiro += finance.deltas.dinheiro
+  deltas.felicidade += finance.deltas.felicidade
+  deltas.popularidade += finance.deltas.popularidade
   messages.push(...finance.messages)
 
   if (activity.type !== 'train' && activity.type !== 'rest') {
@@ -237,6 +244,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     careerVariables,
     contract,
     sponsorships,
+    finance: finance.finance,
     injury,
     progression: progResult.nextProgression,
     currentWeek: calendar.currentWeek,
@@ -268,11 +276,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     messages,
     injury,
     injuryHealed: Boolean(state.injury) && !injury,
-    finance: {
-      weeklySalary: finance.weeklySalary,
-      sponsorIncome: finance.sponsorIncome,
-      totalIncome: finance.deltas.dinheiro,
-    },
+    finance: finance.summary,
     sponsorships,
     contract,
     progression: {

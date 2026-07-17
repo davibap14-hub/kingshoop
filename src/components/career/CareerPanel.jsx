@@ -12,6 +12,7 @@ const TONE = {
   energia: 'from-emerald-500 to-teal-500',
   motivacao: 'from-sky-500 to-blue-600',
   popularidade: 'from-amber-500 to-orange-400',
+  felicidade: 'from-lime-500 to-green-500',
   relTreinador: 'from-slate-500 to-slate-700',
   relCompanheiros: 'from-rose-500 to-red-500',
   dinheiro: 'from-amber-400 to-yellow-500',
@@ -21,6 +22,7 @@ const DISPLAY_KEYS = [
   'energia',
   'motivacao',
   'popularidade',
+  'felicidade',
   'relTreinador',
   'relCompanheiros',
   'dinheiro',
@@ -34,7 +36,7 @@ export default function CareerPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
         {DISPLAY_KEYS.map((key) => {
           const meta = CAREER_STATUS[key]
           const value = status?.[key] ?? 0

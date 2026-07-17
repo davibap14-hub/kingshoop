@@ -45,6 +45,17 @@ src/
  └── assets/
 ```
 
+## Finance Engine
+
+`src/engine/finance/` — salário, patrocínios, investimentos, gastos, luxo, impostos e patrimônio.
+
+```js
+processWeeklyFinance(state, { extraIncome })
+// → { deltas, sponsorships, finance, summary, messages }
+```
+
+O dinheiro influencia **felicidade** e **popularidade**. Cada semana devolve um resumo financeiro (`summary`).
+
 ## Progression Engine
 
 `src/engine/progression/` — XP semanal, level-up e pontos de evolução.

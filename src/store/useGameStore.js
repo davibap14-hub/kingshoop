@@ -188,6 +188,42 @@ export const useGameStore = create((set, get) => {
       return result
     },
 
+    /**
+     * Finance Engine — define estilo de vida (luxo).
+     */
+    setLuxuryLevel: (luxuryLevel) => {
+      const result = gameService.setLuxuryLevel(get(), luxuryLevel)
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+      set({
+        ...result.nextState,
+        lastEvent: result.nextState.lastEvent,
+      })
+      return result
+    },
+
+    /**
+     * Finance Engine — aporta caixa em investimento.
+     */
+    investCash: (productId, amount) => {
+      const result = gameService.investCash(get(), productId, amount)
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+      set({
+        ...result.nextState,
+        careerVariables: {
+          ...(get().careerVariables ?? {}),
+          dinheiro: result.nextState.status.dinheiro,
+        },
+        lastEvent: result.nextState.lastEvent,
+      })
+      return result
+    },
+
     /** Compat: avança com a atividade selecionada */
     advanceWeek: () => get().runWeek(get().selectedActivityId),
 

@@ -1,6 +1,7 @@
 import { ATTRIBUTE_KEYS } from '../../data/constants/attributes'
 import CareerPanel from './CareerPanel'
 import EventChoicePanel from './EventChoicePanel'
+import FinancePanel from './FinancePanel'
 import ProgressionPanel from './ProgressionPanel'
 import WeekControls from './WeekControls'
 import StatCard from '../stats/StatCard'
@@ -27,6 +28,7 @@ export default function CareerDashboard() {
 
       <EventChoicePanel />
       <WeekControls />
+      <FinancePanel />
       <ProgressionPanel />
       <CareerPanel />
 

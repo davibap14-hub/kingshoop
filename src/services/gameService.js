@@ -13,11 +13,13 @@ import {
   chooseBestStyle,
   createInitialCareerState,
   listAvailableActivities,
+  investCash,
   listEvolvableGroups,
   rankStylesForRoster,
   resolveEventChoice,
   rollWeeklyEvent,
   runCareerWeek,
+  setLuxuryLevel,
   simulateMatch,
   spendEvolutionPoint,
   startCareer,
@@ -27,6 +29,7 @@ import { getTeamById, TEAMS } from '../data/teams'
 import { ARCHETYPES } from '../data/constants/archetypes'
 import { WEEKLY_ACTIVITIES } from '../data/career/activities'
 import { CAREER_EVENTS, CAREER_EVENT_COUNT } from '../data/events'
+import { LUXURY_LEVELS } from '../data/finance/constants'
 
 export const gameService = {
   createInitialState: createInitialCareerState,
@@ -108,5 +111,18 @@ export const gameService = {
 
   spendEvolutionPoint(state, groupKey) {
     return spendEvolutionPoint(state, groupKey)
+  },
+
+  /** Finance Engine */
+  setLuxuryLevel(state, luxuryLevel) {
+    return setLuxuryLevel(state, luxuryLevel)
+  },
+
+  investCash(state, productId, amount) {
+    return investCash(state, productId, amount)
+  },
+
+  listLuxuryLevels() {
+    return LUXURY_LEVELS
   },
 }

@@ -24,6 +24,13 @@ export const CAREER_STATUS = {
     max: 100,
     description: 'Reconhecimento da mídia e dos fãs.',
   },
+  felicidade: {
+    id: 'felicidade',
+    label: 'Felicidade',
+    min: 0,
+    max: 100,
+    description: 'Bem-estar pessoal — influenciado pelo dinheiro e pelo estilo de vida.',
+  },
   relTreinador: {
     id: 'relTreinador',
     label: 'Rel. Treinador',
@@ -53,6 +60,7 @@ export const DEFAULT_CAREER_STATUS = {
   energia: 100,
   motivacao: 70,
   popularidade: 20,
+  felicidade: 60,
   relTreinador: 55,
   relCompanheiros: 55,
   dinheiro: 15_000,

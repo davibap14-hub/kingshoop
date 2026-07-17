@@ -1,8 +1,9 @@
 /**
  * Career Engine — API pública.
  *
- * Controla: treinos, descanso, lesões, contratos, salário,
- * patrocínios, popularidade, relações, energia e motivação.
+ * Controla: treinos, descanso, lesões, contratos,
+ * popularidade, relações, energia e motivação.
+ * Finanças (salário/patrocínios/investimentos) → Finance Engine.
  *
  * Contrato com a Interface:
  *   runCareerWeek(state, activityId) → { ok, effects, nextState, availableActivities }
@@ -22,8 +23,6 @@ export {
 export { runCareerWeek, listAvailableActivities, startCareer } from './week'
 export { applyTraining } from './activities'
 export { rollInjury, tickInjury } from './injuries'
-export { resolveWeeklyFinance, trySignSponsorship } from './finance'
-
 // ——— Compat com API anterior ———
 import { ARCHETYPES, DEFAULT_ARCHETYPE_ID } from '../../data/constants/archetypes'
 import { DEFAULT_CAREER } from '../../data/constants/career'
