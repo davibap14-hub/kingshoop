@@ -14,7 +14,7 @@ const TONE = {
   energia: 'from-emerald-500 to-teal-500',
   dinheiro: 'from-amber-500 to-orange-400',
   fama: 'from-sky-500 to-blue-600',
-  quimica: 'from-violet-500 to-indigo-500',
+  quimica: 'from-rose-500 to-red-500',
 }
 
 export default function CareerPanel() {
