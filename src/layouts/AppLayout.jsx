@@ -23,6 +23,9 @@ export default function AppLayout({ children }) {
             <Link to="/" className="transition hover:text-navy">
               Carreira
             </Link>
+            <Link to="/match" className="transition hover:text-navy">
+              Partida
+            </Link>
           </nav>
         </div>
       </header>

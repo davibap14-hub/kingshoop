@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './layouts'
-import { CareerPage } from './pages'
+import { CareerPage, MatchPage } from './pages'
 
 export default function App() {
   return (
@@ -8,6 +8,7 @@ export default function App() {
       <AppLayout>
         <Routes>
           <Route path="/" element={<CareerPage />} />
+          <Route path="/match" element={<MatchPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppLayout>

@@ -45,6 +45,24 @@ src/
  └── assets/
 ```
 
+## Match Engine
+
+`src/engine/match/` — simulação posse a posse.
+
+Fatores: ataque, defesa, fadiga, química, overall, momento, mando de quadra.
+
+Retorno: pontos, rebotes, assistências, roubos, tocos, turnovers, faltas, MVP, placar final.
+
+```js
+import { simulateMatch, buildDefaultMatchup } from './engine'
+
+const matchup = buildDefaultMatchup('gsw', 'bos')
+const result = simulateMatch(matchup)
+// Interface só exibe `result`
+```
+
+Rota UI: `/match`
+
 ## Event Engine
 
 `src/engine/events/` + `src/data/events/catalog.js` (80 eventos).

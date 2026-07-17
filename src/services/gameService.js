@@ -7,6 +7,7 @@ import {
   applyCareerDeltas,
   applyStatDelta,
   applyTeamTransfer,
+  buildDefaultMatchup,
   buildInitialStats,
   calcOverall,
   createInitialCareerState,
@@ -75,7 +76,19 @@ export const gameService = {
     return rollWeeklyEvent()
   },
 
-  simulateMatch(input) {
-    return simulateMatch(input)
+  /**
+   * Match Engine — Interface só exibe o retorno.
+   */
+  simulateMatch(input, opts) {
+    return simulateMatch(input, opts)
+  },
+
+  buildDefaultMatchup(homeTeamId, awayTeamId) {
+    return buildDefaultMatchup(homeTeamId, awayTeamId)
+  },
+
+  runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
+    const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
+    return simulateMatch(matchup)
   },
 }
