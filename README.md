@@ -45,6 +45,22 @@ src/
  └── assets/
 ```
 
+## Event Engine
+
+`src/engine/events/` + `src/data/events/catalog.js` (80 eventos).
+
+Cada evento: `id`, `categoria`, `peso`, `probabilidade`, `condicoes`, `efeitos`, `texto`, `escolhas` (2–4).
+
+```js
+import { rollEvent, resolveEventChoice, triggerEvent } from './engine'
+
+const event = rollEvent(state)
+const result = resolveEventChoice(state, event.id, 'a')
+// result.effects.deltas → mudanças na carreira
+```
+
+Categorias: Treino, Família, Dinheiro, Mídia, Companheiros, Lesões, Treinador, Patrocínio, NBA, Torcedores.
+
 ## Career Engine
 
 `src/engine/career/` — uma atividade por semana; retorna efeitos para a Interface.

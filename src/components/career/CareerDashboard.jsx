@@ -1,12 +1,10 @@
 import { ATTRIBUTE_KEYS } from '../../data/constants/attributes'
-import CareerPanel from '../career/CareerPanel'
-import WeekControls from '../career/WeekControls'
+import CareerPanel from './CareerPanel'
+import EventChoicePanel from './EventChoicePanel'
+import WeekControls from './WeekControls'
 import StatCard from '../stats/StatCard'
 import { useCareerSnapshot } from '../../hooks/useCareer'
 
-/**
- * Bloco de UI da carreira — sem layout de página (isso fica em pages/layouts).
- */
 export default function CareerDashboard() {
   const { playerName, team, overall } = useCareerSnapshot()
 
@@ -26,6 +24,7 @@ export default function CareerDashboard() {
         </div>
       </div>
 
+      <EventChoicePanel />
       <WeekControls />
       <CareerPanel />
 

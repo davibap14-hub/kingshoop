@@ -108,6 +108,8 @@ export function createCareerState(overrides = {}) {
     contract: overrides.contract ?? createDefaultContract(overrides.currentTeamId),
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,
+    pendingEvent: overrides.pendingEvent ?? null,
+    lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,
     currentSeason: overrides.currentSeason ?? 1,
     currentTeamId: overrides.currentTeamId ?? DEFAULT_TEAM_ID,

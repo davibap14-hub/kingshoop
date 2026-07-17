@@ -1,5 +1,6 @@
 import { getActivity, WEEKLY_ACTIVITIES } from '../../data/career/activities'
 import { WEEKS_PER_SEASON } from '../../data/constants/career'
+import { triggerEvent } from '../events'
 import { applyTraining, rangeRoll } from './activities'
 import { resolveWeeklyFinance, trySignSponsorship } from './finance'
 import { rollInjury, tickInjury } from './injuries'
@@ -21,7 +22,6 @@ export function listAvailableActivities(state) {
     if (activity.requiresHealthy && injured && state.injury?.blocksTraining) {
       return false
     }
-    // Recovery só faz sentido lesionado
     if (activity.id === 'recovery' && !injured) return false
     return true
   }).map((a) => ({
@@ -48,14 +48,23 @@ function advanceCalendar(state) {
 
 /**
  * Career Engine — executa UMA atividade e devolve os efeitos da semana.
- *
- * @param {object} state — snapshot da carreira
- * @param {string} activityId — id da atividade escolhida
- * @param {{ rng?: () => number }} [opts]
- * @returns {import('./types').WeekResult}
+ * Pode anexar `pendingEvent` via Event Engine.
  */
 export function runCareerWeek(state, activityId, opts = {}) {
   const rng = opts.rng ?? Math.random
+
+  if (state.pendingEvent) {
+    return {
+      ok: false,
+      error: 'Resolva o evento pendente antes de avançar a semana.',
+      activityId,
+      effects: null,
+      nextState: null,
+      availableActivities: listAvailableActivities(state),
+      pendingEvent: state.pendingEvent,
+    }
+  }
+
   const activity = getActivity(activityId)
 
   if (!activity) {
@@ -97,7 +106,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   messages.push(`Atividade: ${activity.label}.`)
 
-  // ——— 1) Atividade principal ———
   if (activity.type === 'train') {
     const training = applyTraining(state, activity, rng)
     player = training.player
@@ -172,7 +180,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
-  // Lesão passiva (se não tratou via rest/recovery nesta semana e já estava lesionado)
   if (
     state.injury &&
     activity.type !== 'rest' &&
@@ -183,14 +190,11 @@ export function runCareerWeek(state, activityId, opts = {}) {
     messages.push(...tick.messages)
   }
 
-  // ——— 2) Financeiro semanal (salário + patrocínios) ———
   const finance = resolveWeeklyFinance({ ...state, sponsorships })
   sponsorships = finance.sponsorships
   deltas.dinheiro += finance.deltas.dinheiro
   messages.push(...finance.messages)
 
-  // ——— 3) Aplicar status ———
-  // Regeneração passiva leve de energia se não foi treino exaustivo
   if (activity.type !== 'train' && activity.type !== 'rest') {
     deltas.energia += 5
   }
@@ -200,7 +204,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   if (calendar.seasonRolled) {
     messages.push(`Nova temporada! Temporada ${calendar.currentSeason} começa.`)
-    // tick de contrato
   }
 
   let contract = state.contract
@@ -217,7 +220,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
   const careerVariables = syncLegacyCareerVariables(status)
   const playerStats = syncPlayerStatsFromDetailed(player)
 
-  const nextState = {
+  let nextState = {
     ...state,
     player,
     playerStats,
@@ -229,6 +232,18 @@ export function runCareerWeek(state, activityId, opts = {}) {
     currentWeek: calendar.currentWeek,
     currentSeason: calendar.currentSeason,
     lastEvent: messages[messages.length - 1] ?? activity.label,
+    pendingEvent: null,
+  }
+
+  const eventRoll = triggerEvent(
+    nextState,
+    { activityType: activity.type, activityId: activity.id },
+    { rng },
+  )
+
+  if (eventRoll.triggered) {
+    nextState = eventRoll.nextState
+    messages.push(`Evento: ${eventRoll.event.categoriaLabel} — escolha pendente.`)
   }
 
   const effects = {
@@ -250,6 +265,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     },
     sponsorships,
     contract,
+    pendingEvent: nextState.pendingEvent,
   }
 
   nextState.lastWeekResult = effects
@@ -261,6 +277,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     effects,
     nextState,
     availableActivities: listAvailableActivities(nextState),
+    pendingEvent: nextState.pendingEvent,
   }
 }
 

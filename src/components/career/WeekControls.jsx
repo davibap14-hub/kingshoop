@@ -22,6 +22,7 @@ export default function WeekControls() {
   const selectedActivityId = useGameStore((s) => s.selectedActivityId)
   const weekEffects = useGameStore((s) => s.weekEffects)
   const injury = useGameStore((s) => s.injury)
+  const pendingEvent = useGameStore((s) => s.pendingEvent)
 
   const setSelectedActivity = useGameStore((s) => s.setSelectedActivity)
   const runWeek = useGameStore((s) => s.runWeek)
@@ -60,9 +61,10 @@ export default function WeekControls() {
           <button
             type="button"
             onClick={() => runWeek(selectedActivityId)}
-            className="rounded-lg bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-navy/20 transition hover:bg-navy-hover"
+            disabled={Boolean(pendingEvent)}
+            className="rounded-lg bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-navy/20 transition hover:bg-navy-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirmar Semana
+            {pendingEvent ? 'Resolva o evento' : 'Confirmar Semana'}
           </button>
         </div>
       </div>

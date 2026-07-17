@@ -10,6 +10,7 @@
 export * from './utils'
 export * from './progression'
 export * from './career'
+export * from './events'
 export * from './simulation'
 export * from './match'
 export * from './ai'

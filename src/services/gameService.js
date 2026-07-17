@@ -11,14 +11,17 @@ import {
   calcOverall,
   createInitialCareerState,
   listAvailableActivities,
+  resolveEventChoice,
   rollWeeklyEvent,
   runCareerWeek,
   simulateMatch,
   startCareer,
+  triggerEvent,
 } from '../engine'
 import { getTeamById, TEAMS } from '../data/teams'
 import { ARCHETYPES } from '../data/constants/archetypes'
 import { WEEKLY_ACTIVITIES } from '../data/career/activities'
+import { CAREER_EVENTS, CAREER_EVENT_COUNT } from '../data/events'
 
 export const gameService = {
   createInitialState: createInitialCareerState,
@@ -32,6 +35,9 @@ export const gameService = {
   listActivities: () => WEEKLY_ACTIVITIES,
   listAvailableActivities,
 
+  eventCount: () => CAREER_EVENT_COUNT,
+  listEvents: () => CAREER_EVENTS,
+
   updateStat(playerStats, statKey, delta) {
     return applyStatDelta(playerStats, statKey, delta)
   },
@@ -40,16 +46,20 @@ export const gameService = {
     return applyCareerDeltas(careerVariables, { [key]: delta })
   },
 
-  /**
-   * Executa a semana com UMA atividade. Retorna efeitos para a Interface.
-   */
   runWeek(state, activityId) {
     return runCareerWeek(state, activityId)
   },
 
-  /** @deprecated use runWeek */
   advanceWeek(state) {
     return runCareerWeek(state, 'rest')
+  },
+
+  resolveEvent(state, eventId, choiceId) {
+    return resolveEventChoice(state, eventId, choiceId)
+  },
+
+  triggerEvent(state, context) {
+    return triggerEvent(state, context)
   },
 
   changeArchetype(archetypeId) {
