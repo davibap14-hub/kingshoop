@@ -13,8 +13,12 @@ import {
   chooseBestStyle,
   createInitialCareerState,
   listAvailableActivities,
+  analyzeFranchise,
+  capPressure,
   getConferenceTables,
+  getGmView,
   getSeasonView,
+  GM_PERSONALITIES,
   investCash,
   listEvolvableGroups,
   rankStylesForRoster,
@@ -140,6 +144,23 @@ export const gameService = {
 
   getConferenceTables(standings) {
     return getConferenceTables(standings)
+  },
+
+  /** General Manager Engine — Interface só lê */
+  getGmView(state) {
+    return getGmView(state.gm, { teamId: state.currentTeamId })
+  },
+
+  analyzeFranchise(state, teamId) {
+    return analyzeFranchise(state.gm, teamId ?? state.currentTeamId, state.season)
+  },
+
+  getTeamCap(state, teamId) {
+    return capPressure(state.gm?.contracts, teamId ?? state.currentTeamId)
+  },
+
+  listGmPersonalities() {
+    return GM_PERSONALITIES
   },
 
   /** Save System (LocalStorage) */

@@ -13,6 +13,7 @@ import {
   createEmptyCareerStats,
   createEmptyHistory,
 } from '../save/history'
+import { createGmState } from '../gm/state'
 import { createSeasonState } from '../season/state'
 import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
@@ -142,6 +143,7 @@ export function createCareerState(overrides = {}) {
       createSeasonState({
         seasonNumber: overrides.currentSeason ?? 1,
       }),
+    gm: overrides.gm ?? createGmState(),
   }
 }
 

@@ -4,6 +4,7 @@ const NAV = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/match', label: 'Partida', end: false },
   { to: '/#temporada', label: 'Temporada', end: false, hash: true },
+  { to: '/#gm', label: 'GM', end: false, hash: true },
   { to: '/#saves', label: 'Saves', end: false, hash: true },
   { to: '/#calendario', label: 'Calendário', end: false, hash: true },
   { to: '/#status', label: 'Status', end: false, hash: true },

@@ -45,6 +45,21 @@ src/
  └── assets/
 ```
 
+## General Manager Engine
+
+`src/engine/gm/` — decisões automáticas das franquias.
+
+Personalidades: **Reconstrução · Competitiva · Contender · Jovem · Financeira**
+
+Responsabilidades: contratações, trocas, dispensas, renovações, draft e salary cap.
+
+```js
+processWeeklyGm(state, { week, phase, seasonRolled, rng })
+// → { gm, decisions, summary, messages }
+```
+
+Cada decisão considera a situação da franquia (record, OVR, idade, teto, necessidades).
+
 ## Season Engine
 
 `src/engine/season/` — controla a temporada da liga.

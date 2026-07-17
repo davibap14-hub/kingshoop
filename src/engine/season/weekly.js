@@ -52,6 +52,7 @@ export function processWeeklySeason(state, opts = {}) {
     rng,
     playerTeamId: state.currentTeamId,
     playerInjured: Boolean(state.injury),
+    gm: state.gm ?? null,
   }
 
   let weekResults = []

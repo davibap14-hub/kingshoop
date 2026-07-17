@@ -26,6 +26,7 @@ function pickCareerFields(state) {
     history: state.history,
     careerStats: state.careerStats,
     season: state.season,
+    gm: state.gm,
   }
 }
 

@@ -9,6 +9,7 @@ import {
   buildWeekHistoryEntry,
   updateCareerStatsAfterWeek,
 } from '../save'
+import { processWeeklyGm } from '../gm'
 import { processWeeklySeason } from '../season'
 import { rollInjury, tickInjury } from './injuries'
 import {
@@ -248,6 +249,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       ...state,
       status,
       injury,
+      gm: state.gm,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
       season: calendar.seasonRolled
@@ -263,6 +265,25 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...seasonResult.messages)
 
+  // General Manager Engine — decisões automáticas das franquias
+  const gmResult = processWeeklyGm(
+    {
+      ...state,
+      injury,
+      season: seasonResult.season,
+      currentWeek: calendar.currentWeek,
+      currentSeason: calendar.currentSeason,
+      gm: state.gm,
+    },
+    {
+      week: calendar.currentWeek,
+      phase: seasonResult.phase,
+      seasonRolled: calendar.seasonRolled,
+      rng,
+    },
+  )
+  messages.push(...gmResult.messages)
+
   let nextState = {
     ...state,
     player,
@@ -275,6 +296,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injury,
     progression: progResult.nextProgression,
     season: seasonResult.season,
+    gm: gmResult.gm,
     currentWeek: calendar.currentWeek,
     currentSeason: calendar.currentSeason,
     lastEvent: messages[messages.length - 1] ?? activity.label,
@@ -315,6 +337,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       snapshot: progResult.nextProgression,
     },
     season: seasonResult.summary,
+    gm: gmResult.summary,
     pendingEvent: nextState.pendingEvent,
   }
 

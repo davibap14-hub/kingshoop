@@ -5,18 +5,40 @@ import { chooseBestStyle } from '../ai'
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
 
 /**
- * Monta um quinteto a partir do banco local (melhor OVR por posição).
- * A AI Engine escolhe o estilo automaticamente.
+ * Resolve jogadores de um elenco GM (ids) para objetos.
  */
-export function buildLineupFromDb(teamId, { excludeIds = [], styleId } = {}) {
+function resolveRosterPlayers(rosterIds = [], gm = null) {
+  return rosterIds
+    .map(
+      (id) =>
+        playerDb.getById(id) ??
+        (gm?.extraPlayers ?? []).find((p) => p.id === id) ??
+        null,
+    )
+    .filter(Boolean)
+}
+
+/**
+ * Monta um quinteto.
+ * Se `gm` for passado, usa o elenco da franquia; senão fallback global.
+ */
+export function buildLineupFromDb(
+  teamId,
+  { excludeIds = [], styleId, gm = null } = {},
+) {
   const excluded = new Set(excludeIds)
   const lineup = []
+  const rosterIds = gm?.rosters?.[teamId] ?? null
+  const rosterPool = rosterIds
+    ? resolveRosterPlayers(rosterIds, gm).filter((p) => !excluded.has(p.id))
+    : null
 
   for (const pos of POSITIONS) {
-    const pick = playerDb
-      .getByPosition(pos)
-      .filter((p) => !excluded.has(p.id))
-      .sort((a, b) => b.overall - a.overall)[0]
+    const pool = rosterPool ?? playerDb.getByPosition(pos)
+    const pick = (rosterPool
+      ? pool.filter((p) => p.posicao === pos)
+      : pool.filter((p) => !excluded.has(p.id))
+    ).sort((a, b) => b.overall - a.overall)[0]
 
     if (pick) {
       lineup.push(pick)
@@ -24,6 +46,17 @@ export function buildLineupFromDb(teamId, { excludeIds = [], styleId } = {}) {
     }
   }
 
+  while (lineup.length < 5) {
+    const pool = rosterPool
+      ? rosterPool.filter((p) => !excluded.has(p.id))
+      : playerDb.getAll().filter((p) => !excluded.has(p.id))
+    const next = [...pool].sort((a, b) => b.overall - a.overall)[0]
+    if (!next) break
+    lineup.push(next)
+    excluded.add(next.id)
+  }
+
+  // Fallback global se elenco incompleto
   while (lineup.length < 5) {
     const next = playerDb
       .getAll()
@@ -61,10 +94,11 @@ export function buildLineupFromDb(teamId, { excludeIds = [], styleId } = {}) {
 /**
  * Dois times distintos para uma partida de teste.
  */
-export function buildDefaultMatchup(homeTeamId = 'gsw', awayTeamId = 'bos') {
-  const home = buildLineupFromDb(homeTeamId)
+export function buildDefaultMatchup(homeTeamId = 'gsw', awayTeamId = 'bos', gm = null) {
+  const home = buildLineupFromDb(homeTeamId, { gm })
   const away = buildLineupFromDb(awayTeamId, {
     excludeIds: home.players.map((p) => p.id),
+    gm,
   })
   return { home, away }
 }

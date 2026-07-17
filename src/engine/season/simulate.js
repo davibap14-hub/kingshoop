@@ -10,6 +10,7 @@ export function simulateGames(games, seasonState, opts = {}) {
   const rng = opts.rng ?? Math.random
   const playerTeamId = opts.playerTeamId
   const playerInjured = Boolean(opts.playerInjured)
+  const gm = opts.gm ?? null
 
   let standings = { ...seasonState.standings }
   const results = [...(seasonState.results ?? [])]
@@ -24,9 +25,10 @@ export function simulateGames(games, seasonState, opts = {}) {
       injuryFatigueForTeam(seasonState.injuries, game.awayId) +
       (playerInjured && game.awayId === playerTeamId ? 10 : 0)
 
-    const home = buildLineupFromDb(game.homeId)
+    const home = buildLineupFromDb(game.homeId, { gm })
     const away = buildLineupFromDb(game.awayId, {
       excludeIds: home.players.map((p) => p.id),
+      gm,
     })
     home.fatigue = homeFatigue
     away.fatigue = awayFatigue
