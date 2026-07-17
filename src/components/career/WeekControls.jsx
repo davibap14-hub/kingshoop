@@ -1,6 +1,7 @@
 import { ARCHETYPE_LIST } from '../../data/constants/archetypes'
 import { TEAMS } from '../../data/teams'
 import { useGameStore } from '../../store/useGameStore'
+import { Button, Card } from '../ui'
 
 function formatDelta(key, value) {
   if (!value) return null
@@ -35,7 +36,7 @@ export default function WeekControls() {
   const team = TEAMS.find((t) => t.id === currentTeamId)
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <Card className="flex flex-col gap-4" padding="lg">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -51,21 +52,16 @@ export default function WeekControls() {
         </div>
 
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => resetCareer(archetypeId)}
-            className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50"
-          >
+          <Button variant="secondary" onClick={() => resetCareer(archetypeId)}>
             Reset
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="accent"
             onClick={() => runWeek(selectedActivityId)}
             disabled={Boolean(pendingEvent)}
-            className="rounded-lg bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-navy/20 transition hover:bg-navy-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {pendingEvent ? 'Resolva o evento' : 'Confirmar Semana'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -192,6 +188,6 @@ export default function WeekControls() {
           <p className="mt-1 text-sm text-slate-700">{lastEvent}</p>
         </div>
       )}
-    </div>
+    </Card>
   )
 }

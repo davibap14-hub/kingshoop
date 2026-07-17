@@ -1,36 +1,71 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { Header, Sidebar } from '../components/dashboard'
+import { useCareerSnapshot } from '../hooks/useCareer'
 
+const PAGE_META = {
+  '/': {
+    title: 'Dashboard',
+    subtitle: 'Visão geral da carreira · estilo NBA',
+  },
+  '/match': {
+    title: 'Partida',
+    subtitle: 'Simulação e box score',
+  },
+}
+
+/**
+ * Shell: Sidebar + Header + área principal.
+ */
 export default function AppLayout({ children }) {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+  const { playerName, team, overall, currentWeek, currentSeason } =
+    useCareerSnapshot()
+
+  const meta = PAGE_META[location.pathname] ?? {
+    title: 'The Fenômeno',
+    subtitle: 'NBA Career Mode',
+  }
+
   return (
-    <div className="min-h-screen bg-ice text-slate-800">
-      <header className="border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-3 no-underline">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy font-display text-sm font-black tracking-wide text-white">
-              TF
-            </div>
-            <div>
-              <h1 className="font-display text-xl font-extrabold tracking-[0.08em] text-navy sm:text-2xl">
-                THE FENÔMENO
-              </h1>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-court">
-                NBA Career Mode
-              </p>
-            </div>
-          </Link>
+    <div className="flex min-h-screen bg-ice text-slate-800">
+      {/* Desktop sidebar */}
+      <div className="sticky top-0 hidden h-screen shrink-0 lg:block">
+        <Sidebar />
+      </div>
 
-          <nav className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <Link to="/" className="transition hover:text-navy">
-              Carreira
-            </Link>
-            <Link to="/match" className="transition hover:text-navy">
-              Partida
-            </Link>
-          </nav>
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/40"
+            aria-label="Fechar menu"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="relative z-10 h-full w-60 shadow-xl">
+            <Sidebar onNavigate={() => setMobileOpen(false)} />
+          </div>
         </div>
-      </header>
+      )}
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header
+          title={meta.title}
+          subtitle={meta.subtitle}
+          playerName={playerName}
+          teamShort={team?.short}
+          overall={overall}
+          week={currentWeek}
+          season={currentSeason}
+          onMenuClick={() => setMobileOpen(true)}
+        />
+
+        <main className="dashboard-scroll flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mx-auto max-w-7xl animate-fade-up">{children}</div>
+        </main>
+      </div>
     </div>
   )
 }

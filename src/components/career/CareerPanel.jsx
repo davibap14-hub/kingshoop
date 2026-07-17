@@ -1,21 +1,12 @@
 import { CAREER_STATUS } from '../../data/constants/career'
 import { useGameStore } from '../../store/useGameStore'
+import { Card, ProgressBar } from '../ui'
 
 function formatValue(key, value) {
   if (key === 'dinheiro') {
     return `$${Number(value).toLocaleString('en-US')}`
   }
   return `${value}`
-}
-
-const TONE = {
-  energia: 'from-emerald-500 to-teal-500',
-  motivacao: 'from-sky-500 to-blue-600',
-  popularidade: 'from-amber-500 to-orange-400',
-  felicidade: 'from-lime-500 to-green-500',
-  relTreinador: 'from-slate-500 to-slate-700',
-  relCompanheiros: 'from-rose-500 to-red-500',
-  dinheiro: 'from-amber-400 to-yellow-500',
 }
 
 const DISPLAY_KEYS = [
@@ -41,34 +32,30 @@ export default function CareerPanel() {
           const meta = CAREER_STATUS[key]
           const value = status?.[key] ?? 0
           const hasBar = meta.max != null
-          const pct = hasBar ? Math.min(100, (value / meta.max) * 100) : null
 
           return (
-            <div
-              key={key}
-              className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm"
-            >
+            <Card key={key} padding="sm" className="animate-fade-up">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 {meta.label}
               </p>
-              <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-navy">
+              <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-ink">
                 {formatValue(key, value)}
               </p>
-              {pct != null && (
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${TONE[key]} transition-all`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
+              {hasBar && (
+                <ProgressBar
+                  value={value}
+                  max={meta.max}
+                  className="mt-3"
+                  barClassName={key === 'dinheiro' ? 'bg-accent' : 'bg-navy'}
+                />
               )}
-            </div>
+            </Card>
           )
         })}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        <Card padding="md">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
             Contrato
           </p>
@@ -79,9 +66,9 @@ export default function CareerPanel() {
             {contract?.yearsRemaining ?? 0} ano(s) · $
             {Number(contract?.weeklySalary ?? 0).toLocaleString('en-US')}/sem
           </p>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        <Card padding="md">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
             Patrocínios
           </p>
@@ -97,14 +84,11 @@ export default function CareerPanel() {
                   .toLocaleString('en-US')}/sem`
               : 'Faça eventos de marca para assinar'}
           </p>
-        </div>
+        </Card>
 
-        <div
-          className={`rounded-xl border p-4 shadow-sm ${
-            injury
-              ? 'border-court/30 bg-court/5'
-              : 'border-slate-200/80 bg-white'
-          }`}
+        <Card
+          padding="md"
+          className={injury ? 'border-slate-300 bg-slate-50' : ''}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
             Lesão
@@ -117,7 +101,7 @@ export default function CareerPanel() {
               ? `${injury.weeksRemaining} semana(s) restante(s)`
               : 'Sem restrições de treino'}
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   )

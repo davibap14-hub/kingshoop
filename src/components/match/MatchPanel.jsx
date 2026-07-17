@@ -1,5 +1,6 @@
 import { TEAMS } from '../../data/teams'
 import { useMatchStore } from '../../store/useMatchStore'
+import { Button, Card, SectionHeader } from '../ui'
 import MatchResult from './MatchResult'
 
 /**
@@ -16,32 +17,23 @@ export default function MatchPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Match Engine
-            </p>
-            <h2 className="font-display text-3xl font-extrabold text-navy">
-              Simulação por Posses
-            </h2>
-            <p className="mt-1 max-w-xl text-sm text-slate-500">
-              A AI Engine escolhe o estilo do elenco (Fast Pace, Defensivo, 3PT,
-              Garrafão, Transição) e altera as decisões da Match Engine.
-            </p>
-          </div>
-
-          <button
-            type="button"
+      <SectionHeader
+        eyebrow="Match Engine"
+        title="Simulação por Posses"
+        description="A AI Engine escolhe o estilo do elenco e altera as decisões da partida."
+        action={
+          <Button
+            variant="accent"
             onClick={simulate}
             disabled={isSimulating || homeTeamId === awayTeamId}
-            className="rounded-lg bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-navy/20 transition hover:bg-navy-hover disabled:opacity-50"
           >
             {isSimulating ? 'Simulando…' : 'Simular Partida'}
-          </button>
-        </div>
+          </Button>
+        }
+      />
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <Card padding="lg">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               Casa
@@ -49,7 +41,7 @@ export default function MatchPanel() {
             <select
               value={homeTeamId}
               onChange={(e) => setHomeTeam(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-navy outline-none focus:border-court focus:ring-2 focus:ring-court/20"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-navy outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             >
               {TEAMS.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -65,7 +57,7 @@ export default function MatchPanel() {
             <select
               value={awayTeamId}
               onChange={(e) => setAwayTeam(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-navy outline-none focus:border-court focus:ring-2 focus:ring-court/20"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-navy outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             >
               {TEAMS.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -75,7 +67,7 @@ export default function MatchPanel() {
             </select>
           </label>
         </div>
-      </div>
+      </Card>
 
       <MatchResult result={lastMatch} />
     </div>

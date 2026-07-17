@@ -1,6 +1,7 @@
 import { LUXURY_LEVELS } from '../../data/finance/constants'
 import { gameService } from '../../services/gameService'
 import { useGameStore } from '../../store/useGameStore'
+import { Card, CardHeader } from '../ui'
 
 function money(value) {
   return `$${Number(value ?? 0).toLocaleString('en-US')}`
@@ -22,49 +23,39 @@ export default function FinancePanel() {
   const luxuryLevels = gameService.listLuxuryLevels()
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-            Finance Engine
-          </p>
-          <h3 className="font-display text-2xl font-extrabold text-navy">
-            Patrimônio {money(finance.patrimonio)}
-          </h3>
-          <p className="text-sm text-slate-500">
-            Caixa {money(status?.dinheiro)} · Investimentos{' '}
-            {money(
-              (finance.investments ?? []).reduce(
-                (sum, inv) => sum + (inv.principal ?? 0),
-                0,
-              ),
-            )}
-          </p>
-        </div>
-        {summary && (
-          <div className="text-right text-xs text-slate-500">
-            <p className="font-semibold text-navy">
-              Fluxo semanal:{' '}
-              <span
-                className={
-                  summary.fluxoLiquido >= 0
-                    ? 'text-emerald-700'
-                    : 'text-rose-600'
-                }
-              >
-                {summary.fluxoLiquido >= 0 ? '+' : ''}
-                {money(summary.fluxoLiquido)}
-              </span>
-            </p>
-            <p>
-              Felicidade {summary.efeitos?.felicidade >= 0 ? '+' : ''}
-              {summary.efeitos?.felicidade ?? 0} · Popularidade{' '}
-              {summary.efeitos?.popularidade >= 0 ? '+' : ''}
-              {summary.efeitos?.popularidade ?? 0}
-            </p>
-          </div>
+    <Card padding="lg">
+      <CardHeader
+        subtitle="Finance Engine"
+        title={`Patrimônio ${money(finance.patrimonio)}`}
+        action={
+          summary ? (
+            <div className="text-right text-xs text-slate-500">
+              <p className="font-semibold text-navy">
+                Fluxo:{' '}
+                <span
+                  className={
+                    summary.fluxoLiquido >= 0
+                      ? 'text-slate-800'
+                      : 'text-slate-500'
+                  }
+                >
+                  {summary.fluxoLiquido >= 0 ? '+' : ''}
+                  {money(summary.fluxoLiquido)}
+                </span>
+              </p>
+            </div>
+          ) : null
+        }
+      />
+      <p className="-mt-2 mb-4 text-sm text-slate-500">
+        Caixa {money(status?.dinheiro)} · Investimentos{' '}
+        {money(
+          (finance.investments ?? []).reduce(
+            (sum, inv) => sum + (inv.principal ?? 0),
+            0,
+          ),
         )}
-      </div>
+      </p>
 
       {summary?.lines?.length > 0 && (
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -78,7 +69,7 @@ export default function FinancePanel() {
               </p>
               <p
                 className={`font-display text-lg font-bold tabular-nums ${
-                  line.amount >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                  line.amount >= 0 ? 'text-navy' : 'text-slate-500'
                 }`}
               >
                 {line.amount >= 0 ? '+' : ''}
@@ -142,6 +133,6 @@ export default function FinancePanel() {
             : ''}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

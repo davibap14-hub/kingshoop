@@ -16,6 +16,8 @@ export function useCareerSnapshot() {
   const injury = useGameStore((s) => s.injury)
   const contract = useGameStore((s) => s.contract)
   const sponsorships = useGameStore((s) => s.sponsorships)
+  const finance = useGameStore((s) => s.finance)
+  const progression = useGameStore((s) => s.progression)
   const weekEffects = useGameStore((s) => s.weekEffects)
   const availableActivities = useGameStore((s) => s.availableActivities)
   const getOverall = useGameStore((s) => s.getOverall)
@@ -35,6 +37,8 @@ export function useCareerSnapshot() {
     injury,
     contract,
     sponsorships,
+    finance,
+    progression,
     weekEffects,
     availableActivities,
     overall: getOverall(),

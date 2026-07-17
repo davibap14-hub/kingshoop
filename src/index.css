@@ -7,9 +7,10 @@
   --font-body: 'DM Sans', 'Segoe UI', sans-serif;
   --navy: #0c2340;
   --navy-hover: #163556;
-  --court: #c8102e;
-  --ice: #f4f7fb;
+  --accent: #2563eb;
+  --ice: #f8fafc;
   --line: #e2e8f0;
+  --ink: #0a0a0a;
 }
 
 html {
@@ -27,14 +28,19 @@ body {
   margin: 0;
   font-family: var(--font-body);
   background:
-    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(12, 35, 64, 0.06), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 100% 0%, rgba(200, 16, 46, 0.04), transparent 50%),
-    var(--ice);
+    linear-gradient(180deg, #f1f5f9 0%, var(--ice) 40%, #ffffff 100%);
   color: #1e293b;
 }
 
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .dashboard-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
   }
 }

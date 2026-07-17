@@ -45,6 +45,18 @@ src/
  └── assets/
 ```
 
+## Interface (Dashboard NBA)
+
+Layout Tailwind: **Sidebar · Header · Área principal**.
+
+Componentes reutilizáveis em `src/components/ui`, `charts` e `dashboard`:
+
+- Cards, métricas, badges, botões, barras de progresso
+- Gráficos (barras, linha, radar)
+- Status do jogador, próxima partida, calendário da temporada
+
+Paleta: branco, cinza, preto e detalhes em azul (`navy` / `accent`).
+
 ## Finance Engine
 
 `src/engine/finance/` — salário, patrocínios, investimentos, gastos, luxo, impostos e patrimônio.
