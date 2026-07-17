@@ -1,11 +1,8 @@
 /**
  * Services — fachada Interface → Engine.
- * A UI / store chama services; services chamam a Engine e devolvem resultados.
- * Não contém JSX.
  */
 
 import {
-  advanceWeek as engineAdvanceWeek,
   applyArchetypeChange,
   applyCareerDeltas,
   applyStatDelta,
@@ -13,21 +10,27 @@ import {
   buildInitialStats,
   calcOverall,
   createInitialCareerState,
+  listAvailableActivities,
   rollWeeklyEvent,
+  runCareerWeek,
   simulateMatch,
+  startCareer,
 } from '../engine'
-import { getTeamById } from '../data/teams'
-import { TEAMS } from '../data/teams'
+import { getTeamById, TEAMS } from '../data/teams'
 import { ARCHETYPES } from '../data/constants/archetypes'
+import { WEEKLY_ACTIVITIES } from '../data/career/activities'
 
 export const gameService = {
   createInitialState: createInitialCareerState,
+  startCareer,
   buildInitialStats,
   calcOverall,
 
   getTeam: getTeamById,
   listTeams: () => TEAMS,
   getArchetype: (id) => ARCHETYPES[id],
+  listActivities: () => WEEKLY_ACTIVITIES,
+  listAvailableActivities,
 
   updateStat(playerStats, statKey, delta) {
     return applyStatDelta(playerStats, statKey, delta)
@@ -37,8 +40,16 @@ export const gameService = {
     return applyCareerDeltas(careerVariables, { [key]: delta })
   },
 
+  /**
+   * Executa a semana com UMA atividade. Retorna efeitos para a Interface.
+   */
+  runWeek(state, activityId) {
+    return runCareerWeek(state, activityId)
+  },
+
+  /** @deprecated use runWeek */
   advanceWeek(state) {
-    return engineAdvanceWeek(state)
+    return runCareerWeek(state, 'rest')
   },
 
   changeArchetype(archetypeId) {

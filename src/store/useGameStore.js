@@ -1,76 +1,130 @@
 import { create } from 'zustand'
 import { DEFAULT_ARCHETYPE_ID } from '../data/constants/archetypes'
-import { DEFAULT_CAREER } from '../data/constants/career'
 import { DEFAULT_TEAM_ID, getTeamById } from '../data/teams'
 import { gameService } from '../services/gameService'
 
 /**
  * Store Zustand — estado da Interface.
- * Regras: lógica de jogo vive na Engine; aqui só guarda estado e aplica patches.
+ * Lógica de carreira vive na Engine; aqui só aplica `nextState` / `effects`.
  */
-export const useGameStore = create((set, get) => ({
-  ...gameService.createInitialState(),
+export const useGameStore = create((set, get) => {
+  const boot = gameService.startCareer()
 
-  getCurrentTeam: () => getTeamById(get().currentTeamId),
+  return {
+    ...boot.state,
+    availableActivities: boot.availableActivities,
+    selectedActivityId: boot.availableActivities[0]?.id ?? 'rest',
+    weekEffects: null,
 
-  getOverall: () => gameService.calcOverall(get().playerStats),
+    getCurrentTeam: () => getTeamById(get().currentTeamId),
 
-  setPlayerName: (name) => set({ playerName: name.trim() || 'Rookie' }),
+    getOverall: () => {
+      const { player, playerStats } = get()
+      if (player?.overall) return player.overall
+      return gameService.calcOverall(playerStats)
+    },
 
-  setArchetype: (archetypeId) => {
-    const patch = gameService.changeArchetype(archetypeId)
-    set(patch)
-  },
+    setPlayerName: (name) =>
+      set({
+        playerName: name.trim() || 'Rookie',
+        player: { ...get().player, nome: name.trim() || 'Rookie' },
+      }),
 
-  setTeam: (teamId) => {
-    if (!gameService.listTeams().some((t) => t.id === teamId)) return
-    const patch = gameService.transferTeam(teamId)
-    set((state) => ({
-      currentTeamId: patch.currentTeamId,
-      lastEvent: patch.lastEvent,
-      careerVariables: {
-        ...state.careerVariables,
-        ...patch.careerVariablesPatch,
-      },
-    }))
-  },
+    setSelectedActivity: (activityId) => set({ selectedActivityId: activityId }),
 
-  updateStat: (statKey, delta) => {
-    const result = gameService.updateStat(get().playerStats, statKey, delta)
-    if (!result.changed) return
+    setArchetype: (archetypeId) => {
+      const patch = gameService.changeArchetype(archetypeId)
+      const availableActivities = gameService.listAvailableActivities({
+        ...get(),
+        ...patch,
+      })
+      set({
+        ...patch,
+        availableActivities,
+        selectedActivityId: availableActivities[0]?.id ?? 'rest',
+      })
+    },
 
-    set({
-      playerStats: result.playerStats,
-      lastEvent: `${statKey}: ${result.previous} → ${result.next} (${delta > 0 ? '+' : ''}${delta})`,
-    })
-  },
+    setTeam: (teamId) => {
+      if (!gameService.listTeams().some((t) => t.id === teamId)) return
+      const patch = gameService.transferTeam(teamId)
+      set((state) => ({
+        currentTeamId: patch.currentTeamId,
+        lastEvent: patch.lastEvent,
+        status: {
+          ...state.status,
+          ...(patch.statusPatch ?? {}),
+        },
+        careerVariables: {
+          ...state.careerVariables,
+          ...(patch.careerVariablesPatch ?? {}),
+        },
+        contract: {
+          ...state.contract,
+          teamId,
+        },
+      }))
+    },
 
-  updateCareer: (key, delta) => {
-    const next = gameService.updateCareer(get().careerVariables, key, delta)
-    set({ careerVariables: next })
-  },
+    updateStat: (statKey, delta) => {
+      const result = gameService.updateStat(get().playerStats, statKey, delta)
+      if (!result.changed) return
+      set({
+        playerStats: result.playerStats,
+        lastEvent: `${statKey}: ${result.previous} → ${result.next} (${delta > 0 ? '+' : ''}${delta})`,
+      })
+    },
 
-  advanceWeek: () => {
-    const patch = gameService.advanceWeek(get())
-    set({
-      currentWeek: patch.currentWeek,
-      currentSeason: patch.currentSeason,
-      careerVariables: patch.careerVariables,
-      lastEvent: patch.lastEvent,
-    })
-  },
+    updateCareer: (key, delta) => {
+      const next = gameService.updateCareer(get().careerVariables, key, delta)
+      set({ careerVariables: next })
+    },
 
-  resetCareer: (archetypeId = DEFAULT_ARCHETYPE_ID) => {
-    set(
-      gameService.createInitialState({
+    /**
+     * Uma atividade por semana → Career Engine → efeitos na UI.
+     */
+    runWeek: (activityId) => {
+      const id = activityId ?? get().selectedActivityId
+      const result = gameService.runWeek(get(), id)
+
+      if (!result.ok) {
+        set({
+          lastEvent: result.error,
+          weekEffects: null,
+          availableActivities: result.availableActivities,
+        })
+        return result
+      }
+
+      set({
+        ...result.nextState,
+        weekEffects: result.effects,
+        availableActivities: result.availableActivities,
+        selectedActivityId:
+          result.availableActivities.find((a) => a.id === id)?.id ??
+          result.availableActivities[0]?.id ??
+          'rest',
+        lastEvent: result.effects.messages[result.effects.messages.length - 1],
+      })
+
+      return result
+    },
+
+    /** Compat: avança com a atividade selecionada */
+    advanceWeek: () => get().runWeek(get().selectedActivityId),
+
+    resetCareer: (archetypeId = DEFAULT_ARCHETYPE_ID) => {
+      const bootNext = gameService.startCareer({
         archetypeId,
-        playerStats: gameService.buildInitialStats(archetypeId),
-        careerVariables: { ...DEFAULT_CAREER },
-        currentWeek: 1,
-        currentSeason: 1,
         currentTeamId: DEFAULT_TEAM_ID,
         lastEvent: 'Nova carreira iniciada.',
-      }),
-    )
-  },
-}))
+      })
+      set({
+        ...bootNext.state,
+        availableActivities: bootNext.availableActivities,
+        selectedActivityId: bootNext.availableActivities[0]?.id ?? 'rest',
+        weekEffects: null,
+      })
+    },
+  }
+})

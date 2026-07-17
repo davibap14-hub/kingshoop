@@ -45,7 +45,22 @@ src/
  └── assets/
 ```
 
-## Banco local de jogadores
+## Career Engine
+
+`src/engine/career/` — uma atividade por semana; retorna efeitos para a Interface.
+
+```js
+import { runCareerWeek, startCareer } from './engine'
+
+const { state, availableActivities } = startCareer()
+const result = runCareerWeek(state, 'train_arremesso')
+// result.effects → deltas, messages, injury, finance…
+// result.nextState → aplicar no store
+```
+
+Controla: treinos, descanso, lesões, contratos, salário, patrocínios,
+popularidade, relação com treinador/companheiros, energia e motivação.
+
 
 `src/data/players/` — 40 jogadores fictícios com atributos detalhados.
 

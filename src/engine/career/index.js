@@ -1,16 +1,38 @@
-import {
-  ARCHETYPES,
-  DEFAULT_ARCHETYPE_ID,
-} from '../../data/constants/archetypes'
-import {
-  CAREER_KEYS,
-  CAREER_VARIABLES,
-  DEFAULT_CAREER,
-  WEEKS_PER_SEASON,
-} from '../../data/constants/career'
+/**
+ * Career Engine — API pública.
+ *
+ * Controla: treinos, descanso, lesões, contratos, salário,
+ * patrocínios, popularidade, relações, energia e motivação.
+ *
+ * Contrato com a Interface:
+ *   runCareerWeek(state, activityId) → { ok, effects, nextState, availableActivities }
+ *
+ * A Interface escolhe UMA atividade por semana e apenas consome `effects`.
+ */
+
+export {
+  createCareerState,
+  buildStatsFromArchetype,
+  createDefaultContract,
+  applyStatusDeltas,
+  syncLegacyCareerVariables,
+  syncPlayerStatsFromDetailed,
+} from './state'
+
+export { runCareerWeek, listAvailableActivities, startCareer } from './week'
+export { applyTraining } from './activities'
+export { rollInjury, tickInjury } from './injuries'
+export { resolveWeeklyFinance, trySignSponsorship } from './finance'
+
+// ——— Compat com API anterior ———
+import { ARCHETYPES, DEFAULT_ARCHETYPE_ID } from '../../data/constants/archetypes'
+import { DEFAULT_CAREER } from '../../data/constants/career'
 import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { calcOverall } from '../progression/stats'
 import { clamp } from '../utils/math'
+import { CAREER_KEYS, CAREER_VARIABLES, WEEKS_PER_SEASON } from '../../data/constants/career'
+import { createCareerState, syncLegacyCareerVariables } from './state'
+import { runCareerWeek } from './week'
 
 export function getArchetype(archetypeId) {
   return ARCHETYPES[archetypeId] ?? ARCHETYPES[DEFAULT_ARCHETYPE_ID]
@@ -22,99 +44,75 @@ export function buildInitialStats(archetypeId = DEFAULT_ARCHETYPE_ID) {
 }
 
 export function createInitialCareerState(overrides = {}) {
+  const state = createCareerState(overrides)
   return {
-    playerName: 'Rookie',
-    archetypeId: DEFAULT_ARCHETYPE_ID,
-    playerStats: buildInitialStats(DEFAULT_ARCHETYPE_ID),
-    careerVariables: { ...DEFAULT_CAREER },
-    currentWeek: 1,
-    currentSeason: 1,
-    currentTeamId: DEFAULT_TEAM_ID,
-    lastEvent: 'Bem-vindo à carreira. Prepare-se para a Semana 1.',
-    ...overrides,
+    ...state,
+    careerVariables: syncLegacyCareerVariables(state.status),
   }
 }
 
-/**
- * Aplica deltas em variáveis de carreira (imutável).
- */
 export function applyCareerDeltas(careerVariables, deltas = {}) {
   const next = { ...careerVariables }
-
   for (const key of CAREER_KEYS) {
     if (deltas[key] == null) continue
     const meta = CAREER_VARIABLES[key]
+    if (!meta) continue
     const current = next[key] ?? 0
     next[key] = clamp(Math.round(current + deltas[key]), meta.min, meta.max)
   }
-
   return next
 }
 
 /**
- * Avança uma semana de carreira.
- * Entrada: snapshot de estado. Saída: patch imutável (sem side-effects).
- *
- * @param {object} state
- * @param {{ rng?: () => number }} [opts]
+ * @deprecated Prefira runCareerWeek(state, activityId).
+ * Mantido para compat: avança com descanso automático.
  */
 export function advanceWeek(state, opts = {}) {
-  const rng = opts.rng ?? Math.random
-  const overall = calcOverall(state.playerStats)
-
-  const energyCost = 8 + Math.floor(rng() * 7)
-  const paycheck = 2500 + Math.round(overall * 40)
-  const fameGain = rng() < 0.35 ? 1 : 0
-  const chemDelta = rng() < 0.5 ? 1 : -1
-
-  let nextWeek = state.currentWeek + 1
-  let nextSeason = state.currentSeason
-  if (nextWeek > WEEKS_PER_SEASON) {
-    nextWeek = 1
-    nextSeason += 1
+  const result = runCareerWeek(state, 'rest', opts)
+  if (!result.ok) {
+    return {
+      currentWeek: state.currentWeek,
+      currentSeason: state.currentSeason,
+      careerVariables: state.careerVariables ?? syncLegacyCareerVariables(state.status),
+      lastEvent: result.error,
+      meta: { error: result.error },
+    }
   }
 
-  const careerVariables = applyCareerDeltas(state.careerVariables, {
-    energia: -energyCost + 12,
-    dinheiro: paycheck,
-    fama: fameGain,
-    quimica: chemDelta,
-  })
-
   return {
-    currentWeek: nextWeek,
-    currentSeason: nextSeason,
-    careerVariables,
-    lastEvent: `Semana ${state.currentWeek} concluída. Salário +$${paycheck.toLocaleString('en-US')}. Energia −${energyCost}.`,
-    meta: {
-      energyCost,
-      paycheck,
-      fameGain,
-      chemDelta,
-      overall,
-    },
+    currentWeek: result.nextState.currentWeek,
+    currentSeason: result.nextState.currentSeason,
+    careerVariables: result.nextState.careerVariables,
+    status: result.nextState.status,
+    player: result.nextState.player,
+    playerStats: result.nextState.playerStats,
+    injury: result.nextState.injury,
+    sponsorships: result.nextState.sponsorships,
+    contract: result.nextState.contract,
+    lastEvent: result.effects.messages.join(' '),
+    lastWeekResult: result.effects,
+    meta: result.effects,
   }
 }
 
-/**
- * Monta estado após troca de arquétipo (reseta stats base).
- */
 export function applyArchetypeChange(archetypeId) {
+  const state = createCareerState({ archetypeId })
   const archetype = getArchetype(archetypeId)
   return {
     archetypeId: archetype.id,
-    playerStats: buildInitialStats(archetype.id),
+    player: state.player,
+    playerStats: state.playerStats,
     lastEvent: `Arquétipo definido: ${archetype.label}.`,
   }
 }
 
-/**
- * Monta patch após transferência de time.
- */
 export function applyTeamTransfer(teamId, teamName) {
   return {
     currentTeamId: teamId,
-    careerVariablesPatch: { quimica: 50 },
+    careerVariablesPatch: { quimica: 50, relCompanheiros: 50 },
+    statusPatch: { relCompanheiros: 50, relTreinador: 50 },
     lastEvent: `Transferido para ${teamName}.`,
   }
 }
+
+export { DEFAULT_CAREER, DEFAULT_TEAM_ID, WEEKS_PER_SEASON, calcOverall }
