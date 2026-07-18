@@ -1,4 +1,3 @@
-import { analyzeTrueProfile } from './profile.js'
 import { getScoutedView } from './report.js'
 import {
   createScoutingState,
@@ -84,8 +83,6 @@ export function getProspectScoutDetail(state, playerId) {
 
   const report = getReport(scouting, teamId, playerId)
   const view = getScoutedView(player, report)
-  // true profile só para debug interno — não incluir na view pública
-  void analyzeTrueProfile
 
   return {
     ...view,
