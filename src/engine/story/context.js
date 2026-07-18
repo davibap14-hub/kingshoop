@@ -76,6 +76,8 @@ export function gatherStoryContext(state = {}, activityContext = {}) {
         : 'sob pressão'
 
   const story = createStoryState(state.story)
+  const legacyEntry =
+    state.legacy?.scores?.[player.id ?? 'career_player'] ?? null
 
   return {
     week: state.currentWeek ?? 1,
@@ -85,6 +87,10 @@ export function gatherStoryContext(state = {}, activityContext = {}) {
     playerName: state.playerName ?? player.nome ?? 'Você',
     overall: player.overall ?? 70,
     popularidade: status.popularidade ?? player.popularidade ?? 50,
+    // Legacy Engine
+    legacyScore: legacyEntry?.score ?? null,
+    legacyTier: legacyEntry?.tier ?? null,
+    historicalValue: legacyEntry?.historicalValue ?? null,
     energia: status.energia ?? 50,
     motivacao: status.motivacao ?? 50,
     felicidade: status.felicidade ?? 50,

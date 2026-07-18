@@ -22,6 +22,7 @@ export const NEWS_CATEGORIES = {
   franchise: { id: 'franchise', label: 'Franquia', tone: 'neutral' },
   expansion: { id: 'expansion', label: 'Expansão', tone: 'positive' },
   dynasty: { id: 'dynasty', label: 'Dinastia', tone: 'positive' },
+  legacy: { id: 'legacy', label: 'Legado', tone: 'positive' },
 }
 
 export const NEWS_CATEGORY_IDS = Object.keys(NEWS_CATEGORIES)

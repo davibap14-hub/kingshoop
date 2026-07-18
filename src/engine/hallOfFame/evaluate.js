@@ -58,6 +58,7 @@ export function evaluateRetiredPlayer({
       gameMvps: credentials.gameMvps,
       age: credentials.age,
       games: credentials.games,
+      legacyScore: credentials.legacyScore,
     },
     breakdown,
     factors,

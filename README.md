@@ -562,6 +562,23 @@ applyDynastyToWeights(weights, dynastyState, teamId)
 
 Estado em `state.dynasty` (**Save v22**). Sem painel de UI.
 
+## Legacy Engine
+
+`src/engine/legacy/` + `src/data/legacy/` — legado de carreira e **Legacy Score** automático.
+
+Critérios: **títulos · MVP · Finals MVP · All-Star · All-NBA · defesa · recordes · longevidade · popularidade · personalidade · momentos históricos · rivalidades**.
+
+O score influencia Hall da Fama (blend), popularidade, valor histórico, narrativas (Story) e ranking histórico interno (`state.legacy.ranking` / `leagueHistory.legacyRanking`).
+
+```js
+processWeeklyLegacy({ legacy, leagueHistory, gm, analytics, dynasty, player })
+calculateLegacyScore(inputs)
+gatherLegacyInputs({ playerId, history, gm, … })
+getLegacyView(state)
+```
+
+Estado em `state.legacy` (**Save v23**). Sem painel obrigatório.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.
@@ -648,7 +665,7 @@ A **Simulation Engine** consome a Decision Engine em toda posse (`possession.js`
 
 ## Achievement Engine
 
-`src/engine/achievements/` + `src/data/achievements/` — **287 conquistas** com progresso.
+`src/engine/achievements/` + `src/data/achievements/` — **291 conquistas** com progresso.
 
 Categorias: Carreira · Temporada · Partida · Financeiro · Relacionamentos · Títulos · Estatísticas · Colecionáveis.
 

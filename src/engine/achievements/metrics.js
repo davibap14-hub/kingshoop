@@ -129,6 +129,28 @@ export function buildAchievementMetrics(state = {}, effects = null) {
       0,
       ...(history.dynasties ?? []).map((d) => d.criteria?.titles ?? 0),
     ),
+    // Legacy Engine
+    legacyScore: Math.round(
+      state.legacy?.scores?.[pid]?.score ??
+        history.legacyScores?.[pid]?.score ??
+        0,
+    ),
+    legacyTierRank: (() => {
+      const t =
+        state.legacy?.scores?.[pid]?.tier ?? history.legacyScores?.[pid]?.tier
+      if (t === 'immortal') return 5
+      if (t === 'legend') return 4
+      if (t === 'great') return 3
+      if (t === 'notable') return 2
+      if (t === 'developing') return 1
+      return 0
+    })(),
+    legacyTop10: (() => {
+      const rank =
+        state.legacy?.ranking?.find((r) => r.playerId === pid)?.rank ??
+        history.legacyRanking?.find((r) => r.playerId === pid)?.rank
+      return rank != null && rank <= 10 ? 1 : 0
+    })(),
     seasonMvps: history.mvps?.length ?? 0,
     awardsCount: awards.length,
     hofBallots: history.hofBallots?.length ?? 0,

@@ -125,6 +125,12 @@ export function gatherCredentials({
     100,
   )
 
+  // Legacy Engine — score pré-computado (se disponível no history/state)
+  const legacyScore =
+    history?.legacyScores?.[playerId]?.score ??
+    history?.legacyScores?.[name]?.score ??
+    null
+
   return {
     playerId,
     name,
@@ -144,5 +150,6 @@ export function gatherCredentials({
     longevity: seasons,
     popularity,
     seasons,
+    legacyScore,
   }
 }

@@ -41,6 +41,7 @@ export * from './momentum'
 export * from './trade'
 export * from './expansion'
 export * from './dynasty'
+export * from './legacy'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

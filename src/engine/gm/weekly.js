@@ -201,6 +201,10 @@ function formatDecision(d) {
       return `Dinastia: ${d.teamShort ?? d.teamId} — ${d.tierLabel ?? d.tier}`
     case 'dynasty_upgrade':
       return `Dinastia: ${d.teamShort ?? d.teamId} sobe para ${d.tierLabel ?? d.tier}`
+    case 'legacy_tier_up':
+      return `Legado: ${d.playerName} → ${d.tierLabel} (${d.score})`
+    case 'legacy_recognized':
+      return `Legado: ${d.playerName} no radar histórico (${d.tierLabel})`
     default:
       return `${d.teamId ?? 'liga'}: ${d.type}`
   }

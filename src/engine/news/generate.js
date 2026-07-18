@@ -197,6 +197,31 @@ export function generateWeekNews(factsInput, opts = {}) {
 
   // —— Decisões GM ——
   for (const d of facts.decisions ?? []) {
+    if (d.type === 'legacy_tier_up' || d.type === 'legacy_recognized') {
+      push({
+        category: 'legacy',
+        title:
+          d.type === 'legacy_tier_up'
+            ? `Legado: ${d.playerName} alcança ${d.tierLabel}`
+            : `Legado em ascensão: ${d.playerName}`,
+        summary: `Legacy Score ${d.score} (${d.tierLabel}). O ranking histórico interno e o Hall da Fama já sentem o peso da carreira. ${d.reason ?? ''}`,
+        impact: impact('legacy', {
+          magnitude: d.tier === 'immortal' || d.tier === 'legend' ? 5 : 3,
+          description: 'Valor histórico e narrativas de carreira ganham tração.',
+          deltas:
+            d.playerId === 'career_player' || d.aboutPlayerTeam
+              ? { popularidade: 2, motivacao: 1 }
+              : { popularidade: 1 },
+        }),
+        refs: {
+          playerId: d.playerId,
+          teamId: d.teamId,
+          tier: d.tier,
+        },
+        aboutPlayerTeam: d.playerId === 'career_player',
+      })
+    }
+
     if (d.type === 'dynasty_recognized' || d.type === 'dynasty_upgrade') {
       const c = d.criteria ?? {}
       push({

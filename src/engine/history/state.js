@@ -33,6 +33,9 @@ export function createLeagueHistory(overrides = {}) {
     expansions: overrides.expansions ?? [],
     /** Dynasty Engine — dinastias históricas reconhecidas */
     dynasties: overrides.dynasties ?? [],
+    /** Legacy Engine — scores / ranking histórico */
+    legacyScores: overrides.legacyScores ?? {},
+    legacyRanking: overrides.legacyRanking ?? [],
   }
 }
 

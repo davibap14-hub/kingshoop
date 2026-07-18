@@ -2,6 +2,8 @@ import {
   HOF_SCORE_WEIGHTS,
   HOF_STAT_SCALES,
 } from '../../data/hallOfFame'
+import { LEGACY_HOF_BLEND } from '../../data/legacy/constants.js'
+import { blendLegacyIntoHofScore } from '../legacy/score.js'
 import { clamp } from '../utils/math'
 
 /**
@@ -62,13 +64,29 @@ export function calculateHofScore(credentials = {}) {
     }
   }
 
-  const score =
+  const baseScore =
     weightSum > 0
       ? Math.round((weighted / weightSum) * 10) / 10
       : 0
 
+  // Legacy Engine — influencia a votação do Hall da Fama
+  const score =
+    c.legacyScore != null
+      ? blendLegacyIntoHofScore(baseScore, c.legacyScore, LEGACY_HOF_BLEND)
+      : clamp(baseScore, 0, 100)
+
+  if (c.legacyScore != null) {
+    breakdown.legacy = {
+      raw: c.legacyScore,
+      normalized: c.legacyScore,
+      weight: LEGACY_HOF_BLEND,
+      contribution: Math.round(c.legacyScore * LEGACY_HOF_BLEND * 10) / 10,
+    }
+  }
+
   return {
     score: clamp(score, 0, 100),
+    baseScore: clamp(baseScore, 0, 100),
     factors,
     breakdown,
   }

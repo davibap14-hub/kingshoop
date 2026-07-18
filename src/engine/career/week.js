@@ -50,6 +50,7 @@ import {
   hydrateExpansionState,
 } from '../expansion'
 import { processWeeklyDynasty } from '../dynasty'
+import { processWeeklyLegacy } from '../legacy'
 import {
   applyStatusDeltas,
   createCareerState,
@@ -663,6 +664,38 @@ export function runCareerWeek(state, activityId, opts = {}) {
   const leagueHistoryAfterDynasty = dynastyResult.leagueHistory
   const dynastyState = dynastyResult.dynasty
 
+  // Legacy Engine — Legacy Score (após History/Dynasty, antes de News/Story)
+  const legacyResult = processWeeklyLegacy({
+    legacy: state.legacy,
+    leagueHistory: leagueHistoryAfterDynasty,
+    gm: gmAfterDynasty,
+    analytics: analyticsResult.analytics,
+    dynasty: dynastyState,
+    player,
+    status,
+    seasonNumber: calendar.currentSeason,
+    seasonRolled: calendar.seasonRolled,
+  })
+  messages.push(...legacyResult.messages)
+  if (legacyResult.decisions?.length) {
+    gmResult.decisions = [
+      ...(gmResult.decisions ?? []),
+      ...legacyResult.decisions,
+    ]
+    gmResult.summary = {
+      ...gmResult.summary,
+      decisions: gmResult.decisions,
+      decisionsCount: gmResult.decisions.length,
+      legacy: legacyResult.summary,
+    }
+  }
+  const leagueHistoryAfterLegacy = legacyResult.leagueHistory
+  const legacyState = legacyResult.legacy
+  if (legacyResult.popularityDelta) {
+    deltas.popularidade =
+      (deltas.popularidade ?? 0) + legacyResult.popularityDelta
+  }
+
   // News Engine — manchetes da liga com base nos fatos da semana
   const newsResult = processWeeklyNews({
     week: calendar.currentWeek,
@@ -738,10 +771,11 @@ export function runCareerWeek(state, activityId, opts = {}) {
     lastMomentum,
     expansion: expansionState,
     dynasty: dynastyState,
+    legacy: legacyState,
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmAfterDynasty,
-    leagueHistory: leagueHistoryAfterDynasty,
+    leagueHistory: leagueHistoryAfterLegacy,
     analytics: analyticsResult.analytics,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
@@ -816,6 +850,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       picks: expansionState.lastExpansionDraft?.picks?.length ?? 0,
     },
     dynasty: dynastyResult.summary,
+    legacy: legacyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

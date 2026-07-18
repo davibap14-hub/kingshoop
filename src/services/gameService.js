@@ -31,6 +31,7 @@ import {
   getFatigueView,
   getMomentumView,
   getTradeView,
+  getLegacyView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -249,6 +250,11 @@ export const gameService = {
   /** Trade Engine — Interface só lê */
   getTradeView(state) {
     return getTradeView(state)
+  },
+
+  /** Legacy Engine — Interface só lê */
+  getLegacyView(state) {
+    return getLegacyView(state)
   },
 
   /** Injury Engine — Interface só lê */

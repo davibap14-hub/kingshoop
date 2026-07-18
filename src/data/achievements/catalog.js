@@ -619,6 +619,44 @@ add({
   reward: { xp: 350, popularidade: 10, dinheiro: 120000 },
 })
 
+// Legacy Engine
+add({
+  id: 'tit_legacy_45',
+  name: 'Nome no mural',
+  description: 'Alcance Legacy Score 45 (notável).',
+  category: 'titulos',
+  metric: 'legacyScore',
+  target: 45,
+  reward: { xp: 180, popularidade: 4, dinheiro: 35000 },
+})
+add({
+  id: 'tit_legacy_60',
+  name: 'Grande carreira',
+  description: 'Alcance Legacy Score 60.',
+  category: 'titulos',
+  metric: 'legacyScore',
+  target: 60,
+  reward: { xp: 240, popularidade: 6, dinheiro: 60000, felicidade: 2 },
+})
+add({
+  id: 'tit_legacy_75',
+  name: 'Lenda viva',
+  description: 'Alcance Legacy Score 75 (tier Lenda).',
+  category: 'titulos',
+  metric: 'legacyScore',
+  target: 75,
+  reward: { xp: 320, popularidade: 10, dinheiro: 100000, felicidade: 4 },
+})
+add({
+  id: 'tit_legacy_top10',
+  name: 'Top 10 histórico',
+  description: 'Entre no top 10 do ranking histórico interno de legado.',
+  category: 'titulos',
+  metric: 'legacyTop10',
+  target: 1,
+  reward: { xp: 280, popularidade: 8, dinheiro: 80000 },
+})
+
 // ─── Estatísticas ───────────────────────────────────────────
 const careerPts = [100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000]
 careerPts.forEach((n, i) => {

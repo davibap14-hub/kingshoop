@@ -94,6 +94,17 @@ export function scoreSeedAgainstMemory(seed, ctx) {
   if (seed.theme === 'cidade') score += ctx.fansRel < 40 ? 0.8 : 0.4
   if (seed.theme === 'liga' && ctx.week >= 8) score += 0.6
 
+  // Legacy Engine — legado alto puxa narrativas de liga / popularidade / time
+  if (ctx.legacyScore != null) {
+    if (ctx.legacyScore >= 70 && ['liga', 'popularidade', 'time'].includes(seed.theme)) {
+      score += 0.9
+    }
+    if (ctx.legacyScore >= 60 && seed.theme === 'desempenho') score += 0.45
+    if (ctx.legacyTier === 'legend' || ctx.legacyTier === 'immortal') {
+      if (['liga', 'cidade', 'time'].includes(seed.theme)) score += 0.6
+    }
+  }
+
   // Personalidade
   if (seed.theme === 'personalidade') score += Math.abs(ctx.ego - 50) * 0.01
   if (ctx.ego > 70 && ['popularidade', 'liga', 'desempenho'].includes(seed.theme)) {

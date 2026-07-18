@@ -13,6 +13,7 @@ import { hydrateFatigueState } from '../fatigue'
 import { hydrateExpansionState } from '../expansion'
 import { ensureGmForActiveLeague } from '../expansion/ensure.js'
 import { hydrateDynastyState } from '../dynasty'
+import { hydrateLegacyState } from '../legacy'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
 import {
   createEmptyCareerStats,
@@ -187,6 +188,8 @@ export function createCareerState(overrides = {}) {
     expansion: hydrateExpansionState(overrides.expansion),
     /** Dynasty Engine — dinastias ativas / reputação */
     dynasty: hydrateDynastyState(overrides.dynasty),
+    /** Legacy Engine — Legacy Score / ranking histórico */
+    legacy: hydrateLegacyState(overrides.legacy),
     pendingEvent: overrides.pendingEvent ?? null,
     lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,
