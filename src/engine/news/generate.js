@@ -197,6 +197,43 @@ export function generateWeekNews(factsInput, opts = {}) {
 
   // —— Decisões GM ——
   for (const d of facts.decisions ?? []) {
+    if (d.type === 'expansion') {
+      push({
+        category: 'expansion',
+        title: 'Liga anuncia expansão',
+        summary: `${(d.teamNames ?? d.teamIds ?? []).join(' e ')} entram na liga. Expansion Draft e novo calendário começam agora. ${d.reason ?? ''}`,
+        impact: impact('expansion', {
+          magnitude: 5,
+          description: 'Mercado redesenha elencos; torcidas novas chegam.',
+          deltas: { popularidade: 1, motivacao: 1 },
+        }),
+        refs: { teamIds: d.teamIds },
+        aboutPlayerTeam: false,
+      })
+    }
+
+    if (d.type === 'expansion_draft') {
+      push({
+        category: 'expansion',
+        title: `${teamLabel(d.teamId)} seleciona ${d.playerName} no Expansion Draft`,
+        summary: `#${d.pickNumber}: ${d.playerName} (${d.posicao ?? '—'}, OVR ${d.overall ?? '—'}) deixa ${teamLabel(d.fromTeamId)}.`,
+        impact: impact('expansion', {
+          magnitude: 3,
+          description: 'Elenco de expansão ganha peça; doador recalcula o futuro.',
+          deltas:
+            d.fromTeamId === playerTeamId
+              ? { relCompanheiros: -1, motivacao: -1 }
+              : {},
+        }),
+        refs: {
+          teamId: d.teamId,
+          fromTeamId: d.fromTeamId,
+          playerId: d.playerId,
+        },
+        aboutPlayerTeam: d.fromTeamId === playerTeamId,
+      })
+    }
+
     if (d.type === 'trade') {
       const summary =
         d.assetsSummary ??

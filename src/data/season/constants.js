@@ -1,5 +1,6 @@
 /**
- * Constantes da Season Engine — calendário da liga (escala 6 times).
+ * Constantes da Season Engine — calendário da liga.
+ * Escala com TEAMS ativos (Expansion Engine regenera o schedule).
  */
 
 /** Fase da temporada */

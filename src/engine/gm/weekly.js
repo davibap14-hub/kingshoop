@@ -9,6 +9,7 @@ import { generateDraftClass, processDraft } from '../draft'
 import { getDraftBoard } from '../draft/select'
 import { updateAllFranchiseObjectives } from '../franchise/objective'
 import { processWeeklyScouting } from '../scouting'
+import { ensureGmForActiveLeague } from '../expansion/ensure.js'
 import { hydrateDraftPicks, rollDraftPicksAfterSeason } from '../trade/picks.js'
 import { appendGmLog, createGmState } from './state'
 import { decideForTeam } from './decide'
@@ -26,17 +27,23 @@ export function processWeeklyGm(state, opts = {}) {
   const seasonNumber = state.season?.seasonNumber ?? state.currentSeason ?? 1
   const seasonRolled = Boolean(opts.seasonRolled)
 
-  let gm = createGmState(state.gm ?? {})
+  let gm = ensureGmForActiveLeague(createGmState(state.gm ?? {}), {
+    seasonNumber,
+  })
   const messages = []
   const weekDecisions = []
+  const draftClassSize = Math.max(18, TEAMS.length * 3)
 
   if (seasonRolled) {
     gm = rollGmContracts(gm)
-    gm.draftClass = generateDraftClass(seasonNumber, rng)
+    gm.draftClass = generateDraftClass(seasonNumber, rng, {
+      classSize: draftClassSize,
+    })
     gm.draftComplete = false
     gm.draftOrder = []
     gm.lastDraft = null
     gm.draftPicks = rollDraftPicksAfterSeason(gm.draftPicks)
+    gm = ensureGmForActiveLeague(gm, { seasonNumber })
     messages.push(
       `Draft Engine: nova classe ${seasonNumber} (${gm.draftClass.length} prospects + Mock Draft).`,
     )
@@ -52,7 +59,9 @@ export function processWeeklyGm(state, opts = {}) {
     !(gm.draftClass ?? []).length &&
     !gm.draftComplete
   ) {
-    gm.draftClass = generateDraftClass(seasonNumber, rng)
+    gm.draftClass = generateDraftClass(seasonNumber, rng, {
+      classSize: draftClassSize,
+    })
     messages.push(
       `Draft Engine: classe revelada — Mock Draft #1 ${gm.draftClass[0]?.nome ?? '—'}.`,
     )
@@ -184,8 +193,12 @@ function formatDecision(d) {
       return `${d.teamId}: draft #${d.pickNumber} ${d.playerName}${
         d.universidade ? ` (${d.universidade})` : ''
       }`
+    case 'expansion':
+      return `Expansão: ${(d.teamIds ?? []).join(', ').toUpperCase()} entram na liga`
+    case 'expansion_draft':
+      return `${d.teamId}: Expansion Draft #${d.pickNumber} ${d.playerName} (de ${d.fromTeamId})`
     default:
-      return `${d.teamId}: ${d.type}`
+      return `${d.teamId ?? 'liga'}: ${d.type}`
   }
 }
 

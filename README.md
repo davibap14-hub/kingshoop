@@ -527,6 +527,21 @@ getTradeView(state)
 
 Picks em `gm.draftPicks` · histórico `gm.lastTrades` (**Save v20**). UI: `TradePanel`.
 
+## Expansion Engine
+
+`src/engine/expansion/` + `src/data/expansion/` — expansão automática da liga.
+
+Após **3 temporadas** completas: novas franquias (SEA Cascade, ORL Pulse) com identidade visual, uniformes e arenas; **Expansion Draft** (times existentes protegem 4); novo calendário regenerado; integração com Season · GM · Draft · History · News · Save — **sem painel de UI**.
+
+```js
+applyLeagueExpansion({ gm, expansion, previousSeasonNumber, newSeasonNumber })
+runExpansionDraft(gm, expansionTeamIds)
+hydrateExpansionState(state)
+syncLeagueTeams(activeTeamIds)
+```
+
+Estado em `state.expansion` · registry `TEAMS` (**Save v21**).
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

@@ -29,6 +29,8 @@ export function createLeagueHistory(overrides = {}) {
     gameMvpTotals: overrides.gameMvpTotals ?? {},
     /** Triple-doubles acumulados */
     tripleDoubleTotals: overrides.tripleDoubleTotals ?? {},
+    /** Expansion Engine — ondas de expansão da liga */
+    expansions: overrides.expansions ?? [],
   }
 }
 

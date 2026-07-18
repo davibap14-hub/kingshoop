@@ -10,6 +10,8 @@ import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
 import { ensurePlayerDna } from '../dna'
 import { hydrateFatigueState } from '../fatigue'
+import { hydrateExpansionState } from '../expansion'
+import { ensureGmForActiveLeague } from '../expansion/ensure.js'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
 import {
   createEmptyCareerStats,
@@ -180,6 +182,8 @@ export function createCareerState(overrides = {}) {
     fatigue: hydrateFatigueState(overrides.fatigue),
     /** Momentum Engine — snapshot da última partida do time */
     lastMomentum: overrides.lastMomentum ?? null,
+    /** Expansion Engine — liga ativa / ondas */
+    expansion: hydrateExpansionState(overrides.expansion),
     pendingEvent: overrides.pendingEvent ?? null,
     lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,
@@ -204,7 +208,9 @@ export function createCareerState(overrides = {}) {
       createSeasonState({
         seasonNumber: overrides.currentSeason ?? 1,
       }),
-    gm: overrides.gm ?? createGmState(),
+    gm: ensureGmForActiveLeague(overrides.gm ?? createGmState(), {
+      seasonNumber: overrides.currentSeason ?? 1,
+    }),
   }
 }
 

@@ -46,6 +46,10 @@ import { processWeeklyPlaybooks } from '../playbook'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import {
+  applyLeagueExpansion,
+  hydrateExpansionState,
+} from '../expansion'
+import {
   applyStatusDeltas,
   createCareerState,
   syncLegacyCareerVariables,
@@ -422,13 +426,34 @@ export function runCareerWeek(state, activityId, opts = {}) {
   // Season Engine — atualiza toda a liga na semana avançada
   // Guarda a temporada anterior para o History Engine arquivar no roll
   const previousSeason = state.season
+  let gmPipeline = gmAfterBalance
+  let expansionState = hydrateExpansionState(state.expansion)
+  let expansionDecisions = []
+
+  // Expansion Engine — após N temporadas: novas franquias + Expansion Draft
+  // Roda no roll, ANTES do reset do calendário da Season Engine
+  if (calendar.seasonRolled) {
+    const expansionResult = applyLeagueExpansion({
+      gm: gmPipeline,
+      expansion: expansionState,
+      previousSeasonNumber:
+        previousSeason?.seasonNumber ?? state.currentSeason,
+      newSeasonNumber: calendar.currentSeason,
+      rng,
+    })
+    gmPipeline = expansionResult.gm
+    expansionState = expansionResult.expansion
+    expansionDecisions = expansionResult.decisions ?? []
+    messages.push(...(expansionResult.messages ?? []))
+  }
+
   const seasonResult = processWeeklySeason(
     {
       ...state,
       status,
       injury,
       fatigue,
-      gm: gmAfterBalance,
+      gm: gmPipeline,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
       season: calendar.seasonRolled
@@ -466,7 +491,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       season: seasonResult.season,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
-      gm: gmAfterBalance,
+      gm: gmPipeline,
     },
     {
       week: calendar.currentWeek,
@@ -475,6 +500,26 @@ export function runCareerWeek(state, activityId, opts = {}) {
       rng,
     },
   )
+  if (expansionDecisions.length) {
+    gmResult.gm = {
+      ...gmResult.gm,
+      lastWeekDecisions: [
+        ...expansionDecisions,
+        ...(gmResult.gm.lastWeekDecisions ?? []),
+      ],
+      log: [...(gmResult.gm.log ?? []), ...expansionDecisions].slice(-80),
+    }
+    gmResult.decisions = [
+      ...expansionDecisions,
+      ...(gmResult.decisions ?? []),
+    ]
+    gmResult.summary = {
+      ...gmResult.summary,
+      decisions: gmResult.decisions,
+      decisionsCount: gmResult.decisions.length,
+      expansion: expansionState.expanded,
+    }
+  }
   messages.push(...gmResult.messages)
 
   // Contract Engine — renovação, FA, opções, buyout, extensões
@@ -588,6 +633,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     seasonNumber: calendar.currentSeason,
     gmDecisions: gmResult.decisions ?? gmResult.summary?.decisions ?? [],
     gm: gmWithDna,
+    expansion: expansionState,
   })
   messages.push(...historyResult.messages)
 
@@ -664,6 +710,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injuryEngine,
     fatigue,
     lastMomentum,
+    expansion: expansionState,
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmWithDna,
@@ -734,6 +781,13 @@ export function runCareerWeek(state, activityId, opts = {}) {
     defense: defenseResult.summary,
     fatigue: fatigueResult.summary,
     momentum: lastMomentum,
+    expansion: {
+      expanded: expansionState.expanded,
+      expandedAtSeason: expansionState.expandedAtSeason,
+      teamIds: expansionState.expansionTeamIds,
+      calendarVersion: expansionState.calendarVersion,
+      picks: expansionState.lastExpansionDraft?.picks?.length ?? 0,
+    },
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

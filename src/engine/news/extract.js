@@ -37,6 +37,11 @@ export function collectWeekFacts({
     objectives,
     objectiveChanges: diffObjectives(prevObjectives, objectives),
     phase: seasonSummary.phase ?? 'regular',
+    expansion: gmSummary.expansion
+      ? { expanded: true }
+      : decisions.some((d) => d.type === 'expansion')
+        ? { expanded: true }
+        : null,
   }
 }
 

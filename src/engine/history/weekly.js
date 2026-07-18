@@ -31,10 +31,35 @@ export function processWeeklyHistory({
   seasonNumber,
   gmDecisions = [],
   gm = null,
+  expansion = null,
 } = {}) {
   const messages = []
   let history = createLeagueHistory(leagueHistory ?? {})
   const archivedSeason = seasonRolled ? previousSeason?.seasonNumber ?? null : null
+
+  // 0) Expansion Engine — registro permanente da onda
+  if (
+    seasonRolled &&
+    expansion?.expanded &&
+    expansion?.lastExpansionDraft &&
+    expansion.expandedAtSeason === (previousSeason?.seasonNumber ?? null)
+  ) {
+    const wave = {
+      season: expansion.expandedAtSeason,
+      teamIds: [...(expansion.expansionTeamIds ?? [])],
+      picks: expansion.lastExpansionDraft.picks?.length ?? 0,
+      calendarVersion: expansion.calendarVersion ?? null,
+      at: expansion.lastExpansionDraft.at ?? Date.now(),
+    }
+    const expansions = [...(history.expansions ?? [])]
+    if (!expansions.some((e) => e.season === wave.season)) {
+      expansions.push(wave)
+      history = { ...history, expansions }
+      messages.push(
+        `History Engine: expansão T${wave.season} arquivada (${wave.teamIds.join(', ').toUpperCase()}).`,
+      )
+    }
+  }
 
   // 1) Arquivar temporada que acabou — ANTES de qualquer dado novo sobrescrever
   if (seasonRolled && previousSeason) {
