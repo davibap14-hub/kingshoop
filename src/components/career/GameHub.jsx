@@ -48,6 +48,7 @@ export default function GameHub({
   const runWeek = useGameStore((s) => s.runWeek)
   const pendingEvent = useGameStore((s) => s.pendingEvent)
   const pendingContractOffer = useGameStore((s) => s.pendingContractOffer)
+  const lastEventResult = useGameStore((s) => s.lastEventResult)
   const story = useGameStore((s) => s.story)
   const gm = useGameStore((s) => s.gm)
   const weekNews = useGameStore((s) => s.weekNews)
@@ -58,8 +59,13 @@ export default function GameHub({
   const [confetti, setConfetti] = useState(false)
   const confettiKeyRef = useRef(null)
 
-  const storyView = gameService.getStoryView({ story, pendingEvent })
+  const storyView = gameService.getStoryView({
+    story,
+    pendingEvent,
+    lastEventResult,
+  })
   const achView = gameService.getAchievementsView({ achievements })
+  const storyNovelActive = storyView.novel?.mode === 'active'
 
   const blocked = Boolean(pendingEvent || pendingContractOffer)
 
@@ -142,42 +148,19 @@ export default function GameHub({
         selectedActivityLabel={!blocked && selected ? selected.label : null}
       />
 
-      {/* 1. História atual */}
-      <HubSection
-        index="01"
-        eyebrow="História atual"
-        title="O que está acontecendo"
-        accent
-      >
+      {/* 1. História — Visual Novel MyCareer */}
+      {storyNovelActive ? (
         <EventChoicePanel />
-        {!pendingEvent && storyView.openChains?.length > 0 ? (
-          <ul className="mt-3 space-y-2">
-            {storyView.openChains.slice(0, 3).map((c) => (
-              <li
-                key={c.id}
-                className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone="blue">{c.themeLabel}</Badge>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Cap. {c.stage + 1}/{c.maxStages}
-                  </span>
-                </div>
-                <p className="mt-1 font-display text-base font-bold text-navy">
-                  {c.title}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {!pendingEvent &&
-        !storyView.openChains?.length &&
-        !storyView.counts.resolved ? (
-          <p className="text-sm text-slate-500">
-            Avance a semana — histórias da carreira podem surgir a qualquer momento.
-          </p>
-        ) : null}
-      </HubSection>
+      ) : (
+        <HubSection
+          index="01"
+          eyebrow="MyCareer · Story"
+          title="Sua história"
+          accent
+        >
+          <EventChoicePanel />
+        </HubSection>
+      )}
 
       {/* 2. Próxima decisão */}
       <HubSection
