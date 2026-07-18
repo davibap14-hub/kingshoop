@@ -28,6 +28,7 @@ src/
  ├── layouts/        # Shell da aplicação
  ├── engine/
  │    ├── simulation/
+ │    ├── draft/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -36,6 +37,7 @@ src/
  │    └── utils/
  ├── data/
  │    ├── players/
+ │    ├── draft/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -46,6 +48,22 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Draft Engine
+
+`src/engine/draft/` + `src/data/draft/` — gera a classe de Draft todo ano.
+
+Cada prospect possui: **Potencial, Overall, Idade, Posição, Universidade, Arquétipo, Personalidade, Atributos, Mock Draft**.
+
+```js
+import { generateDraftClass, processDraft, getDraftBoard } from './engine'
+
+const board = generateDraftClass(seasonNumber, rng)
+const result = processDraft(gm, seasonState, rng)
+// times escolhem por necessidade; undrafted entram como FA
+```
+
+Fluxo na offseason: semana 44 revela a classe + Mock Draft; semanas 45–46 executam o draft. Após o draft, **todos** entram na liga (elenco ou free agency).
 
 ## Personality Engine
 

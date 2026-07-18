@@ -1,6 +1,5 @@
 import {
   DEFAULT_CONTRACT_YEARS,
-  DRAFT_CLASS_SIZE,
   MAX_GM_LOG,
   ROSTER_SIZE_TARGET,
 } from '../../data/gm/constants'
@@ -10,6 +9,12 @@ import {
 } from '../../data/gm/personalities'
 import { playerDb } from '../../data/players'
 import { TEAMS } from '../../data/teams'
+import { generateDraftClass as generateDraftClassFromEngine } from '../draft/generate'
+
+/** @deprecated use Draft Engine `generateDraftClass` */
+export function generateDraftClass(seasonNumber, rng = Math.random) {
+  return generateDraftClassFromEngine(seasonNumber, rng)
+}
 
 /**
  * Distribui jogadores do banco em elencos iniciais (snake por OVR).
@@ -80,37 +85,6 @@ export function assignPersonalities(teams = TEAMS) {
   return map
 }
 
-/**
- * Gera classe de draft procedural (prospects).
- */
-export function generateDraftClass(seasonNumber, rng = Math.random) {
-  const positions = ['PG', 'SG', 'SF', 'PF', 'C']
-  const classSize = DRAFT_CLASS_SIZE
-  const prospects = []
-
-  for (let i = 0; i < classSize; i++) {
-    const pos = positions[i % positions.length]
-    const overall = 68 + Math.floor(rng() * 14)
-    const pot = Math.min(96, overall + 6 + Math.floor(rng() * 12))
-    const salario = 1_200_000 + Math.floor(rng() * 2_500_000)
-    prospects.push({
-      id: `draft_s${seasonNumber}_${i + 1}`,
-      nome: `Prospect ${seasonNumber}-${i + 1}`,
-      idade: 19 + Math.floor(rng() * 3),
-      posicao: pos,
-      overall,
-      potencial: pot,
-      popularidade: 15 + Math.floor(rng() * 20),
-      arquetipo: 'versatil',
-      valorMercado: salario * 4,
-      salario,
-      isProspect: true,
-    })
-  }
-
-  return prospects.sort((a, b) => b.potencial - a.potencial)
-}
-
 export function createGmState(overrides = {}) {
   const built = overrides.rosters
     ? {
@@ -129,6 +103,7 @@ export function createGmState(overrides = {}) {
     draftClass: overrides.draftClass ?? [],
     draftOrder: overrides.draftOrder ?? [],
     draftComplete: overrides.draftComplete ?? false,
+    lastDraft: overrides.lastDraft ?? null,
     extraPlayers: overrides.extraPlayers ?? [],
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],

@@ -6,8 +6,8 @@ import {
   calcTradeWillingness,
   personalityContractScore,
 } from '../personality/contracts'
+import { runDraft as runDraftEngine } from '../draft/run'
 import {
-  draftProspect,
   releasePlayer,
   renewContract,
   signFreeAgent,
@@ -236,48 +236,7 @@ function findTrade(gm, sit, seasonState, rng) {
   }
 }
 
-/**
- * Executa o draft completo (uma vez na offseason).
- */
+/** @deprecated use Draft Engine `runDraft` — ponte de compatibilidade */
 export function runDraft(gm, seasonState, rng = Math.random) {
-  let state = {
-    ...gm,
-    draftClass: [...(gm.draftClass ?? [])],
-    draftOrder: [...(gm.draftOrder ?? [])],
-  }
-  const decisions = []
-
-  if (!state.draftOrder.length) {
-    // Ordem inversa da classificação (pior primeiro)
-    const rows = Object.values(seasonState.standings ?? {}).sort((a, b) => {
-      if (a.wins !== b.wins) return a.wins - b.wins
-      return b.losses - a.losses
-    })
-    state.draftOrder = rows.map((r) => r.teamId)
-    if (!state.draftOrder.length) {
-      state.draftOrder = TEAMS.map((t) => t.id)
-    }
-  }
-
-  let pick = 1
-  const order = [...state.draftOrder]
-  for (const teamId of order) {
-    if (!state.draftClass.length) break
-    const sit = analyzeFranchise(state, teamId, seasonState)
-    const board = [...state.draftClass].sort(
-      (a, b) => scoreFa(sit, b) - scoreFa(sit, a),
-    )
-    // leve ruído
-    const choice = board[rng() < 0.7 ? 0 : Math.min(2, board.length - 1)]
-    const result = draftProspect(state, teamId, choice.id, pick)
-    if (result.ok) {
-      state = result.gm
-      decisions.push(result.decision)
-      pick += 1
-    }
-  }
-
-  state.draftComplete = true
-  state.draftOrder = []
-  return { gm: state, decisions }
+  return runDraftEngine(gm, seasonState, rng)
 }

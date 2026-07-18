@@ -169,9 +169,19 @@ export function draftProspect(gm, teamId, prospectId, pickNumber) {
     return { ok: false, gm, decision: null }
   }
 
+  const signed = {
+    ...prospect,
+    isProspect: false,
+    draftedBy: teamId,
+    draftPick: pickNumber,
+  }
+
   next.draftClass = next.draftClass.filter((p) => p.id !== prospectId)
   next.rosters[teamId] = [...roster, prospectId]
-  next.extraPlayers = [...next.extraPlayers, prospect]
+  next.extraPlayers = [
+    ...next.extraPlayers.filter((p) => p.id !== prospectId),
+    signed,
+  ]
   next.contracts[prospectId] = {
     playerId: prospectId,
     teamId,
@@ -188,6 +198,10 @@ export function draftProspect(gm, teamId, prospectId, pickNumber) {
     pickNumber,
     overall: prospect.overall,
     potencial: prospect.potencial,
+    posicao: prospect.posicao,
+    universidade: prospect.universidade,
+    arquetipo: prospect.arquetipo,
+    mockRank: prospect.mockDraft?.rank ?? null,
     reason: `Draft pick #${pickNumber}`,
     at: Date.now(),
   }

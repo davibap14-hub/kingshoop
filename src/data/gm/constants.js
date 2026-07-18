@@ -18,8 +18,8 @@ export const ROSTER_SIZE_MAX = 8
 /** Anos padrão de contrato ao assinar / renovar */
 export const DEFAULT_CONTRACT_YEARS = 2
 
-/** Prospects gerados no draft */
-export const DRAFT_CLASS_SIZE = 12
+/** @deprecated use data/draft — mantido por compat */
+export { DRAFT_CLASS_SIZE } from '../draft/constants'
 
 /** Máximo de decisões por time por semana */
 export const MAX_DECISIONS_PER_TEAM_WEEK = 2

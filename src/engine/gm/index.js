@@ -3,7 +3,8 @@
  *
  * Cada franquia tem personalidade (Reconstrução, Competitiva, Contender,
  * Jovem, Financeira). O GM decide automaticamente: contratações, trocas,
- * dispensas, renovações, draft e salary cap — sempre com base na situação.
+ * dispensas, renovações e salary cap. O Draft é da Draft Engine
+ * (reexportado aqui por compatibilidade).
  *
  * A Interface apenas exibe os dados retornados.
  */
@@ -21,7 +22,6 @@ export {
   buildInitialRosters,
   buildInitialContracts,
   assignPersonalities,
-  generateDraftClass,
   appendGmLog,
   getPersonality,
 } from './state'
@@ -44,5 +44,5 @@ export {
   draftProspect,
 } from './actions'
 
-export { decideForTeam, runDraft } from './decide'
+export { decideForTeam } from './decide'
 export { processWeeklyGm, getGmView } from './weekly'

@@ -131,6 +131,49 @@ export default function GmPanel() {
         </div>
       </div>
 
+      {(view.draftBoard ?? []).length > 0 && (
+        <div className="mt-4 rounded-lg border border-slate-100 bg-white p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Draft Engine · Mock Draft
+          </p>
+          <ul className="mt-2 max-h-44 space-y-1.5 overflow-y-auto text-[11px] text-slate-700">
+            {view.draftBoard.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-baseline gap-x-2">
+                <span className="w-6 font-bold text-accent">
+                  #{p.mockRank}
+                </span>
+                <span className="font-semibold text-navy">{p.nome}</span>
+                <span className="text-slate-400">
+                  {p.posicao} · {p.universidade} · OVR {p.overall} · POT{' '}
+                  {p.potencial}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {view.lastDraft?.picks?.length > 0 && (
+        <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Último Draft
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {view.lastDraft.picks.length} picks ·{' '}
+            {view.lastDraft.undraftedCount ?? 0} undrafted na liga
+          </p>
+          <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto text-[11px] text-slate-700">
+            {view.lastDraft.picks.slice(0, 10).map((p) => (
+              <li key={`pick-${p.pickNumber}`}>
+                <span className="font-bold text-navy">#{p.pickNumber}</span>{' '}
+                {String(p.teamId).toUpperCase()}: {p.prospectName} (
+                {p.posicao}, {p.universidade})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {(view.recentLog ?? []).length > 0 && (
         <div className="mt-4 rounded-lg border border-slate-100 bg-white p-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">

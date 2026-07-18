@@ -1,12 +1,20 @@
+import {
+  DRAFT_REVEAL_WEEK,
+  DRAFT_RUN_WEEK_END,
+  DRAFT_RUN_WEEK_START,
+} from '../../data/draft/constants'
 import { SEASON_PHASES } from '../../data/season/constants'
 import { TEAMS } from '../../data/teams'
-import { appendGmLog, createGmState, generateDraftClass } from './state'
-import { decideForTeam, runDraft } from './decide'
+import { generateDraftClass, processDraft } from '../draft'
+import { getDraftBoard } from '../draft/select'
+import { appendGmLog, createGmState } from './state'
+import { decideForTeam } from './decide'
 
 /**
  * Pipeline semanal do General Manager Engine.
  * Decisões automáticas por franquia, influenciadas pela personalidade
  * e pela situação (standings, teto, idade, necessidades).
+ * Draft é orquestrado pela Draft Engine.
  */
 export function processWeeklyGm(state, opts = {}) {
   const rng = opts.rng ?? Math.random
@@ -24,39 +32,39 @@ export function processWeeklyGm(state, opts = {}) {
     gm.draftClass = generateDraftClass(seasonNumber, rng)
     gm.draftComplete = false
     gm.draftOrder = []
-    messages.push('GM: nova temporada — contratos atualizados e draft board gerado.')
+    gm.lastDraft = null
+    messages.push(
+      `Draft Engine: nova classe ${seasonNumber} (${gm.draftClass.length} prospects + Mock Draft).`,
+    )
   }
 
   // Garante draft class na entrada da offseason
   if (
     phase === SEASON_PHASES.offseason &&
-    week === 44 &&
+    week === DRAFT_REVEAL_WEEK &&
     !(gm.draftClass ?? []).length &&
     !gm.draftComplete
   ) {
     gm.draftClass = generateDraftClass(seasonNumber, rng)
-    messages.push('GM: classe de draft revelada.')
+    messages.push(
+      `Draft Engine: classe revelada — Mock Draft #1 ${gm.draftClass[0]?.nome ?? '—'}.`,
+    )
   }
 
   const seasonState = state.season ?? {}
 
-  // Draft na semana 45 (se ainda não feito)
+  // Draft Engine — semanas 45–46
   if (
     phase === SEASON_PHASES.offseason &&
-    week >= 45 &&
-    week <= 46 &&
+    week >= DRAFT_RUN_WEEK_START &&
+    week <= DRAFT_RUN_WEEK_END &&
     !gm.draftComplete &&
     (gm.draftClass ?? []).length > 0
   ) {
-    const draft = runDraft(gm, seasonState, rng)
+    const draft = processDraft(gm, seasonState, rng, { seasonNumber })
     gm = draft.gm
-    weekDecisions.push(...draft.decisions)
-    messages.push(`Draft NBA: ${draft.decisions.length} picks realizados.`)
-    for (const d of draft.decisions.slice(0, 4)) {
-      messages.push(
-        `${d.teamId.toUpperCase()} seleciona ${d.playerName} (#${d.pickNumber}).`,
-      )
-    }
+    weekDecisions.push(...(draft.decisions ?? []))
+    messages.push(...(draft.messages ?? []))
   }
 
   // Decisões de mercado: offseason intensa; temporada regular mais rara
@@ -140,7 +148,9 @@ function formatDecision(d) {
     case 'trade':
       return `${d.teamId}: troca ${d.playerName} por ${d.acquiredName} (${d.partnerId})`
     case 'draft':
-      return `${d.teamId}: draft ${d.playerName} (#${d.pickNumber})`
+      return `${d.teamId}: draft #${d.pickNumber} ${d.playerName}${
+        d.universidade ? ` (${d.universidade})` : ''
+      }`
     default:
       return `${d.teamId}: ${d.type}`
   }
@@ -156,6 +166,8 @@ export function getGmView(gm, opts = {}) {
     freeAgentsCount: gm.freeAgents?.length ?? 0,
     draftRemaining: gm.draftClass?.length ?? 0,
     draftComplete: gm.draftComplete,
+    draftBoard: getDraftBoard(gm.draftClass ?? []).slice(0, 12),
+    lastDraft: gm.lastDraft ?? null,
     lastWeekDecisions: gm.lastWeekDecisions ?? [],
     recentLog: (gm.log ?? []).slice(-12).reverse(),
     teamRoster: teamId ? gm.rosters?.[teamId] ?? [] : [],
