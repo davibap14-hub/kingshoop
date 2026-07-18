@@ -465,7 +465,7 @@ Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
 ## Achievement Engine
 
-`src/engine/achievements/` + `src/data/achievements/` — **284 conquistas** com progresso.
+`src/engine/achievements/` + `src/data/achievements/` — **282 conquistas** com progresso.
 
 Categorias: Carreira · Temporada · Partida · Financeiro · Relacionamentos · Títulos · Estatísticas · Colecionáveis.
 
