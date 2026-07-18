@@ -2,7 +2,7 @@
  * Constantes do Save System.
  */
 
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 /** Prefixo LocalStorage */
 export const SAVE_STORAGE_PREFIX = 'fenomeno_nba'

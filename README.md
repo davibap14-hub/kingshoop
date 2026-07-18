@@ -35,6 +35,7 @@ src/
  │    ├── balance/
  │    ├── relationships/
  │    ├── contracts/
+ │    ├── chemistry/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -50,6 +51,7 @@ src/
  │    ├── balance/
  │    ├── relationships/
  │    ├── contracts/
+ │    ├── chemistry/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -60,6 +62,30 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Chemistry Engine
+
+`src/engine/chemistry/` + `src/data/chemistry/` — química entre **todos** os jogadores.
+
+Cada **dupla** tem um valor **−100 … +100**, afetado por:
+
+- Tempo jogando juntos
+- Personalidade (inicial determinístico, sem RNG)
+- Vitórias / derrotas
+- Discussões / eventos
+- Treinos (bonding, train, media)
+
+Na **Simulation Engine**, a cada posse a química entra como **peso** em:
+
+- Passe · Movimentação · Defesa · Eficiência ofensiva · Decisões da IA
+
+```js
+processWeeklyChemistry({ chemistry, gm, weekResults, activityType, … })
+buildLineupChemistryEffects(chemistryState, lineup, relationshipBonus)
+getChemistryView(state)
+```
+
+Nunca usa aleatório puro para química — só pesos. Persistido em `gm.chemistry` (Save `v7`). UI: `ChemistryPanel`.
 
 ## Contract Engine
 

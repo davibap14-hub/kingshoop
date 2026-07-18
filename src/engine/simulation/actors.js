@@ -1,29 +1,49 @@
+import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { combineScore, weightedSelect, attr, tendency } from './weights'
 
 /**
- * Escolhe ball handler com pesos combinados (QI, tendências, overall).
+ * Escolhe ball handler com pesos combinados (QI, tendências, overall, química).
  */
 export function pickBallHandler(players, rng, context = {}) {
-  const entries = players.map((p) => ({
-    id: p.id,
-    player: p,
-    score: combineScore([
-      { value: tendency(p, 'pass'), weight: 1.15 },
-      { value: tendency(p, 'isolation'), weight: 0.55 },
-      { value: attr(p, 'qi.tomadaDecisao'), weight: 1.0 },
-      { value: attr(p, 'qi.passe'), weight: 0.85 },
-      { value: attr(p, 'qi.visao'), weight: 0.75 },
-      { value: attr(p, 'fisico.velocidade'), weight: 0.65 },
-      { value: p.overall ?? 70, weight: 0.6 },
-      {
-        value:
-          context.preferPerimeter && ['PG', 'SG', 'SF'].includes(p.posicao)
-            ? 85
-            : 50,
-        weight: 0.35,
-      },
-    ]),
-  }))
+  const chem = context.chemistryEffects
+  const entries = players.map((p) => {
+    // Química média do jogador com o resto do elenco (IA / decisão)
+    let chemScore = 50
+    if (chem?.pairScoreBetween) {
+      const others = players.filter((o) => o.id !== p.id)
+      if (others.length) {
+        chemScore =
+          others.reduce(
+            (s, o) => s + chem.pairScoreBetween(p.id, o.id),
+            0,
+          ) / others.length
+      }
+    }
+    return {
+      id: p.id,
+      player: p,
+      score: combineScore([
+        { value: tendency(p, 'pass'), weight: 1.15 },
+        { value: tendency(p, 'isolation'), weight: 0.55 },
+        { value: attr(p, 'qi.tomadaDecisao'), weight: 1.0 },
+        { value: attr(p, 'qi.passe'), weight: 0.85 },
+        { value: attr(p, 'qi.visao'), weight: 0.75 },
+        { value: attr(p, 'fisico.velocidade'), weight: 0.65 },
+        { value: p.overall ?? 70, weight: 0.6 },
+        {
+          value: chemScore,
+          weight: chem?.weights?.aiDecision ?? CHEMISTRY_SIM_WEIGHTS.aiDecision,
+        },
+        {
+          value:
+            context.preferPerimeter && ['PG', 'SG', 'SF'].includes(p.posicao)
+              ? 85
+              : 50,
+          weight: 0.35,
+        },
+      ]),
+    }
+  })
   return weightedSelect(entries, rng)?.player ?? players[0]
 }
 
@@ -53,11 +73,18 @@ export function pickIndividualDefender(defensePlayers, ballHandler, rng) {
 }
 
 /**
- * Ajuda defensiva — exclui o marcador individual.
+ * Ajuda defensiva — química entre defensores melhora a rotação.
  */
-export function pickHelpDefender(defensePlayers, primaryDefender, rng) {
+export function pickHelpDefender(
+  defensePlayers,
+  primaryDefender,
+  rng,
+  chemistryEffects = null,
+) {
   const pool = defensePlayers.filter((p) => p.id !== primaryDefender?.id)
   if (!pool.length) return primaryDefender
+  const w =
+    chemistryEffects?.weights?.defense ?? CHEMISTRY_SIM_WEIGHTS.defense
   const entries = pool.map((p) => ({
     id: p.id,
     player: p,
@@ -67,13 +94,25 @@ export function pickHelpDefender(defensePlayers, primaryDefender, rng) {
       { value: attr(p, 'qi.tomadaDecisao'), weight: 0.9 },
       { value: attr(p, 'fisico.impulsao'), weight: 0.6 },
       { value: p.overall ?? 70, weight: 0.5 },
+      {
+        value:
+          chemistryEffects?.pairScoreBetween?.(primaryDefender?.id, p.id) ??
+          50,
+        weight: w,
+      },
     ]),
   }))
   return weightedSelect(entries, rng)?.player ?? pool[0]
 }
 
-export function pickScreener(offensePlayers, ballHandler, rng) {
+export function pickScreener(
+  offensePlayers,
+  ballHandler,
+  rng,
+  chemistryEffects = null,
+) {
   const pool = offensePlayers.filter((p) => p.id !== ballHandler?.id)
+  const w = chemistryEffects?.weights?.pass ?? CHEMISTRY_SIM_WEIGHTS.pass
   const entries = pool.map((p) => ({
     id: p.id,
     player: p,
@@ -82,14 +121,27 @@ export function pickScreener(offensePlayers, ballHandler, rng) {
       { value: attr(p, 'fisico.impulsao'), weight: 0.7 },
       { value: ['PF', 'C', 'SF'].includes(p.posicao) ? 88 : 45, weight: 0.9 },
       { value: p.overall ?? 70, weight: 0.4 },
+      {
+        value:
+          chemistryEffects?.pairScoreBetween?.(ballHandler?.id, p.id) ?? 50,
+        weight: w,
+      },
     ]),
   }))
   return weightedSelect(entries, rng)?.player ?? pool[0]
 }
 
-export function pickCutter(offensePlayers, ballHandler, screener, rng) {
+export function pickCutter(
+  offensePlayers,
+  ballHandler,
+  screener,
+  rng,
+  chemistryEffects = null,
+) {
   const exclude = new Set([ballHandler?.id, screener?.id])
   const pool = offensePlayers.filter((p) => !exclude.has(p.id))
+  const w =
+    chemistryEffects?.weights?.movement ?? CHEMISTRY_SIM_WEIGHTS.movement
   const entries = pool.map((p) => ({
     id: p.id,
     player: p,
@@ -98,13 +150,24 @@ export function pickCutter(offensePlayers, ballHandler, screener, rng) {
       { value: attr(p, 'qi.visao'), weight: 0.6 },
       { value: attr(p, 'arremesso.bandeja'), weight: 0.9 },
       { value: p.overall ?? 70, weight: 0.5 },
+      {
+        value:
+          chemistryEffects?.pairScoreBetween?.(ballHandler?.id, p.id) ?? 50,
+        weight: w,
+      },
     ]),
   }))
   return weightedSelect(entries, rng)?.player ?? pool[0] ?? ballHandler
 }
 
-export function pickKickTarget(offensePlayers, ballHandler, rng) {
+export function pickKickTarget(
+  offensePlayers,
+  ballHandler,
+  rng,
+  chemistryEffects = null,
+) {
   const pool = offensePlayers.filter((p) => p.id !== ballHandler?.id)
+  const w = chemistryEffects?.weights?.pass ?? CHEMISTRY_SIM_WEIGHTS.pass
   const entries = pool.map((p) => ({
     id: p.id,
     player: p,
@@ -115,6 +178,11 @@ export function pickKickTarget(offensePlayers, ballHandler, rng) {
       { value: attr(p, 'arremesso.midRange'), weight: 0.5 },
       { value: attr(p, 'qi.tomadaDecisao'), weight: 0.4 },
       { value: p.overall ?? 70, weight: 0.35 },
+      {
+        value:
+          chemistryEffects?.pairScoreBetween?.(ballHandler?.id, p.id) ?? 50,
+        weight: w,
+      },
     ]),
   }))
   return weightedSelect(entries, rng)?.player ?? pool[0]
@@ -135,7 +203,7 @@ export function pickRebounder(players, rng, { offensive = false } = {}) {
   return weightedSelect(entries, rng)?.player ?? players[0]
 }
 
-export function pickPasser(players, ballHandler, rng) {
+export function pickPasser(players, ballHandler, rng, chemistryEffects = null) {
   if (ballHandler) return ballHandler
-  return pickBallHandler(players, rng)
+  return pickBallHandler(players, rng, { chemistryEffects })
 }

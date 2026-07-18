@@ -9,6 +9,7 @@ import {
 } from '../../data/gm/personalities'
 import { playerDb } from '../../data/players'
 import { TEAMS } from '../../data/teams'
+import { createChemistryState } from '../chemistry/state.js'
 import { generateDraftClass as generateDraftClassFromEngine } from '../draft/generate'
 
 /** @deprecated use Draft Engine `generateDraftClass` */
@@ -108,6 +109,8 @@ export function createGmState(overrides = {}) {
     extraPlayers: overrides.extraPlayers ?? [],
     /** Overrides de idade/attrs da Balance Engine (jogadores do DB) */
     playerOverrides: overrides.playerOverrides ?? {},
+    /** Chemistry Engine — matriz de pares (−100…+100) */
+    chemistry: createChemistryState(overrides.chemistry ?? {}),
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

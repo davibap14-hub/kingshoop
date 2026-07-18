@@ -8,6 +8,7 @@ import {
   suggestWeeklyActivity,
 } from '../personality'
 import { processSeasonalBalance } from '../balance'
+import { processWeeklyChemistry } from '../chemistry'
 import { processWeeklyContracts } from '../contracts'
 import { processWeeklyNews } from '../news'
 import {
@@ -398,6 +399,21 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...contractResult.messages)
 
+  // Chemistry Engine — pares (−100…+100): tempo, W/L, treino, discussões
+  const chemResult = processWeeklyChemistry({
+    chemistry: gmResult.gm?.chemistry,
+    gm: gmResult.gm,
+    weekResults: seasonResult.weekResults ?? [],
+    activityType: activity.type,
+    careerPlayerId: player?.id ?? 'career_player',
+    careerTeamId: contractResult.currentTeamId ?? state.currentTeamId,
+    eventTeammateDelta:
+      relResult.summary?.applied?.teammates ?? chemDelta ?? 0,
+    relationshipBonus: relResult.effects?.chemistryBonus ?? 0,
+  })
+  messages.push(...chemResult.messages)
+  const gmWithChemistry = chemResult.gm ?? gmResult.gm
+
   // History Engine — arquivo permanente (antes do reset já capturado em previousSeason)
   const historyResult = processWeeklyHistory({
     leagueHistory: state.leagueHistory,
@@ -407,7 +423,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     week: calendar.currentWeek,
     seasonNumber: calendar.currentSeason,
     gmDecisions: gmResult.decisions ?? gmResult.summary?.decisions ?? [],
-    gm: gmResult.gm,
+    gm: gmWithChemistry,
   })
   messages.push(...historyResult.messages)
 
@@ -420,7 +436,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     careerInjury: injury,
     seasonSummary: seasonResult.summary,
     gmSummary: gmResult.summary,
-    gmState: gmResult.gm,
+    gmState: gmWithChemistry,
     previousSeason: { objectives: state.gm?.objectives ?? {} },
     newsFeed: state.newsFeed ?? [],
   })
@@ -463,7 +479,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injury,
     progression: progResult.nextProgression,
     season: seasonResult.season,
-    gm: gmResult.gm,
+    gm: gmWithChemistry,
     leagueHistory: historyResult.leagueHistory,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
@@ -516,6 +532,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     gm: gmResult.summary,
     balance: balanceResult.summary,
     relationships: relResult.summary,
+    chemistry: chemResult.summary,
     historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,

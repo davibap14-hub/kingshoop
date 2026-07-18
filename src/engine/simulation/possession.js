@@ -1,4 +1,6 @@
+import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { PLAY_ACTIONS } from '../../data/simulation/constants'
+import { boostToScoreFactor } from '../chemistry/effects'
 import {
   chooseFinishStyle,
   chooseOffensiveSet,
@@ -14,6 +16,8 @@ import {
 } from './actions'
 import { attr, combineScore, contestedSelect, tendency, weightedSelect } from './weights'
 import { formatPbpEvent } from './playbyplay'
+
+const CHEMISTRY_PASS_W = CHEMISTRY_SIM_WEIGHTS.pass
 
 /**
  * Simula uma posse completa com ações, atributos e tendências.
@@ -48,9 +52,13 @@ export function simulatePossessionDetailed({
     )
   }
 
-  // —— Ball Handler (tendência Pass favorece quem inicia) ——
+  const chemistryEffects = context.chemistryEffects ?? null
+  const defChemistryEffects = context.defenseChemistryEffects ?? null
+
+  // —— Ball Handler (tendência Pass + química de pares) ——
   const ballHandler = pickBallHandler(offensePlayers, rng, {
     preferPerimeter: true,
+    chemistryEffects,
   })
   push({
     action: PLAY_ACTIONS.ball_handler,
@@ -59,7 +67,12 @@ export function simulatePossessionDetailed({
   })
 
   const defender = pickIndividualDefender(defensePlayers, ballHandler, rng)
-  const help = pickHelpDefender(defensePlayers, defender, rng)
+  const help = pickHelpDefender(
+    defensePlayers,
+    defender,
+    rng,
+    defChemistryEffects,
+  )
   push({
     action: PLAY_ACTIONS.individual_defense,
     text: `${defender.nome} marca ${ballHandler.nome} no perímetro.`,
@@ -71,7 +84,8 @@ export function simulatePossessionDetailed({
     defender,
     helpDefender: help,
     isHome: offenseIsHome,
-    chemistry: context.chemistry ?? 55,
+    chemistry: context.chemistry ?? chemistryEffects?.teamChemistry ?? 55,
+    chemistryEffects,
     rng,
   })
 
@@ -94,6 +108,10 @@ export function simulatePossessionDetailed({
       { value: tendency(ballHandler, 'pass'), weight: 0.7 },
       { value: attr(ballHandler, 'qi.passe'), weight: 0.8 },
       { value: attr(ballHandler, 'fisico.forca'), weight: 0.45 },
+      {
+        value: chemistryEffects?.teamChemistry ?? context.chemistry ?? 55,
+        weight: CHEMISTRY_SIM_WEIGHTS.onBallPressure,
+      },
     ])
     const stealDuel = contestedSelect(stealScore, holdScore, rng)
     if (stealDuel.winner === 'a') {
@@ -157,6 +175,8 @@ export function simulatePossessionDetailed({
       styleThreeBias: context.styleThreeBias ?? 0,
       stylePace: context.stylePace ?? 1,
       styleMotion: context.styleMotion ?? 0.5,
+      chemistry: context.chemistry ?? chemistryEffects?.teamChemistry ?? 55,
+      chemistryEffects,
     },
     rng,
   })
@@ -191,7 +211,9 @@ export function simulatePossessionDetailed({
     finishAction = fbFinish.action
     openLook = true
   } else if (setId === 'pick_and_roll') {
-    screener = pickScreener(offensePlayers, ballHandler, rng)
+    screener = pickScreener(offensePlayers, ballHandler, rng, chemistryEffects)
+    const pairScreen =
+      chemistryEffects?.pairScoreBetween?.(ballHandler.id, screener.id) ?? 50
     push({
       action: PLAY_ACTIONS.screen,
       text: `${screener.nome} oferece screen para ${ballHandler.nome}.`,
@@ -212,6 +234,7 @@ export function simulatePossessionDetailed({
             { value: tendency(screener, 'postUp'), weight: 0.5 },
             { value: attr(screener, 'arremesso.bandeja'), weight: 0.9 },
             { value: tendency(ballHandler, 'pass'), weight: 1.1 },
+            { value: pairScreen, weight: CHEMISTRY_PASS_W },
           ]),
         },
         {
@@ -234,6 +257,10 @@ export function simulatePossessionDetailed({
           score: combineScore([
             { value: tendency(ballHandler, 'pass'), weight: 1.4 },
             { value: pressure.helpCommitted ? 80 : 42, weight: 0.9 },
+            {
+              value: boostToScoreFactor(chemistryEffects?.passBoost),
+              weight: CHEMISTRY_PASS_W,
+            },
           ]),
         },
         {
@@ -242,6 +269,7 @@ export function simulatePossessionDetailed({
             { value: tendency(screener, 'alleyOop'), weight: 1.5 },
             { value: tendency(ballHandler, 'pass'), weight: 1.2 },
             { value: attr(screener, 'fisico.impulsao'), weight: 0.9 },
+            { value: pairScreen, weight: CHEMISTRY_PASS_W },
           ]),
         },
       ],
@@ -270,7 +298,12 @@ export function simulatePossessionDetailed({
         actors: { ballHandler: ballHandler.nome, screener: screener.nome },
       })
     } else if (branch === 'kick') {
-      const kickTo = pickKickTarget(offensePlayers, ballHandler, rng)
+      const kickTo = pickKickTarget(
+        offensePlayers,
+        ballHandler,
+        rng,
+        chemistryEffects,
+      )
       push({
         action: PLAY_ACTIONS.kick_out,
         text: `Kick out de ${ballHandler.nome} para ${kickTo.nome} (tend. Pass ${tendency(ballHandler, 'pass')}).`,
@@ -390,12 +423,23 @@ export function simulatePossessionDetailed({
     })
 
     if (pressure.helpCommitted) {
-      const kickTo = pickKickTarget(offensePlayers, ballHandler, rng)
+      const kickTo = pickKickTarget(
+        offensePlayers,
+        ballHandler,
+        rng,
+        chemistryEffects,
+      )
       const kickDuel = contestedSelect(
         combineScore([
           { value: tendency(ballHandler, 'pass'), weight: 1.4 },
           { value: attr(ballHandler, 'qi.visao'), weight: 1.0 },
           { value: attr(ballHandler, 'qi.passe'), weight: 0.9 },
+          {
+            value:
+              chemistryEffects?.pairScoreBetween?.(ballHandler.id, kickTo.id) ??
+              50,
+            weight: CHEMISTRY_PASS_W,
+          },
         ]),
         combineScore([
           { value: attr(help, 'defesa.roubo'), weight: 0.9 },
@@ -459,8 +503,14 @@ export function simulatePossessionDetailed({
     }
     openLook = pressure.winner === 'offense'
   } else if (setId === 'cut') {
-    screener = pickScreener(offensePlayers, ballHandler, rng)
-    const cutter = pickCutter(offensePlayers, ballHandler, screener, rng)
+    screener = pickScreener(offensePlayers, ballHandler, rng, chemistryEffects)
+    const cutter = pickCutter(
+      offensePlayers,
+      ballHandler,
+      screener,
+      rng,
+      chemistryEffects,
+    )
     push({
       action: PLAY_ACTIONS.screen,
       text: `${screener.nome} bloqueia para liberar corte.`,
@@ -478,6 +528,16 @@ export function simulatePossessionDetailed({
         { value: attr(ballHandler, 'qi.passe'), weight: 1.0 },
         { value: attr(cutter, 'fisico.velocidade'), weight: 1.0 },
         { value: tendency(cutter, 'alleyOop'), weight: 0.5 },
+        {
+          value:
+            chemistryEffects?.pairScoreBetween?.(ballHandler.id, cutter.id) ??
+            50,
+          weight: CHEMISTRY_PASS_W,
+        },
+        {
+          value: boostToScoreFactor(chemistryEffects?.movementBoost),
+          weight: CHEMISTRY_SIM_WEIGHTS.movement,
+        },
       ]),
       combineScore([
         { value: attr(defender, 'defesa.garrafao'), weight: 1.0 },
@@ -539,6 +599,8 @@ export function simulatePossessionDetailed({
     shotType: resolvedShotType,
     isHome: offenseIsHome,
     openLook,
+    chemistryEffects,
+    assister,
     rng,
   })
 

@@ -1,4 +1,6 @@
+import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { ACTION_SET_BASE_WEIGHTS, HOME_FACTORS } from '../../data/simulation/constants'
+import { boostToScoreFactor } from '../chemistry/effects'
 import {
   pickBallHandler,
   pickCutter,
@@ -17,7 +19,9 @@ import {
 } from './weights'
 
 /**
- * Escolhe o set ofensivo com pesos combinados (attrs + tendências + contexto).
+ * Escolhe o set ofensivo com pesos combinados
+ * (attrs + tendências + contexto + química).
+ * Nunca aleatório puro.
  */
 export function chooseOffensiveSet({
   offensePlayers,
@@ -27,6 +31,12 @@ export function chooseOffensiveSet({
 }) {
   const handler = ballHandler
   const postPlayer = pickPostPlayer(offensePlayers, rng)
+  const chem = context.chemistryEffects
+  const cw = chem?.weights ?? CHEMISTRY_SIM_WEIGHTS
+  const offChem = boostToScoreFactor(chem?.offenseEfficiency)
+  const passChem = boostToScoreFactor(chem?.passBoost ?? chem?.aiPassBias)
+  const cutChem = boostToScoreFactor(chem?.movementBoost ?? chem?.aiCutBias)
+  const teamChem = chem?.teamChemistry ?? context.chemistry ?? 55
 
   const sets = [
     {
@@ -38,6 +48,9 @@ export function chooseOffensiveSet({
         { value: tendency(handler, 'drive'), weight: 0.7 },
         { value: tendency(postPlayer, 'alleyOop'), weight: 0.5 },
         { value: context.styleThreeBias * 100, weight: 0.25 },
+        { value: passChem, weight: cw.setPassBias },
+        { value: offChem, weight: cw.offenseEfficiency * 0.6 },
+        { value: teamChem, weight: cw.aiDecision * 0.5 },
       ]),
     },
     {
@@ -49,6 +62,9 @@ export function chooseOffensiveSet({
         { value: tendency(handler, 'fadeaway'), weight: 0.5 },
         { value: attr(handler, 'arremesso.midRange'), weight: 0.7 },
         { value: handler?.overall ?? 70, weight: 0.4 },
+        // Iso sofre um pouco com química alta (preferência coletiva)
+        { value: passChem, weight: cw.setPassBias * 0.35, invert: true },
+        { value: teamChem, weight: cw.aiDecision * 0.35 },
       ]),
     },
     {
@@ -59,6 +75,8 @@ export function chooseOffensiveSet({
         { value: attr(handler, 'fisico.velocidade'), weight: 0.9 },
         { value: attr(handler, 'arremesso.bandeja'), weight: 0.7 },
         { value: context.stylePace * 50, weight: 0.35 },
+        { value: cutChem, weight: cw.setCutBias * 0.7 },
+        { value: offChem, weight: cw.offenseEfficiency * 0.5 },
       ]),
     },
     {
@@ -69,6 +87,11 @@ export function chooseOffensiveSet({
         { value: attr(postPlayer, 'fisico.forca'), weight: 0.9 },
         { value: attr(postPlayer, 'arremesso.bandeja'), weight: 0.6 },
         { value: postPlayer?.overall ?? 65, weight: 0.4 },
+        {
+          value: chem?.pairScoreBetween?.(handler?.id, postPlayer?.id) ?? 50,
+          weight: cw.pass,
+        },
+        { value: offChem, weight: cw.offenseEfficiency * 0.45 },
       ]),
       meta: { postPlayer },
     },
@@ -79,6 +102,9 @@ export function chooseOffensiveSet({
         { value: tendency(handler, 'pass'), weight: 1.3 },
         { value: attr(handler, 'qi.visao'), weight: 0.9 },
         { value: context.styleMotion * 80, weight: 0.45 },
+        { value: cutChem, weight: cw.setCutBias },
+        { value: passChem, weight: cw.setPassBias },
+        { value: teamChem, weight: cw.aiDecision * 0.55 },
       ]),
     },
   ]
@@ -92,6 +118,7 @@ export function chooseOffensiveSet({
         { value: attr(handler, 'fisico.velocidade'), weight: 1.0 },
         { value: context.transitionDefense, weight: 0.85, invert: true },
         { value: context.stylePace * 60, weight: 0.5 },
+        { value: cutChem, weight: cw.movement * 0.6 },
       ]),
       mult: 1.25,
     })
@@ -116,6 +143,7 @@ export function pickPostPlayer(offensePlayers, rng) {
 
 /**
  * Duelo ball handler vs defesa individual (+ chance de ajuda).
+ * Química entra como peso (passe / movimentação / pressão) — sem RNG puro.
  */
 export function resolveOnBallPressure({
   ballHandler,
@@ -123,15 +151,23 @@ export function resolveOnBallPressure({
   helpDefender,
   isHome,
   chemistry = 55,
+  chemistryEffects = null,
   rng,
 }) {
+  const cw = chemistryEffects?.weights ?? CHEMISTRY_SIM_WEIGHTS
+  const teamChem = chemistryEffects?.teamChemistry ?? chemistry
+  const passChem = boostToScoreFactor(chemistryEffects?.passBoost)
+  const moveChem = boostToScoreFactor(chemistryEffects?.movementBoost)
+
   const attackScore = combineScore([
     { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 1.0 },
     { value: attr(ballHandler, 'fisico.velocidade'), weight: 0.9 },
     { value: tendency(ballHandler, 'drive'), weight: 0.55 },
     { value: tendency(ballHandler, 'pass'), weight: 0.45 },
     { value: ballHandler?.overall ?? 70, weight: 0.5 },
-    { value: chemistry, weight: 0.45 },
+    { value: teamChem, weight: cw.onBallPressure },
+    { value: passChem, weight: cw.pass * 0.55 },
+    { value: moveChem, weight: cw.movement * 0.45 },
     { value: 50 + homeBoost(isHome, 'ballSecurity') * 100, weight: 0.35 },
   ])
 
@@ -142,10 +178,14 @@ export function resolveOnBallPressure({
     { value: defender?.overall ?? 70, weight: 0.5 },
   ])
 
+  const helpChem =
+    chemistryEffects?.pairScoreBetween?.(defender?.id, helpDefender?.id) ?? 50
+
   const helpScore = combineScore([
     { value: attr(helpDefender, 'defesa.garrafao'), weight: 1.0 },
     { value: attr(helpDefender, 'qi.tomadaDecisao'), weight: 0.9 },
     { value: attr(helpDefender, 'defesa.roubo'), weight: 0.7 },
+    { value: helpChem, weight: cw.defense * 0.7 },
   ])
 
   const helpCommit = contestedSelect(helpScore, 0.55, rng)
@@ -267,7 +307,7 @@ export function chooseFinishStyle({
 }
 
 /**
- * Resolve finalização / chute com pesos combinados.
+ * Resolve finalização / chute com pesos combinados + eficiência ofensiva da química.
  */
 export function resolveShot({
   shooter,
@@ -276,6 +316,8 @@ export function resolveShot({
   shotType, // 'two' | 'three' | 'layup' | 'post' | 'alley_oop' | 'step_back' | 'fadeaway'
   isHome,
   openLook,
+  chemistryEffects = null,
+  assister = null,
   rng,
 }) {
   const normalizedType =
@@ -309,6 +351,13 @@ export function resolveShot({
               ? tendency(shooter, 'postUp')
               : tendency(shooter, 'drive')
 
+  const cw = chemistryEffects?.weights ?? CHEMISTRY_SIM_WEIGHTS
+  const offChem = boostToScoreFactor(chemistryEffects?.offenseEfficiency)
+  const pairChem =
+    assister && chemistryEffects?.pairScoreBetween
+      ? chemistryEffects.pairScoreBetween(assister.id, shooter.id)
+      : chemistryEffects?.teamChemistry ?? 50
+
   const makeScore = combineScore([
     { value: finishAttr, weight: 1.25 },
     { value: tendencyBoost, weight: 0.85 },
@@ -321,6 +370,8 @@ export function resolveShot({
     { value: shooter?.overall ?? 70, weight: 0.45 },
     { value: openLook ? 88 : 52, weight: 0.95 },
     { value: 50 + homeBoost(isHome, 'finish') * 100, weight: 0.3 },
+    { value: offChem, weight: cw.offenseEfficiency },
+    { value: pairChem, weight: cw.pass * 0.45 },
   ])
 
   const perimeter =

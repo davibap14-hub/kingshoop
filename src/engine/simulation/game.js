@@ -7,6 +7,7 @@ import {
   SIM_QUARTERS,
 } from '../../data/simulation/constants'
 import { decidePossessionPlan, resolveTeamStyle } from '../ai'
+import { buildLineupChemistryEffects } from '../chemistry'
 import {
   applyPossessionToBox,
   computeMvp,
@@ -34,6 +35,15 @@ function normalizeSide(side, { isHome }) {
 
   const styleDecision = resolveTeamStyle(side)
 
+  // Química de pares — reconstruída aqui para ter pairScoreBetween na posse
+  const chemistryEffects =
+    side.chemistryEffects ??
+    buildLineupChemistryEffects(
+      side.chemistryState ?? null,
+      players,
+      side.chemistryBonus ?? 0,
+    )
+
   return {
     team: {
       id: side.teamId ?? side.team?.id ?? (isHome ? 'home' : 'away'),
@@ -41,7 +51,9 @@ function normalizeSide(side, { isHome }) {
       short: side.teamShort ?? side.team?.short ?? (isHome ? 'HOME' : 'AWAY'),
     },
     players,
-    chemistry: side.chemistry ?? 55,
+    chemistry: side.chemistry ?? chemistryEffects.teamChemistry ?? 55,
+    chemistryEffects,
+    chemistryState: chemistryEffects.state,
     fatigue: side.fatigue ?? 0,
     isHome,
     styleId: styleDecision.styleId,
@@ -109,6 +121,8 @@ export function simulateGame(input = {}, opts = {}) {
       context: {
         allowFastBreak,
         chemistry: offense.chemistry ?? 55,
+        chemistryEffects: offense.chemistryEffects,
+        defenseChemistryEffects: defense.chemistryEffects,
         styleThreeBias: offensePlan?.threeBias ?? 0,
         stylePace: offense.style?.match?.pace ?? 1,
         styleMotion: offense.styleId === 'fast_pace' ? 0.8 : 0.5,

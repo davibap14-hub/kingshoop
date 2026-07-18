@@ -1,6 +1,10 @@
 import { playerDb } from '../../data/players'
 import { getTeamById, TEAMS } from '../../data/teams'
 import { chooseBestStyle } from '../ai'
+import {
+  buildLineupChemistryEffects,
+  createChemistryState,
+} from '../chemistry'
 import { calcRosterChemistry } from '../personality/chemistry'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
@@ -21,7 +25,7 @@ function resolveRosterPlayers(rosterIds = [], gm = null) {
 
 /**
  * Monta um quinteto.
- * Se `gm` for passado, usa o elenco da franquia; senão fallback global.
+ * Se `gm` for passado, usa o elenco da franquia + Chemistry Engine.
  */
 export function buildLineupFromDb(
   teamId,
@@ -69,7 +73,17 @@ export function buildLineupFromDb(
   }
 
   const team = getTeamById(teamId) ?? TEAMS[0]
-  const chemistry = calcRosterChemistry(lineup, chemistryBonus)
+
+  const chemistryState = createChemistryState(gm?.chemistry ?? {})
+  const chemistryEffects = buildLineupChemistryEffects(
+    chemistryState,
+    lineup,
+    chemistryBonus,
+  )
+  // Scalar de compat: pares da Chemistry Engine (fallback personalidade)
+  const chemistry =
+    chemistryEffects.teamChemistry ??
+    calcRosterChemistry(lineup, chemistryBonus)
 
   const ai = styleId
     ? { styleId, auto: false }
@@ -82,6 +96,9 @@ export function buildLineupFromDb(
     team,
     players: lineup,
     chemistry,
+    chemistryBonus,
+    chemistryState: chemistryEffects.state,
+    chemistryEffects,
     fatigue: 0,
     styleId: ai.styleId,
   }
