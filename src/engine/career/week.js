@@ -8,6 +8,7 @@ import {
   suggestWeeklyActivity,
 } from '../personality'
 import { processSeasonalBalance } from '../balance'
+import { processWeeklyContracts } from '../contracts'
 import { processWeeklyNews } from '../news'
 import {
   applyEventToRelationships,
@@ -83,6 +84,18 @@ function advanceCalendar(state) {
  */
 export function runCareerWeek(state, activityId, opts = {}) {
   const rng = opts.rng ?? Math.random
+
+  if (state.pendingContractOffer) {
+    return {
+      ok: false,
+      error: 'Resolva a oferta de contrato antes de avançar a semana.',
+      activityId,
+      effects: null,
+      nextState: null,
+      availableActivities: listAvailableActivities(state),
+      pendingContractOffer: state.pendingContractOffer,
+    }
+  }
 
   if (state.pendingEvent) {
     return {
@@ -290,17 +303,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
     messages.push(`Nova temporada! Temporada ${calendar.currentSeason} começa.`)
   }
 
-  let contract = state.contract
-  if (calendar.seasonRolled && contract) {
-    const yearsRemaining = Math.max(0, (contract.yearsRemaining ?? 1) - 1)
-    contract = { ...contract, yearsRemaining }
-    if (yearsRemaining === 0) {
-      messages.push('Contrato expirou — renegociação necessária.')
-    } else {
-      messages.push(`Contrato: ${yearsRemaining} ano(s) restante(s).`)
-    }
-  }
-
   // Balance Engine — idade, rookies e decadência no roll de temporada
   const balanceResult = processSeasonalBalance({
     player,
@@ -372,6 +374,30 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...gmResult.messages)
 
+  // Contract Engine — renovação, FA, opções, buyout, extensões
+  const contractResult = processWeeklyContracts(
+    {
+      ...state,
+      player,
+      status,
+      gm: gmResult.gm,
+      season: seasonResult.season,
+      contract: state.contract,
+      contractEngine: state.contractEngine,
+      pendingContractOffer: state.pendingContractOffer,
+      currentTeamId: state.currentTeamId,
+      relationships: relResult.relationships,
+    },
+    {
+      week: calendar.currentWeek,
+      seasonNumber: calendar.currentSeason,
+      seasonRolled: calendar.seasonRolled,
+      phase: seasonResult.phase,
+      rng,
+    },
+  )
+  messages.push(...contractResult.messages)
+
   // History Engine — arquivo permanente (antes do reset já capturado em previousSeason)
   const historyResult = processWeeklyHistory({
     leagueHistory: state.leagueHistory,
@@ -427,7 +453,11 @@ export function runCareerWeek(state, activityId, opts = {}) {
     relationships: newsRel.relationships,
     relationshipEffects,
     playingTimeShare: relationshipEffects.playingTimeShare,
-    contract,
+    contract: contractResult.contract,
+    contractEngine: contractResult.contractEngine,
+    pendingContractOffer: contractResult.pendingContractOffer,
+    currentTeamId:
+      contractResult.currentTeamId ?? state.currentTeamId,
     sponsorships,
     finance: finance.finance,
     injury,
@@ -443,15 +473,20 @@ export function runCareerWeek(state, activityId, opts = {}) {
     pendingEvent: null,
   }
 
-  const eventRoll = triggerEvent(
-    nextState,
-    { activityType: activity.type, activityId: activity.id },
-    { rng },
-  )
+  // Evita dois pendentes na mesma semana — contrato tem prioridade
+  if (!nextState.pendingContractOffer) {
+    const eventRoll = triggerEvent(
+      nextState,
+      { activityType: activity.type, activityId: activity.id },
+      { rng },
+    )
 
-  if (eventRoll.triggered) {
-    nextState = eventRoll.nextState
-    messages.push(`Evento: ${eventRoll.event.categoriaLabel} — escolha pendente.`)
+    if (eventRoll.triggered) {
+      nextState = eventRoll.nextState
+      messages.push(
+        `Evento: ${eventRoll.event.categoriaLabel} — escolha pendente.`,
+      )
+    }
   }
 
   const effects = {
@@ -468,7 +503,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injuryHealed: Boolean(state.injury) && !injury,
     finance: finance.summary,
     sponsorships,
-    contract,
+    contract: contractResult.contract,
+    contracts: contractResult.summary,
     progression: {
       xpGain: progResult.xpGain,
       leveledUp: progResult.leveledUp,
@@ -484,6 +520,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,
+    pendingContractOffer: nextState.pendingContractOffer,
   }
 
   nextState.lastWeekResult = effects

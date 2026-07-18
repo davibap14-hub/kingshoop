@@ -29,6 +29,8 @@ function pickCareerFields(state) {
     relationships: state.relationships,
     relationshipEffects: state.relationshipEffects,
     playingTimeShare: state.playingTimeShare,
+    contractEngine: state.contractEngine,
+    pendingContractOffer: state.pendingContractOffer,
     season: state.season,
     gm: state.gm,
     weekNews: state.weekNews,
@@ -157,6 +159,8 @@ export const useGameStore = create((set, get) => {
         weekEffects: result.effects,
         availableActivities: result.availableActivities,
         pendingEvent: result.pendingEvent ?? null,
+        pendingContractOffer:
+          result.nextState.pendingContractOffer ?? null,
         selectedActivityId:
           result.availableActivities.find((a) => a.id === id)?.id ??
           result.availableActivities[0]?.id ??
@@ -170,6 +174,46 @@ export const useGameStore = create((set, get) => {
           activeSaveId: saved.payload.id,
           lastSaveAt: saved.payload.updatedAt,
           lastSaveMessage: `Auto-save · Semana ${result.nextState.currentWeek}`,
+          saveList: gameService.listSaves(),
+        })
+      }
+
+      return result
+    },
+
+    /**
+     * Resolve oferta da Contract Engine + auto-save.
+     */
+    resolveContractDecision: (decision, terms = {}) => {
+      const pending = get().pendingContractOffer
+      if (!pending) {
+        return { ok: false, error: 'Nenhuma oferta de contrato pendente.' }
+      }
+
+      const result = gameService.resolveContractDecision(
+        get(),
+        decision,
+        terms,
+      )
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+
+      set({
+        ...result.nextState,
+        pendingContractOffer: result.nextState.pendingContractOffer ?? null,
+        lastEvent:
+          result.effects.messages?.[result.effects.messages.length - 1] ??
+          result.nextState.lastEvent,
+      })
+
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: 'Auto-save · contrato',
           saveList: gameService.listSaves(),
         })
       }

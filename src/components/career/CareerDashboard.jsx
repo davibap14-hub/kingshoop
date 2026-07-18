@@ -14,6 +14,8 @@ import EventChoicePanel from './EventChoicePanel'
 import FinancePanel from './FinancePanel'
 import GmPanel from './GmPanel'
 import BalancePanel from './BalancePanel'
+import ContractOfferPanel from './ContractOfferPanel'
+import ContractPanel from './ContractPanel'
 import HistoryPanel from './HistoryPanel'
 import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
@@ -123,9 +125,11 @@ export default function CareerDashboard() {
             trend={trend}
           />
 
+          <ContractOfferPanel />
           <EventChoicePanel />
           <WeekControls />
           <NewsPanel />
+          <ContractPanel />
           <RelationshipPanel />
           <HistoryPanel />
           <SeasonPanel />

@@ -24,6 +24,7 @@ export default function WeekControls() {
   const weekEffects = useGameStore((s) => s.weekEffects)
   const injury = useGameStore((s) => s.injury)
   const pendingEvent = useGameStore((s) => s.pendingEvent)
+  const pendingContractOffer = useGameStore((s) => s.pendingContractOffer)
 
   const setSelectedActivity = useGameStore((s) => s.setSelectedActivity)
   const runWeek = useGameStore((s) => s.runWeek)
@@ -58,9 +59,13 @@ export default function WeekControls() {
           <Button
             variant="accent"
             onClick={() => runWeek(selectedActivityId)}
-            disabled={Boolean(pendingEvent)}
+            disabled={Boolean(pendingEvent || pendingContractOffer)}
           >
-            {pendingEvent ? 'Resolva o evento' : 'Confirmar Semana'}
+            {pendingContractOffer
+              ? 'Resolva o contrato'
+              : pendingEvent
+                ? 'Resolva o evento'
+                : 'Confirmar Semana'}
           </Button>
         </div>
       </div>

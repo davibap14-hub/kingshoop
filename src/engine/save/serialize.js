@@ -1,6 +1,10 @@
 import { SAVE_VERSION } from '../../data/save/constants'
 import { createLeagueHistory } from '../history/state'
 import {
+  createContractEngineState,
+  migrateLegacyContract,
+} from '../contracts'
+import {
   calculateRelationshipEffects,
   createRelationshipsState,
   hydrateRelationshipsFromStatus,
@@ -22,7 +26,15 @@ export function buildSaveSnapshot(state) {
     careerVariables: structuredCloneSafe(state.careerVariables),
     progression: structuredCloneSafe(state.progression),
     finance: structuredCloneSafe(state.finance),
-    contract: structuredCloneSafe(state.contract),
+    contract: structuredCloneSafe(
+      migrateLegacyContract(state.contract, {
+        teamId: state.currentTeamId,
+      }),
+    ),
+    contractEngine: structuredCloneSafe(
+      state.contractEngine ?? createContractEngineState(),
+    ),
+    pendingContractOffer: structuredCloneSafe(state.pendingContractOffer),
     sponsorships: structuredCloneSafe(state.sponsorships ?? []),
     injury: structuredCloneSafe(state.injury),
     pendingEvent: structuredCloneSafe(state.pendingEvent),
@@ -104,7 +116,11 @@ export function hydrateSaveToOverrides(payload) {
     careerVariables: snap.careerVariables,
     progression: snap.progression,
     finance: snap.finance,
-    contract: snap.contract,
+    contract: migrateLegacyContract(snap.contract, {
+      teamId: snap.currentTeamId,
+    }),
+    contractEngine: createContractEngineState(snap.contractEngine),
+    pendingContractOffer: snap.pendingContractOffer ?? null,
     sponsorships: snap.sponsorships,
     injury: snap.injury,
     pendingEvent: snap.pendingEvent,

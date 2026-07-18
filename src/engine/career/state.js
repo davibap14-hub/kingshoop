@@ -14,6 +14,10 @@ import {
   createEmptyHistory,
 } from '../save/history'
 import { calcBalancedSalary } from '../balance'
+import {
+  createContractEngineState,
+  createPlayerContract,
+} from '../contracts'
 import { createLeagueHistory } from '../history/state'
 import {
   calculateRelationshipEffects,
@@ -67,12 +71,16 @@ export function buildStatsFromArchetype(archetypeId = DEFAULT_ARCHETYPE_ID) {
 }
 
 export function createDefaultContract(teamId = DEFAULT_TEAM_ID, yearlySalary = 1_500_000) {
-  return {
+  return createPlayerContract({
     teamId,
     yearsRemaining: 3,
+    yearsTotal: 3,
     yearlySalary,
     weeklySalary: Math.round(yearlySalary / WEEKS_PER_SEASON),
-  }
+    seasonsWithTeam: 1,
+    seasonsInLeague: 1,
+    birdRights: true,
+  })
 }
 
 /**
@@ -143,11 +151,14 @@ export function createCareerState(overrides = {}) {
     contract:
       overrides.contract ??
       createDefaultContract(
-        overrides.currentTeamId,
+        overrides.currentTeamId ?? DEFAULT_TEAM_ID,
         calcBalancedSalary(player, {
           seasonNumber: overrides.currentSeason ?? 1,
         }),
       ),
+    contractEngine:
+      overrides.contractEngine ?? createContractEngineState(),
+    pendingContractOffer: overrides.pendingContractOffer ?? null,
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,
     pendingEvent: overrides.pendingEvent ?? null,

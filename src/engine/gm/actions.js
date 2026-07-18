@@ -140,6 +140,16 @@ export function tradePlayers(gm, teamA, playerA, teamB, playerB, reason = 'Troca
     return { ok: false, gm, decision: null }
   }
 
+  // Contract Engine — No-Trade Clause bloqueia troca
+  const playerAObj = resolvePlayer(next, playerA)
+  const playerBObj = resolvePlayer(next, playerB)
+  if (
+    playerAObj?.clauses?.tradeClause === 'full' ||
+    playerBObj?.clauses?.tradeClause === 'full'
+  ) {
+    return { ok: false, gm, decision: null }
+  }
+
   next.rosters[teamA] = rosterA.map((id) => (id === playerA ? playerB : id))
   next.rosters[teamB] = rosterB.map((id) => (id === playerB ? playerA : id))
 

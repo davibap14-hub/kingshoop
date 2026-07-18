@@ -19,10 +19,13 @@ import {
   getGmView,
   calculateRelationshipEffects,
   getBalanceView,
+  getContractView,
   getHistoryView,
   getRelationshipView,
   getSeasonView,
   GM_PERSONALITIES,
+  resolveContractDecision,
+  summarizeOffer,
   investCash,
   listEvolvableGroups,
   rankStylesForRoster,
@@ -177,6 +180,21 @@ export const gameService = {
 
   getRelationshipEffects(relationships) {
     return calculateRelationshipEffects(relationships)
+  },
+
+  /** Contract Engine */
+  getContractView(state) {
+    return getContractView(state)
+  },
+
+  summarizeContractOffer(offer) {
+    return summarizeOffer(offer)
+  },
+
+  resolveContractDecision(state, decision, terms = {}) {
+    return resolveContractDecision(state, decision, terms, {
+      seasonNumber: state.currentSeason,
+    })
   },
 
   analyzeFranchise(state, teamId) {

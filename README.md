@@ -34,6 +34,7 @@ src/
  │    ├── history/
  │    ├── balance/
  │    ├── relationships/
+ │    ├── contracts/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -48,6 +49,7 @@ src/
  │    ├── history/
  │    ├── balance/
  │    ├── relationships/
+ │    ├── contracts/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -58,6 +60,26 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Contract Engine
+
+`src/engine/contracts/` + `src/data/contracts/` — contratos da carreira.
+
+- Renovação · Extensões · Ofertas de franquias
+- Player Option · Team Option
+- RFA · UFA
+- Trade Clause · Buyout
+- Negociação (salário, duração, bônus, cláusulas)
+
+Franquias geram propostas com overall, potencial, idade, popularidade, personalidade, objetivos e salary cap.
+
+```js
+processWeeklyContracts(state, { week, seasonRolled, phase })
+resolveContractDecision(state, 'accept' | 'negotiate' | 'refuse', terms?)
+getContractView(state)
+```
+
+UI: `ContractPanel` + `ContractOfferPanel`. Save `v6`.
 
 ## Relationship Engine
 
