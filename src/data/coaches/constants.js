@@ -81,3 +81,6 @@ export const OFFENSIVE_SET_BIAS_KEYS = [
   'post_up',
   'cut',
 ]
+
+/** Reexport — preferências defensivas vivem em data/defense */
+export { DEFENSE_SCHEMES as DEFENSIVE_SCHEME_KEYS } from '../defense/constants.js'

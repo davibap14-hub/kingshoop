@@ -42,6 +42,7 @@ src/
  │    ├── personality/
  │    ├── dna/
  │    ├── playbook/
+ │    ├── defense/
  │    ├── career/
  │    ├── match/
  │    ├── progression/
@@ -61,6 +62,7 @@ src/
  │    ├── personality/
  │    ├── dna/
  │    ├── playbook/
+ │    ├── defense/
  │    ├── teams/
  │    ├── events/
  │    ├── coaches/
@@ -467,6 +469,26 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Defensive Engine
+
+`src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.
+
+Esquemas: **Individual · Zona · Switch · Help Defense · Double Team · Trap · Drop Coverage · Hedge · Ice · Full Court Press**.
+
+- Cada técnico tem `defenseBias` (preferências por esquema).
+- A defesa **reage dinamicamente** à ameaça ofensiva (transição, PnR, iso, post, shooters, placar, fadiga).
+- A Simulation Engine usa a Engine em pressão on-ball, ajuda, roubo, turnover e contest.
+
+```js
+decideDefensiveScheme({ defensePlayers, ballHandler, ctx, coach, defenseBias, rng })
+adaptDefenseToSet(plan, offensiveSet, ctx, rng)
+resolveOnBallPressure({ …, defenseEffects })
+resolveShot({ …, defenseEffects })
+getDefenseView(state)
+```
+
+Preferências no coach (`defenseBias`) · Save **v17** · UI: `DefensePanel`.
+
 ## Playbook Engine
 
 `src/engine/playbook/` + `src/data/playbook/` — jogadas por franquia.
@@ -486,7 +508,7 @@ processWeeklyPlaybooks({ playbooks, gm, seasonRolled })
 getPlaybookView(state)
 ```
 
-Persistido em `gm.playbooks` (**Save v16**). UI: `PlaybookPanel`.
+Persistido em `gm.playbooks` (**Save v17**). UI: `PlaybookPanel`.
 
 ## Player DNA Engine
 
@@ -509,7 +531,7 @@ dnaSetBias(handler, setId)
 getDnaView(state)
 ```
 
-Persistido no Save (**v16**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
+Persistido no Save (**v17**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
 
 ## Decision Engine
 
@@ -545,7 +567,7 @@ evaluateAchievements(achievements, state)
 getAchievementsView(state)
 ```
 
-Persistido em `state.achievements` via Save Engine (**v16**). UI: `AchievementsPanel`.
+Persistido em `state.achievements` via Save Engine (**v17**). UI: `AchievementsPanel`.
 
 ## Story Engine
 

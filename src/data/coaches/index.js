@@ -10,6 +10,7 @@ export {
   PRACTICE_FOCI,
   COACH_DECISION_WEIGHTS,
   OFFENSIVE_SET_BIAS_KEYS,
+  DEFENSIVE_SCHEME_KEYS,
 } from './constants'
 
 export {

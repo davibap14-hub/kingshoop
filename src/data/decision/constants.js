@@ -24,6 +24,8 @@ export const DECISION_IDS = {
   steal_duel: 'steal_duel',
   shot_resolve: 'shot_resolve',
   rebound_duel: 'rebound_duel',
+  defensive_scheme: 'defensive_scheme',
+  defense_adapt: 'defense_adapt',
 }
 
 /** Pesos dos fatores situacionais (aplicados em todas as decisões) */

@@ -23,6 +23,7 @@ export const PLAY_ACTIONS = {
   step_back: 'step_back',
   fadeaway: 'fadeaway',
   play_call: 'play_call',
+  defensive_scheme: 'defensive_scheme',
 }
 
 export const PLAY_ACTION_LABELS = {
@@ -42,6 +43,7 @@ export const PLAY_ACTION_LABELS = {
   step_back: 'Step Back',
   fadeaway: 'Fadeaway',
   play_call: 'Jogada (Playbook)',
+  defensive_scheme: 'Esquema defensivo',
 }
 
 /** Pesos base para escolher o set ofensivo (combinados com attrs) */

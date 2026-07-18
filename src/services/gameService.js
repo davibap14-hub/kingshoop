@@ -27,6 +27,7 @@ import {
   getAchievementsView,
   getDnaView,
   getPlaybookView,
+  getDefenseView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -225,6 +226,11 @@ export const gameService = {
   /** Playbook Engine — Interface só lê */
   getPlaybookView(state) {
     return getPlaybookView(state)
+  },
+
+  /** Defensive Engine — Interface só lê */
+  getDefenseView(state) {
+    return getDefenseView(state)
   },
 
   /** Injury Engine — Interface só lê */

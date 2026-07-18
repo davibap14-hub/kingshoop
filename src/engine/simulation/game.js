@@ -58,6 +58,7 @@ function normalizeSide(side, { isHome }) {
     chemistryState: chemistryEffects.state,
     coachSetBias: side.coachSetBias ?? side.coach?.setBias ?? {},
     coach: side.coach ?? null,
+    defenseBias: side.defenseBias ?? side.coach?.defenseBias ?? null,
     playbook: side.playbook ?? null,
     fatigue: side.fatigue ?? 0,
     isHome,
@@ -134,6 +135,9 @@ export function simulateGame(input = {}, opts = {}) {
         coachSetBias: offense.coachSetBias ?? {},
         coach: offense.coach ?? null,
         playbook: offense.playbook ?? null,
+        // Defensive Engine — preferências do técnico DEFENSOR
+        defenseBias: defense.defenseBias ?? defense.coach?.defenseBias ?? null,
+        defenseCoach: defense.coach ?? null,
         styleThreeBias: offensePlan?.threeBias ?? 0,
         stylePace: offense.style?.match?.pace ?? 1,
         styleMotion: offense.styleId === 'fast_pace' ? 0.8 : 0.5,

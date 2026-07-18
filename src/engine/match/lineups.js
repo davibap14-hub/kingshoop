@@ -117,6 +117,7 @@ export function buildLineupFromDb(
     chemistryEffects,
     coach,
     coachSetBias: coach?.setBias ?? ai.setBias ?? {},
+    defenseBias: coach?.defenseBias ?? null,
     playbook,
     fatigue: 0,
     styleId: ai.styleId,

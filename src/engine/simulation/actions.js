@@ -90,6 +90,7 @@ export function resolveOnBallPressure({
   importance = 50,
   fatigue = 0,
   momentum = 50,
+  defenseEffects = null,
   rng,
 }) {
   const cw = chemistryEffects?.weights ?? CHEMISTRY_SIM_WEIGHTS
@@ -97,6 +98,7 @@ export function resolveOnBallPressure({
   const passChem = boostToScoreFactor(chemistryEffects?.passBoost)
   const moveChem = boostToScoreFactor(chemistryEffects?.movementBoost)
   const decisionCtx = { pressure, importance, fatigue, momentum }
+  const defFx = defenseEffects
 
   const attackScore = combineScore([
     { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 1.0 },
@@ -117,7 +119,8 @@ export function resolveOnBallPressure({
     { value: attr(defender, 'defesa.roubo'), weight: 1.0 },
     { value: attr(defender, 'fisico.velocidade'), weight: 0.9 },
     { value: defender?.overall ?? 70, weight: 0.5 },
-    { value: fatigue * 0.6, weight: 0.35, invert: true },
+    { value: defFx?.pressureScore ?? 50, weight: 0.85 },
+    { value: fatigue * 0.6 * (defFx?.fatigueMult ?? 1), weight: 0.35, invert: true },
   ])
 
   const helpChem =
@@ -129,12 +132,18 @@ export function resolveOnBallPressure({
     { value: attr(helpDefender, 'defesa.roubo'), weight: 0.7 },
     { value: helpChem, weight: cw.defense * 0.7 },
     { value: importance, weight: 0.3 },
+    { value: defFx?.helpScore ?? 50, weight: 0.95 },
   ])
+
+  // Threshold dinâmico: esquemas agressivos commitam ajuda mais cedo
+  const helpThreshold = defFx?.commitsHelpEarly
+    ? 0.42 / (defFx.helpCommitMult ?? 1)
+    : 0.55 / Math.max(0.75, defFx?.helpCommitMult ?? 1)
 
   const helpCommit = decideDuel(
     'help_commit',
     helpScore,
-    0.55,
+    helpThreshold,
     decisionCtx,
     rng,
   )
@@ -143,8 +152,18 @@ export function resolveOnBallPressure({
       ? combineScore([
           { value: defenseScore * 100, weight: 1.0, scale: 100 },
           { value: helpScore * 100, weight: 0.85, scale: 100 },
+          {
+            value: (defFx?.pressureScore ?? 50) * (defFx?.pressureMult ?? 1),
+            weight: 0.55,
+          },
         ])
-      : defenseScore
+      : combineScore([
+          { value: defenseScore * 100, weight: 1.0, scale: 100 },
+          {
+            value: (defFx?.pressureScore ?? 50) * (defFx?.pressureMult ?? 1),
+            weight: 0.45,
+          },
+        ])
 
   const duel = decideDuel(
     'on_ball_pressure',
@@ -161,6 +180,7 @@ export function resolveOnBallPressure({
     helpDefender: helpCommit.winner === 'a' ? helpDefender : null,
     winner: duel.winner === 'a' ? 'offense' : 'defense',
     margin: duel.margin,
+    defenseScheme: defFx?.scheme ?? null,
   }
 }
 
@@ -273,6 +293,7 @@ export function resolveShot({
   openLook,
   chemistryEffects = null,
   assister = null,
+  defenseEffects = null,
   rng,
 }) {
   const normalizedType =
@@ -335,6 +356,41 @@ export function resolveShot({
     shotType === 'step_back' ||
     shotType === 'fadeaway'
 
+  // Defensive Engine — contest reage ao esquema × tipo de chute
+  let contestSchemeMult = 1
+  if (defenseEffects) {
+    const isThreeShot = normalizedType === 'three'
+    const isPaintShot =
+      normalizedType === 'layup' ||
+      normalizedType === 'alley_oop' ||
+      normalizedType === 'post'
+    if (isThreeShot) {
+      contestSchemeMult =
+        (defenseEffects.contestMult ?? 1) /
+        Math.max(0.85, defenseEffects.threeConcedeMult ?? 1)
+    } else if (isPaintShot) {
+      contestSchemeMult =
+        (defenseEffects.contestMult ?? 1) * (defenseEffects.paintMult ?? 1)
+    } else {
+      contestSchemeMult =
+        (defenseEffects.contestMult ?? 1) *
+        (((defenseEffects.perimeterMult ?? 1) + (defenseEffects.paintMult ?? 1)) /
+          2)
+    }
+  }
+
+  const makeWithScheme = combineScore([
+    { value: makeScore * 100, weight: 1.0, scale: 100 },
+    // Zona / drop concedem mais espaço no perímetro
+    {
+      value:
+        normalizedType === 'three'
+          ? (defenseEffects?.threeConcedeMult ?? 1) * 50
+          : 50,
+      weight: defenseEffects ? 0.35 : 0.05,
+    },
+  ])
+
   const contestScore = combineScore([
     {
       value: perimeter
@@ -348,6 +404,8 @@ export function resolveShot({
       value: helpDefender ? attr(helpDefender, 'defesa.toco') : 40,
       weight: helpDefender ? 0.7 : 0.2,
     },
+    { value: defenseEffects?.contestScore ?? 50, weight: 0.75 },
+    { value: 50 * contestSchemeMult, weight: 0.55 },
     { value: 50 + homeBoost(!isHome, 'contest') * 100, weight: 0.3 },
   ])
 
@@ -355,17 +413,21 @@ export function resolveShot({
     { value: attr(defender, 'defesa.toco'), weight: 1.3 },
     { value: attr(defender, 'fisico.impulsao'), weight: 1.0 },
     { value: contestScore * 100, weight: 0.5, scale: 100 },
-    { value: makeScore * 100, weight: 0.4, scale: 100, invert: true },
+    { value: makeWithScheme * 100, weight: 0.4, scale: 100, invert: true },
+    {
+      value: (defenseEffects?.paintMult ?? 1) * 50,
+      weight: defenseEffects?.protectsPaint ? 0.45 : 0.15,
+    },
   ])
 
   const outcomes = weightedSelect(
     [
-      { id: 'make', score: makeScore, mult: 1.0 },
+      { id: 'make', score: makeWithScheme, mult: 1.0 },
       {
         id: 'miss',
         score: combineScore([
           { value: contestScore * 100, weight: 1.0, scale: 100 },
-          { value: makeScore * 100, weight: 0.85, scale: 100, invert: true },
+          { value: makeWithScheme * 100, weight: 0.85, scale: 100, invert: true },
         ]),
       },
       { id: 'block', score: blockScore, mult: 0.55 },

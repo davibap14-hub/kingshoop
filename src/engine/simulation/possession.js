@@ -2,6 +2,10 @@ import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { PLAY_ACTIONS } from '../../data/simulation/constants'
 import { boostToScoreFactor } from '../chemistry/effects'
 import {
+  adaptDefenseToSet,
+  decideDefensiveScheme,
+} from '../defense'
+import {
   buildPossessionDecisionContext,
   decideBallHandler,
   decideCutter,
@@ -96,6 +100,35 @@ export function simulatePossessionDetailed({
     actors: { defender: defender.nome, ballHandler: ballHandler.nome },
   })
 
+  // Defensive Engine — esquema coletivo reage à ameaça ofensiva
+  let defensePlan = decideDefensiveScheme({
+    defensePlayers,
+    offensePlayers,
+    ballHandler,
+    ctx: {
+      ...decisionCtx,
+      allowFastBreak: Boolean(decisionCtx.allowFastBreak),
+      coach: context.defenseCoach ?? context.coach ?? decisionCtx.coach,
+    },
+    coach: context.defenseCoach ?? null,
+    defenseBias:
+      context.defenseBias ??
+      context.defenseCoach?.defenseBias ??
+      decisionCtx.defenseBias,
+    rng,
+  })
+  push({
+    action: PLAY_ACTIONS.defensive_scheme,
+    text: `Defesa: ${defensePlan.label}.`,
+    actors: { defender: defender.nome },
+  })
+
+  const pack = (payload) =>
+    packResult({
+      ...payload,
+      defenseScheme: defensePlan?.scheme ?? payload.defenseScheme ?? null,
+    })
+
   const pressure = resolveOnBallPressure({
     ballHandler,
     defender,
@@ -107,13 +140,20 @@ export function simulatePossessionDetailed({
     importance: decisionCtx.importance,
     fatigue: decisionCtx.fatigue,
     momentum: decisionCtx.momentum,
+    defenseEffects: defensePlan.effects,
     rng,
   })
 
   if (pressure.helpCommitted) {
+    const helpLabel =
+      defensePlan.scheme === 'double_team'
+        ? 'dobra'
+        : defensePlan.scheme === 'trap'
+          ? 'trap'
+          : 'ajuda'
     push({
       action: PLAY_ACTIONS.help_defense,
-      text: `${help.nome} vem na ajuda sobre ${ballHandler.nome}.`,
+      text: `${help.nome} vem na ${helpLabel} sobre ${ballHandler.nome} (${defensePlan.label}).`,
       actors: { help: help.nome, ballHandler: ballHandler.nome },
     })
   }
@@ -132,6 +172,11 @@ export function simulatePossessionDetailed({
       { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 0.8, invert: true },
       { value: decisionCtx.pressure, weight: 0.35 },
       { value: decisionCtx.fatigue, weight: 0.3, invert: true },
+      {
+        value: (defensePlan.effects?.stealScore ?? 50) *
+          (defensePlan.effects?.stealMult ?? 1),
+        weight: defensePlan.effects?.gamblesSteal ? 1.0 : 0.65,
+      },
     ])
     const holdScore = combineScore([
       { value: pressure.attackScore * 100, weight: 1.0, scale: 100 },
@@ -154,10 +199,10 @@ export function simulatePossessionDetailed({
     if (stealDuel.winner === 'a') {
       push({
         action: PLAY_ACTIONS.individual_defense,
-        text: `Roubo de ${stealer.nome}!`,
+        text: `Roubo de ${stealer.nome}! (${defensePlan.label})`,
         actors: { stealer: stealer.nome },
       })
-      return packResult({
+      return pack({
         outcome: 'steal',
         points: 0,
         stealerId: stealer.id,
@@ -174,6 +219,11 @@ export function simulatePossessionDetailed({
         { value: pressure.defenseScore * 100, weight: 1, scale: 100 },
         { value: 48, weight: 0.5 },
         { value: decisionCtx.pressure, weight: 0.4 },
+        {
+          value: (defensePlan.effects?.raw?.turnoverForce ?? 50) *
+            (defensePlan.effects?.turnoverMult ?? 1),
+          weight: 0.7,
+        },
       ]),
       combineScore([
         { value: pressure.attackScore * 100, weight: 1, scale: 100 },
@@ -190,7 +240,7 @@ export function simulatePossessionDetailed({
         text: `Turnover de ${ballHandler.nome} sob pressão.`,
         actors: { ballHandler: ballHandler.nome },
       })
-      return packResult({
+      return pack({
         outcome: 'turnover',
         points: 0,
         turnoversById: ballHandler.id,
@@ -221,6 +271,24 @@ export function simulatePossessionDetailed({
     },
     rng,
   })
+
+  // Defensive Engine — adapta cobertura ao set ofensivo real
+  defensePlan = adaptDefenseToSet(
+    defensePlan,
+    set,
+    {
+      ...decisionCtx,
+      coach: context.defenseCoach ?? decisionCtx.coach,
+    },
+    rng,
+  )
+  if (defensePlan.adapted && defensePlan.previousScheme) {
+    push({
+      action: PLAY_ACTIONS.defensive_scheme,
+      text: `Ajuste defensivo: ${defensePlan.label} contra ${set?.id ?? 'ataque'}.`,
+      actors: { defender: defender.nome },
+    })
+  }
 
   const setId = set?.id ?? 'isolation'
   const calledPlay = set?.meta?.play ?? null
@@ -651,6 +719,7 @@ export function simulatePossessionDetailed({
     openLook,
     chemistryEffects,
     assister,
+    defenseEffects: defensePlan.effects,
     rng,
   })
 
@@ -675,7 +744,7 @@ export function simulatePossessionDetailed({
       blocker,
       events,
       push,
-      packResult,
+      packResult: pack,
     })
   }
 
@@ -693,7 +762,7 @@ export function simulatePossessionDetailed({
         points: shot.points,
       })
     }
-    return packResult({
+    return pack({
       outcome: 'shooting_foul',
       points: shot.points,
       scorerId: shot.points > 0 ? shooter.id : null,
@@ -739,7 +808,7 @@ export function simulatePossessionDetailed({
       },
       points: pts,
     })
-    return packResult({
+    return pack({
       outcome: pts === 3 ? 'make3' : 'make2',
       points: pts,
       scorerId: shooter.id,
@@ -772,7 +841,7 @@ export function simulatePossessionDetailed({
     blocker: null,
     events,
     push,
-    packResult,
+    packResult: pack,
   })
 }
 
@@ -840,6 +909,7 @@ function packResult(payload) {
     missedById: payload.missedById ?? null,
     keepsPossession: Boolean(payload.keepsPossession),
     transitionNext: Boolean(payload.transitionNext),
+    defenseScheme: payload.defenseScheme ?? null,
     events: payload.events ?? [],
   }
 }

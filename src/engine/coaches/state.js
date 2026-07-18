@@ -3,6 +3,7 @@ import {
   COACH_ATTR_MAX,
   COACH_ATTR_MIN,
 } from '../../data/coaches'
+import { resolveCoachDefenseBias } from '../defense/preferences.js'
 import { clamp } from '../utils/math'
 
 export function clampCoachAttr(value) {
@@ -43,7 +44,7 @@ export function normalizeCoach(raw = {}) {
   for (const key of COACH_ATTR_KEYS) {
     attrs[key] = clampCoachAttr(raw[key] ?? raw.base?.[key] ?? 55)
   }
-  return {
+  const base = {
     id: raw.id ?? 'coach_unknown',
     name: raw.name ?? 'Head Coach',
     teamId: raw.teamId ?? null,
@@ -51,5 +52,12 @@ export function normalizeCoach(raw = {}) {
     preferredStyleId: raw.preferredStyleId ?? 'fast_pace',
     setBias: { ...(raw.setBias ?? {}) },
     ...attrs,
+  }
+  return {
+    ...base,
+    defenseBias: resolveCoachDefenseBias({
+      ...base,
+      defenseBias: raw.defenseBias,
+    }),
   }
 }

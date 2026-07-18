@@ -119,6 +119,8 @@ export function buildPossessionDecisionContext({
     coach: context.coach ?? null,
     playbook: context.playbook ?? null,
     playbookCategoryBias: context.playbookCategoryBias ?? null,
+    defenseBias: context.defenseBias ?? null,
+    defenseCoach: context.defenseCoach ?? null,
     matchup,
     styleThreeBias: context.styleThreeBias ?? 0,
     stylePace: context.stylePace ?? 1,
