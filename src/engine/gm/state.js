@@ -97,6 +97,7 @@ export function createGmState(overrides = {}) {
 
   return {
     personalities: overrides.personalities ?? assignPersonalities(),
+    objectives: overrides.objectives ?? {},
     rosters: built.rosters,
     freeAgents: overrides.freeAgents ?? built.freeAgents,
     contracts,

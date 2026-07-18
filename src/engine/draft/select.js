@@ -2,12 +2,14 @@ import { trait } from '../personality/traits'
 import { sortByMockRank } from './mock'
 
 /**
- * Score do prospect para um time — necessidades + personalidade da franquia + mock.
+ * Score do prospect para um time — objetivo da Franchise AI + necessidades + mock.
+ * Determinístico.
  */
 export function scoreProspectForTeam(prospect, sit) {
   if (!prospect || !sit) return 0
 
-  const w = sit.personality?.weights ?? {}
+  const w = sit.weights ?? sit.personality?.weights ?? {}
+  const objectiveId = sit.objectiveId
   let score = 0
 
   score += (prospect.overall ?? 70) * (w.winNow ?? 1) * 0.9
@@ -18,47 +20,54 @@ export function scoreProspectForTeam(prospect, sit) {
     score += 28
   }
 
-  // Mock rank: melhores ranks valem mais
   const mockRank = prospect.mockDraft?.rank ?? 20
   score += Math.max(0, 22 - mockRank) * 1.8
 
-  // Personalidade do prospect: liderança / disciplina agradam; ego alto afasta financeiras
   score += (trait(prospect, 'lideranca') - 50) * 0.15
   score += (trait(prospect, 'disciplina') - 50) * 0.12
   score += (trait(prospect, 'competitividade') - 50) * 0.1
 
-  if (sit.personalityId === 'financeira') {
+  if (objectiveId === 'economy' || sit.personalityId === 'financeira') {
     score -= (prospect.salario ?? 0) / 1_200_000
     score -= (trait(prospect, 'ego') - 50) * 0.12
   }
-  if (sit.personalityId === 'jovem' || sit.mode === 'rebuild') {
-    score += (prospect.potencial - prospect.overall) * 1.2
+  if (
+    objectiveId === 'tank' ||
+    objectiveId === 'development' ||
+    sit.mode === 'rebuild'
+  ) {
+    score += ((prospect.potencial ?? 70) - (prospect.overall ?? 70)) * 1.35
   }
-  if (sit.personalityId === 'contender' || sit.mode === 'contend') {
+  if (objectiveId === 'title' || objectiveId === 'playoffs') {
     score += (prospect.overall ?? 0) * (w.starHunting ?? 1) * 0.35
   }
 
-  // Elenco já saturado na posição → penaliza
-  const samePos = (sit.roster ?? []).filter((p) => p.posicao === prospect.posicao)
+  const samePos = (sit.roster ?? []).filter(
+    (p) => p.posicao === prospect.posicao,
+  )
   if (samePos.length >= 2) score -= 12
 
   return score
 }
 
 /**
- * Escolhe o melhor prospect disponível para o time.
+ * Escolhe o melhor prospect (maior score). Empate: mock rank, depois id.
+ * Sem aleatoriedade.
  */
-export function selectProspectForTeam(board, sit, rng = Math.random) {
+export function selectProspectForTeam(board, sit /*, rng */) {
   if (!board?.length) return null
 
   const ranked = [...board]
     .map((p) => ({ p, score: scoreProspectForTeam(p, sit) }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score
+      const ra = a.p.mockDraft?.rank ?? 999
+      const rb = b.p.mockDraft?.rank ?? 999
+      if (ra !== rb) return ra - rb
+      return String(a.p.id).localeCompare(String(b.p.id))
+    })
 
-  // 70% BPA/necessidade #1, 20% #2, 10% #3 (ruído humano)
-  const roll = rng()
-  const idx = roll < 0.7 ? 0 : roll < 0.9 ? 1 : 2
-  return ranked[Math.min(idx, ranked.length - 1)]?.p ?? ranked[0]?.p
+  return ranked[0]?.p ?? null
 }
 
 /**

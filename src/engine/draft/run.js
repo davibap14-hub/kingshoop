@@ -1,8 +1,8 @@
 import { DRAFT_MAX_PICKS_PER_TEAM } from '../../data/draft/constants'
 import { ROSTER_SIZE_MAX } from '../../data/gm/constants'
 import { TEAMS } from '../../data/teams'
+import { resolveFranchiseObjective } from '../franchise/objective'
 import { draftProspect } from '../gm/actions'
-import { analyzeFranchise } from '../gm/situation'
 import { generateDraftClass } from './generate'
 import { buildDraftOrder, expandDraftPicks } from './order'
 import { selectProspectForTeam } from './select'
@@ -51,8 +51,19 @@ export function runDraft(gm, seasonState, rng = Math.random, opts = {}) {
     if (rosterSize >= ROSTER_SIZE_MAX) continue
     if ((picksTaken[slot.teamId] ?? 0) >= maxPicksPerTeam) continue
 
-    const sit = analyzeFranchise(state, slot.teamId, seasonState)
-    const choice = selectProspectForTeam(state.draftClass, sit, rng)
+    const resolved = resolveFranchiseObjective(state, slot.teamId, seasonState)
+    const sit = {
+      ...resolved.situation,
+      objectiveId: resolved.objectiveId,
+      objective: resolved.objective,
+      weights: resolved.weights,
+      personality: {
+        ...resolved.situation.personality,
+        weights: resolved.weights,
+        label: resolved.label,
+      },
+    }
+    const choice = selectProspectForTeam(state.draftClass, sit)
     if (!choice) break
 
     const result = draftProspect(state, slot.teamId, choice.id, slot.pickNumber)

@@ -29,6 +29,7 @@ src/
  ├── engine/
  │    ├── simulation/
  │    ├── draft/
+ │    ├── franchise/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -38,6 +39,7 @@ src/
  ├── data/
  │    ├── players/
  │    ├── draft/
+ │    ├── franchise/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -48,6 +50,23 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Franchise AI
+
+`src/engine/franchise/` — cada franquia persegue um objetivo e adapta decisões aos resultados.
+
+Objetivos: **Tank · Playoffs · Título · Desenvolvimento · Economia**
+
+```js
+import { resolveFranchiseObjective, decideForFranchise } from './engine'
+
+const goal = resolveFranchiseObjective(gm, 'bos', seasonState)
+// goal.objectiveId / reason — muda com win% , OVR, cap, semana
+const turn = decideForFranchise(gm, 'bos', seasonState)
+// decisões por score — nunca aleatórias
+```
+
+A IA reavalia o objetivo toda semana e escolhe sempre a ação de maior score (sign/release/renew/trade/draft).
 
 ## Draft Engine
 

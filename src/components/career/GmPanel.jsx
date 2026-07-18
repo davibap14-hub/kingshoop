@@ -35,21 +35,24 @@ export default function GmPanel() {
   return (
     <Card id="gm" padding="lg" className="animate-fade-up">
       <CardHeader
-        subtitle="General Manager Engine"
+        subtitle="Franchise AI · Front Office"
         title="Front Office"
-        action={<Badge tone="blue">Automático</Badge>}
+        action={<Badge tone="blue">Determinístico</Badge>}
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Seu time
+            Objetivo
           </p>
           <p className="mt-1 text-sm font-bold text-navy">
-            {GM_PERSONALITIES[view.teamPersonality]?.label ?? '—'}
+            {view.teamObjective?.label ??
+              GM_PERSONALITIES[view.teamPersonality]?.label ??
+              '—'}
           </p>
           <p className="text-xs text-slate-500">
-            Modo {situation.mode} · OVR méd. {situation.avgOvr}
+            {view.teamObjective?.reason ??
+              `Modo ${situation.mode} · OVR méd. ${situation.avgOvr}`}
           </p>
         </div>
         <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
@@ -79,10 +82,11 @@ export default function GmPanel() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Personalidades
+            Objetivos da liga
           </p>
           <ul className="mt-2 space-y-1.5 text-xs text-slate-700">
             {TEAMS.map((team) => {
+              const obj = gm.objectives?.[team.id]
               const pid = gm.personalities?.[team.id]
               const meta = GM_PERSONALITIES[pid]
               return (
@@ -96,7 +100,9 @@ export default function GmPanel() {
                   >
                     {team.short}
                   </span>
-                  <span className="text-slate-500">{meta?.label ?? pid}</span>
+                  <span className="text-slate-500">
+                    {obj?.label ?? meta?.label ?? pid}
+                  </span>
                 </li>
               )
             })}
@@ -121,6 +127,12 @@ export default function GmPanel() {
                   </span>{' '}
                   {d.playerName}
                   {d.acquiredName ? ` ↔ ${d.acquiredName}` : ''}
+                  {d.objectiveLabel ? (
+                    <span className="text-slate-400">
+                      {' '}
+                      · {d.objectiveLabel}
+                    </span>
+                  ) : null}
                   {d.reason ? (
                     <span className="text-slate-400"> — {d.reason}</span>
                   ) : null}

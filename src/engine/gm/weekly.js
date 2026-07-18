@@ -7,6 +7,7 @@ import { SEASON_PHASES } from '../../data/season/constants'
 import { TEAMS } from '../../data/teams'
 import { generateDraftClass, processDraft } from '../draft'
 import { getDraftBoard } from '../draft/select'
+import { updateAllFranchiseObjectives } from '../franchise/objective'
 import { appendGmLog, createGmState } from './state'
 import { decideForTeam } from './decide'
 
@@ -51,7 +52,21 @@ export function processWeeklyGm(state, opts = {}) {
     )
   }
 
-  const seasonState = state.season ?? {}
+  const seasonState = {
+    ...(state.season ?? {}),
+    currentWeek: week,
+    phase,
+    seasonNumber,
+  }
+
+  // Franchise AI — atualiza objetivos conforme resultados
+  const objUpdate = updateAllFranchiseObjectives(gm, seasonState)
+  gm = objUpdate.gm
+  for (const change of objUpdate.changes.slice(0, 4)) {
+    messages.push(
+      `Franchise AI: ${change.teamId.toUpperCase()} ${change.from} → ${change.to} (${change.reason}).`,
+    )
+  }
 
   // Draft Engine — semanas 45–46
   if (
@@ -67,7 +82,7 @@ export function processWeeklyGm(state, opts = {}) {
     messages.push(...(draft.messages ?? []))
   }
 
-  // Decisões de mercado: offseason intensa; temporada regular mais rara
+  // Franchise AI — mercado (decisões determinísticas por objetivo)
   const marketWeek =
     phase === SEASON_PHASES.offseason ||
     phase === SEASON_PHASES.awards ||
@@ -75,9 +90,7 @@ export function processWeeklyGm(state, opts = {}) {
 
   if (marketWeek) {
     for (const team of TEAMS) {
-      // Pula o time do jogador em decisões automáticas agressivas? 
-      // Requisitos: cada franquia decide — inclui o time do jogador (liga viva).
-      const result = decideForTeam(gm, team.id, seasonState, rng)
+      const result = decideForTeam(gm, team.id, seasonState)
       gm = result.gm
       weekDecisions.push(...result.decisions)
     }
@@ -162,6 +175,7 @@ export function getGmView(gm, opts = {}) {
   const teamId = opts.teamId
   return {
     personalities: gm.personalities,
+    objectives: gm.objectives ?? {},
     rosters: gm.rosters,
     freeAgentsCount: gm.freeAgents?.length ?? 0,
     draftRemaining: gm.draftClass?.length ?? 0,
@@ -172,6 +186,7 @@ export function getGmView(gm, opts = {}) {
     recentLog: (gm.log ?? []).slice(-12).reverse(),
     teamRoster: teamId ? gm.rosters?.[teamId] ?? [] : [],
     teamPersonality: teamId ? gm.personalities?.[teamId] : null,
+    teamObjective: teamId ? gm.objectives?.[teamId] ?? null : null,
     teamContracts: teamId
       ? Object.values(gm.contracts ?? {}).filter((c) => c.teamId === teamId)
       : [],
