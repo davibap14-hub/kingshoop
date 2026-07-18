@@ -8,6 +8,8 @@ export function createPlayerLine(player) {
     overall: player.overall,
     points: 0,
     rebounds: 0,
+    orb: 0,
+    drb: 0,
     assists: 0,
     steals: 0,
     blocks: 0,
@@ -31,11 +33,19 @@ export function createTeamBox(teamMeta, players) {
     totals: {
       points: 0,
       rebounds: 0,
+      orb: 0,
+      drb: 0,
       assists: 0,
       steals: 0,
       blocks: 0,
       turnovers: 0,
       fouls: 0,
+      fgMade: 0,
+      fgAtt: 0,
+      threeMade: 0,
+      threeAtt: 0,
+      ftMade: 0,
+      ftAtt: 0,
     },
   }
 }
@@ -80,7 +90,9 @@ export function applyPossessionToBox(offenseBox, defenseBox, result) {
   if (result.assisterId) bump(offenseBox, result.assisterId, 'assists')
   if (result.rebounderId) {
     const onOffense = offenseBox.players.some((p) => p.id === result.rebounderId)
-    bump(onOffense ? offenseBox : defenseBox, result.rebounderId, 'rebounds')
+    const box = onOffense ? offenseBox : defenseBox
+    bump(box, result.rebounderId, 'rebounds')
+    bump(box, result.rebounderId, onOffense ? 'orb' : 'drb')
   }
   if (result.stealerId) bump(defenseBox, result.stealerId, 'steals')
   if (result.blockerId) bump(defenseBox, result.blockerId, 'blocks')
@@ -89,14 +101,23 @@ export function applyPossessionToBox(offenseBox, defenseBox, result) {
 }
 
 export function recomputeTotals(box) {
+  const sum = (key) => box.players.reduce((s, p) => s + (p[key] ?? 0), 0)
   box.totals = {
-    points: box.players.reduce((s, p) => s + p.points, 0),
-    rebounds: box.players.reduce((s, p) => s + p.rebounds, 0),
-    assists: box.players.reduce((s, p) => s + p.assists, 0),
-    steals: box.players.reduce((s, p) => s + p.steals, 0),
-    blocks: box.players.reduce((s, p) => s + p.blocks, 0),
-    turnovers: box.players.reduce((s, p) => s + p.turnovers, 0),
-    fouls: box.players.reduce((s, p) => s + p.fouls, 0),
+    points: sum('points'),
+    rebounds: sum('rebounds'),
+    orb: sum('orb'),
+    drb: sum('drb'),
+    assists: sum('assists'),
+    steals: sum('steals'),
+    blocks: sum('blocks'),
+    turnovers: sum('turnovers'),
+    fouls: sum('fouls'),
+    fgMade: sum('fgMade'),
+    fgAtt: sum('fgAtt'),
+    threeMade: sum('threeMade'),
+    threeAtt: sum('threeAtt'),
+    ftMade: sum('ftMade'),
+    ftAtt: sum('ftAtt'),
   }
 }
 

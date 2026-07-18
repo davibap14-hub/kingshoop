@@ -37,6 +37,7 @@ import {
 } from '../save'
 import { processWeeklyGm } from '../gm'
 import { resolvePlayer } from '../gm/situation'
+import { processWeeklyAnalytics } from '../analytics'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import {
@@ -476,6 +477,16 @@ export function runCareerWeek(state, activityId, opts = {}) {
   messages.push(...coachResult.messages)
   const gmWithCoaches = coachResult.gm ?? gmWithChemistry
 
+  // Analytics Engine — estatísticas avançadas (PER, TS%, ratings, WS, PIE…)
+  const analyticsResult = processWeeklyAnalytics({
+    analytics: state.analytics,
+    weekResults: seasonResult.weekResults ?? [],
+    seasonNumber: calendar.currentSeason,
+    seasonRolled: calendar.seasonRolled,
+    careerPlayerId: player?.id ?? 'career_player',
+  })
+  messages.push(...analyticsResult.messages)
+
   // History Engine — arquivo permanente (antes do reset já capturado em previousSeason)
   const historyResult = processWeeklyHistory({
     leagueHistory: state.leagueHistory,
@@ -564,6 +575,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     season: seasonResult.season,
     gm: gmWithCoaches,
     leagueHistory: historyResult.leagueHistory,
+    analytics: analyticsResult.analytics,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
     currentWeek: calendar.currentWeek,
@@ -620,6 +632,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     coaches: coachResult.summary,
     scouting: gmResult.summary?.scouting ?? null,
     historyEngine: historyResult.summary,
+    analytics: analyticsResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

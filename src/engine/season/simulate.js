@@ -1,3 +1,4 @@
+import { analyzeGameBox } from '../analytics'
 import { careerInjurySimFatigue } from '../injuries'
 import { buildLineupFromDb } from '../match/lineups'
 import { extractPerformances } from '../news/extract'
@@ -63,6 +64,9 @@ export function simulateGames(games, seasonState, opts = {}) {
       awayShort: away.teamShort,
       gameId: game.id,
     })
+    const analytics = analyzeGameBox(match.boxScore, {
+      possessionCount: match.possessionCount,
+    })
     const entry = {
       gameId: game.id,
       week: game.week,
@@ -85,7 +89,28 @@ export function simulateGames(games, seasonState, opts = {}) {
             assists: match.mvp.assists,
           }
         : null,
-      boxSummary: flattenBoxSummary(match.boxScore),
+      possessionCount: match.possessionCount ?? null,
+      boxSummary: flattenBoxSummary(match.boxScore, analytics),
+      analytics: {
+        players: (analytics.players ?? []).map((p) => ({
+          playerId: p.playerId,
+          playerName: p.playerName,
+          teamId: p.teamId,
+          advanced: p.advanced,
+        })),
+        teams: Object.fromEntries(
+          Object.entries(analytics.teams ?? {}).map(([id, t]) => [
+            id,
+            {
+              teamId: t.teamId,
+              possessions: t.possessions,
+              ortg: t.ortg,
+              drtg: t.drtg,
+              points: t.points,
+            },
+          ]),
+        ),
+      },
       performances,
       summary: match.summary,
     }
@@ -102,9 +127,15 @@ export function simulateGames(games, seasonState, opts = {}) {
   return { standings, results, weekResults, messages }
 }
 
-/** Linhas de box score para Career Totals / Hall of Fame. */
-function flattenBoxSummary(boxScore) {
+/**
+ * Linhas de box score para History / Hall of Fame / Analytics.
+ * Inclui tiros e ORB/DRB para métricas avançadas sem re-simular.
+ */
+function flattenBoxSummary(boxScore, analytics = null) {
   if (!boxScore) return []
+  const advById = new Map(
+    (analytics?.players ?? []).map((p) => [p.playerId, p.advanced]),
+  )
   const lines = []
   for (const side of [boxScore.home, boxScore.away]) {
     if (!side?.players) continue
@@ -112,9 +143,23 @@ function flattenBoxSummary(boxScore) {
       lines.push({
         playerId: p.id ?? null,
         playerName: p.nome ?? p.name ?? null,
+        teamId: side.teamId ?? null,
         points: p.points ?? 0,
         assists: p.assists ?? 0,
         rebounds: p.rebounds ?? 0,
+        orb: p.orb ?? 0,
+        drb: p.drb ?? 0,
+        steals: p.steals ?? 0,
+        blocks: p.blocks ?? 0,
+        turnovers: p.turnovers ?? 0,
+        fouls: p.fouls ?? 0,
+        fgMade: p.fgMade ?? 0,
+        fgAtt: p.fgAtt ?? 0,
+        threeMade: p.threeMade ?? 0,
+        threeAtt: p.threeAtt ?? 0,
+        ftMade: p.ftMade ?? 0,
+        ftAtt: p.ftAtt ?? 0,
+        advanced: advById.get(p.id) ?? null,
       })
     }
   }

@@ -67,6 +67,28 @@ src/
  └── assets/
 ```
 
+## Analytics Engine
+
+`src/engine/analytics/` + `src/data/analytics/` — estatísticas avançadas.
+
+Métricas (todas calculadas na Engine; a Interface só exibe):
+
+- **PER** · **True Shooting %** · **Effective FG %**
+- **Usage %** · **Assist %** · **Rebound %**
+- **Offensive Rating** · **Defensive Rating** · **Net Rating**
+- **Win Shares** · **Player Impact Estimate (PIE)**
+
+Fonte: box score da Simulation Engine (FGM/FGA/3P/FT, ORB/DRB, TOV…). Totais de temporada e carreira em `state.analytics`.
+
+```js
+analyzeGameBox(boxScore, { possessionCount })
+computeAdvancedStats(line, teamContext)
+processWeeklyAnalytics({ analytics, weekResults, seasonNumber, seasonRolled })
+getAnalyticsView(state)
+```
+
+Persistido no Save (**v12**). UI: `AnalyticsPanel`.
+
 ## Hall of Fame Engine
 
 `src/engine/hallOfFame/` + `src/data/hallOfFame/` — votação automática na aposentadoria.

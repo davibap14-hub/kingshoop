@@ -22,6 +22,7 @@ import {
   getContractView,
   getHistoryView,
   getHallOfFameView,
+  getAnalyticsView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -176,6 +177,11 @@ export const gameService = {
   /** Hall of Fame Engine — Interface só lê */
   getHallOfFameView(state) {
     return getHallOfFameView(state)
+  },
+
+  /** Analytics Engine — Interface só lê */
+  getAnalyticsView(state) {
+    return getAnalyticsView(state)
   },
 
   /** Balance Engine — Interface só lê */
