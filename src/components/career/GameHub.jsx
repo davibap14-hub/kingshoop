@@ -45,7 +45,7 @@ export default function GameHub({
   const newsFeed = useGameStore((s) => s.newsFeed)
   const achievements = useGameStore((s) => s.achievements)
   const archetypeId = useGameStore((s) => s.archetypeId)
-  const seasonResults = useGameStore((s) => s.season?.results ?? [])
+  const seasonResults = useGameStore((s) => s.season?.results)
 
   const storyView = gameService.getStoryView({ story, pendingEvent })
   const achView = gameService.getAchievementsView({ achievements })
@@ -108,7 +108,7 @@ export default function GameHub({
         currentSeason={currentSeason}
         seasonView={seasonView}
         archetypeId={archetypeId}
-        seasonResults={seasonResults}
+        seasonResults={seasonResults ?? []}
         ctaLabel={ctaLabel}
         onCta={() => runWeek(selectedActivityId)}
         ctaDisabled={blocked}
