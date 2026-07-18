@@ -5,6 +5,7 @@ import {
   WEEKLY_XP_BY_ACTIVITY,
   XP_GROWTH_RATE,
 } from '../../data/progression/constants'
+import { applyPersonalityToXp } from '../personality/development'
 import { clamp } from '../utils/math'
 
 /** XP necessário para ir de `level` → `level + 1` */
@@ -47,6 +48,7 @@ export function calcWeeklyXp(state, activity, rng = Math.random) {
     xp += 2
   }
 
+  xp = applyPersonalityToXp(xp, state.player)
   return Math.max(4, Math.round(xp))
 }
 

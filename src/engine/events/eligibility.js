@@ -1,5 +1,10 @@
 import { CAREER_EVENTS, CAREER_EVENTS_BY_ID } from '../../data/events/catalog'
 import { EVENT_CATEGORIES } from '../../data/events/categories'
+import {
+  calcEventWeightMultiplier,
+  matchesPersonalityConditions,
+  sortChoicesByPersonality,
+} from '../personality/events'
 import { pickWeighted } from '../utils/math'
 
 /**
@@ -39,6 +44,8 @@ export function matchesConditions(event, state, context = {}) {
 
   if (c.categoriasBloqueadas?.includes(event.categoria)) return false
 
+  if (!matchesPersonalityConditions(event, state.player)) return false
+
   return true
 }
 
@@ -66,7 +73,16 @@ export function rollEvent(state, context = {}, rng = Math.random) {
   const eligible = listEligibleEvents(state, context)
   if (!eligible.length) return null
 
-  const picked = pickWeighted(eligible, 'peso', rng)
+  // Personality Engine — repondera eventos pelo perfil do jogador
+  const weighted = eligible.map((e) => ({
+    ...e,
+    peso: Math.max(
+      0.1,
+      (e.peso ?? 1) * calcEventWeightMultiplier(e, state.player),
+    ),
+  }))
+
+  const picked = pickWeighted(weighted, 'peso', rng)
   if (!picked) return null
 
   if (rng() > (picked.probabilidade ?? 1)) {
@@ -89,17 +105,22 @@ export function getCategoryMeta(categoria) {
   return EVENT_CATEGORIES[categoria] ?? { id: categoria, label: categoria }
 }
 
-export function summarizeEventForUi(event) {
+export function summarizeEventForUi(event, player = null) {
   if (!event) return null
+  const escolhasRaw = (event.escolhas ?? []).map((c) => ({
+    id: c.id,
+    label: c.label,
+    efeitos: { ...c.efeitos },
+  }))
+  const escolhas = player
+    ? sortChoicesByPersonality(escolhasRaw, player)
+    : escolhasRaw
+
   return {
     id: event.id,
     categoria: event.categoria,
     categoriaLabel: event.categoriaLabel ?? getCategoryMeta(event.categoria).label,
     texto: event.texto,
-    escolhas: (event.escolhas ?? []).map((c) => ({
-      id: c.id,
-      label: c.label,
-      efeitos: { ...c.efeitos },
-    })),
+    escolhas,
   }
 }

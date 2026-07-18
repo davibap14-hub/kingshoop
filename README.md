@@ -28,6 +28,7 @@ src/
  ├── layouts/        # Shell da aplicação
  ├── engine/
  │    ├── simulation/
+ │    ├── personality/
  │    ├── career/
  │    ├── match/
  │    ├── progression/
@@ -35,6 +36,7 @@ src/
  │    └── utils/
  ├── data/
  │    ├── players/
+ │    ├── personality/
  │    ├── teams/
  │    ├── events/
  │    ├── coaches/
@@ -44,6 +46,29 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Personality Engine
+
+`src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:
+
+**Competitividade · Ego · Liderança · Lealdade · Temperamento · Ambição · Disciplina · Confiança**
+
+Influenciam:
+- **Química** do elenco e relações semanais
+- **Contratos** (demanda salarial / renovação)
+- **Trocas** (disposição a sair)
+- **Desenvolvimento** (XP e eficiência de treino)
+- **Eventos** (peso, elegibilidade e efeitos das escolhas)
+- **Escolhas** semanais (ordem / sugestão de atividades)
+
+```js
+import { calcRosterChemistry, trait, sortActivitiesByPersonality } from './engine'
+
+trait(player, 'lealdade') // 0–100
+calcRosterChemistry(lineup)
+```
+
+Personalidade é derivada no `normalizePlayer` (override manual via `personalidade`).
 
 ## General Manager Engine
 

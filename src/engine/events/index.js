@@ -42,7 +42,7 @@ export function triggerEvent(state, context = {}, opts = {}) {
     }
   }
 
-  const pendingEvent = summarizeEventForUi(cloneEvent(event))
+  const pendingEvent = summarizeEventForUi(cloneEvent(event), state.player)
 
   return {
     ok: true,

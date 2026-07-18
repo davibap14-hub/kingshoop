@@ -81,6 +81,11 @@ export const TENDENCY_LABELS = {
   fadeaway: 'Fadeaway',
 }
 
+export {
+  PERSONALITY_KEYS,
+  PERSONALITY_LABELS,
+} from '../personality/constants'
+
 /** Campos de topo do registro de jogador */
 export const PLAYER_FIELDS = [
   'id',
@@ -93,6 +98,7 @@ export const PLAYER_FIELDS = [
   'defesa',
   'qi',
   'tendencias',
+  'personalidade',
   'potencial',
   'popularidade',
   'arquetipo',

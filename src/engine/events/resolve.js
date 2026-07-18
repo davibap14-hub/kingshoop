@@ -2,6 +2,7 @@ import {
   applyStatusDeltas,
   syncLegacyCareerVariables,
 } from '../career/state'
+import { applyPersonalityToChoiceEffects } from '../personality/events'
 import {
   appendHistory,
   buildEventHistoryEntry,
@@ -48,11 +49,14 @@ export function resolveEventChoice(state, eventId, choiceId) {
 
   const baseEffects = event.efeitos ?? {}
   const choiceEffects = choice.efeitos ?? {}
-  const merged = { ...baseEffects }
+  let merged = { ...baseEffects }
 
   for (const [key, value] of Object.entries(choiceEffects)) {
     merged[key] = (merged[key] ?? 0) + value
   }
+
+  // Personality Engine — amplifica / atenua efeitos da escolha
+  merged = applyPersonalityToChoiceEffects(merged, state.player)
 
   const status = applyStatusDeltas(state.status, merged)
   const careerVariables = syncLegacyCareerVariables(status)
@@ -101,6 +105,6 @@ export function resolveEventChoice(state, eventId, choiceId) {
     error: null,
     effects,
     nextState,
-    event: summarizeEventForUi(event),
+    event: summarizeEventForUi(event, state.player),
   }
 }

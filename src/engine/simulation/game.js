@@ -1,4 +1,7 @@
-import { normalizeTendencies } from '../../data/players/utils'
+import {
+  normalizePersonality,
+  normalizeTendencies,
+} from '../../data/players/utils'
 import {
   SIM_POSSESSIONS_PER_QUARTER,
   SIM_QUARTERS,
@@ -13,21 +16,16 @@ import {
 import { simulatePossessionDetailed } from './possession'
 import { resetPbpSeq, stampScoreOnEvents } from './playbyplay'
 
-function withTendencies(player) {
-  if (player?.tendencias && typeof player.tendencias === 'object') {
-    return {
-      ...player,
-      tendencias: normalizeTendencies(player, player.tendencias),
-    }
-  }
+function withPlayerProfile(player) {
   return {
     ...player,
-    tendencias: normalizeTendencies(player, {}),
+    tendencias: normalizeTendencies(player, player?.tendencias ?? {}),
+    personalidade: normalizePersonality(player, player?.personalidade ?? {}),
   }
 }
 
 function normalizeSide(side, { isHome }) {
-  const players = (side.players ?? []).slice(0, 5).map(withTendencies)
+  const players = (side.players ?? []).slice(0, 5).map(withPlayerProfile)
   if (players.length < 5) {
     throw new Error(
       'Cada time precisa de 5 jogadores para a Simulation Engine.',
@@ -110,6 +108,7 @@ export function simulateGame(input = {}, opts = {}) {
       offenseIsHome,
       context: {
         allowFastBreak,
+        chemistry: offense.chemistry ?? 55,
         styleThreeBias: offensePlan?.threeBias ?? 0,
         stylePace: offense.style?.match?.pace ?? 1,
         styleMotion: offense.styleId === 'fast_pace' ? 0.8 : 0.5,

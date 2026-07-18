@@ -71,6 +71,7 @@ export function simulatePossessionDetailed({
     defender,
     helpDefender: help,
     isHome: offenseIsHome,
+    chemistry: context.chemistry ?? 55,
     rng,
   })
 

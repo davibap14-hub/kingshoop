@@ -1,3 +1,4 @@
+import { PERSONALITY_KEYS, PERSONALITY_LABELS } from '../personality/constants'
 import {
   ATTRIBUTE_GROUPS,
   ATTRIBUTE_GROUP_KEYS,
@@ -10,7 +11,7 @@ function avg(values) {
   return Math.round(values.reduce((sum, n) => sum + n, 0) / values.length)
 }
 
-function clampTendency(n) {
+function clamp01(n) {
   return Math.max(0, Math.min(100, Math.round(Number(n) || 0)))
 }
 
@@ -49,49 +50,49 @@ export function deriveTendencies(player = {}) {
   if (!overall) overall = 70
 
   return {
-    shoot3: clampTendency(
+    shoot3: clamp01(
       a(player, 'arremesso', 'tresPontos') * 0.8 +
         (isGuard ? 12 : isBig ? -18 : 0) +
         scorer * 0.4,
     ),
-    drive: clampTendency(
+    drive: clamp01(
       a(player, 'fisico', 'velocidade') * 0.45 +
         a(player, 'arremesso', 'bandeja') * 0.4 +
         (isBig ? -12 : 8),
     ),
-    pass: clampTendency(
+    pass: clamp01(
       a(player, 'qi', 'passe') * 0.65 +
         a(player, 'qi', 'visao') * 0.3 +
         (pos === 'PG' ? 14 : 0) +
         playmaker,
     ),
-    isolation: clampTendency(
+    isolation: clamp01(
       overall * 0.35 +
         a(player, 'arremesso', 'midRange') * 0.3 +
         a(player, 'fisico', 'velocidade') * 0.25 +
         scorer,
     ),
-    postUp: clampTendency(
+    postUp: clamp01(
       a(player, 'fisico', 'forca') * 0.5 +
         a(player, 'arremesso', 'bandeja') * 0.25 +
         (isBig ? 22 : -22),
     ),
-    fastBreak: clampTendency(
+    fastBreak: clamp01(
       a(player, 'fisico', 'velocidade') * 0.65 +
         a(player, 'arremesso', 'bandeja') * 0.25 +
         (isGuard ? 10 : isBig ? -8 : 4),
     ),
-    alleyOop: clampTendency(
+    alleyOop: clamp01(
       a(player, 'fisico', 'impulsao') * 0.6 +
         a(player, 'arremesso', 'bandeja') * 0.25 +
         (isBig || pos === 'SF' ? 16 : -6),
     ),
-    stepBack: clampTendency(
+    stepBack: clamp01(
       a(player, 'arremesso', 'tresPontos') * 0.4 +
         a(player, 'arremesso', 'midRange') * 0.4 +
         scorer,
     ),
-    fadeaway: clampTendency(
+    fadeaway: clamp01(
       a(player, 'arremesso', 'midRange') * 0.5 +
         a(player, 'fisico', 'forca') * 0.25 +
         (isBig ? 10 : 0) +
@@ -106,13 +107,135 @@ export function normalizeTendencies(player, overrides = {}) {
   const out = {}
   for (const key of TENDENCY_KEYS) {
     const raw = overrides[key]
-    out[key] = clampTendency(raw != null ? raw : derived[key])
+    out[key] = clamp01(raw != null ? raw : derived[key])
   }
   return out
 }
 
 /**
- * Normaliza um registro: overall + tendências 0–100.
+ * Deriva personalidade 0–100 a partir de arquétipo, overall e attrs.
+ */
+export function derivePersonality(player = {}) {
+  const arch = player.arquetipo ?? 'versatil'
+  let overall = player.overall
+  if (overall == null) overall = calcOverall(player)
+  if (!overall) overall = 70
+
+  const starBoost = overall >= 84 ? 10 : overall >= 78 ? 5 : 0
+  const young = (player.idade ?? 25) <= 23 ? 8 : 0
+  const vet = (player.idade ?? 25) >= 30 ? 8 : 0
+
+  const archMods = {
+    playmaker: {
+      lideranca: 14,
+      lealdade: 8,
+      ego: -6,
+      disciplina: 6,
+      confianca: 4,
+    },
+    scorer: {
+      ego: 12,
+      ambicao: 10,
+      competitividade: 10,
+      confianca: 8,
+      lealdade: -6,
+    },
+    defender: {
+      disciplina: 12,
+      competitividade: 10,
+      temperamento: -8,
+      lideranca: 6,
+    },
+    athletic: {
+      competitividade: 8,
+      confianca: 6,
+      temperamento: 6,
+      disciplina: -4,
+    },
+    sharpshooter: {
+      disciplina: 10,
+      confianca: 8,
+      ego: 4,
+      temperamento: -4,
+    },
+    versatil: {
+      disciplina: 4,
+      lealdade: 4,
+      ambicao: 4,
+    },
+  }
+
+  const m = archMods[arch] ?? archMods.versatil
+
+  return {
+    competitividade: clamp01(
+      48 +
+        a(player, 'fisico', 'resistencia') * 0.2 +
+        (m.competitividade ?? 0) +
+        starBoost * 0.4,
+    ),
+    ego: clamp01(
+      35 +
+        overall * 0.25 +
+        (player.popularidade ?? overall * 0.5) * 0.15 +
+        (m.ego ?? 0) +
+        starBoost,
+    ),
+    lideranca: clamp01(
+      40 +
+        a(player, 'qi', 'tomadaDecisao') * 0.25 +
+        a(player, 'qi', 'visao') * 0.15 +
+        (m.lideranca ?? 0) +
+        vet,
+    ),
+    lealdade: clamp01(
+      55 +
+        (m.lealdade ?? 0) +
+        vet * 0.8 -
+        starBoost * 0.5 -
+        young * 0.3,
+    ),
+    temperamento: clamp01(
+      45 +
+        (100 - a(player, 'qi', 'tomadaDecisao')) * 0.2 +
+        (m.temperamento ?? 0) +
+        (arch === 'athletic' ? 6 : 0),
+    ),
+    ambicao: clamp01(
+      45 +
+        (player.potencial ?? overall) * 0.2 +
+        young +
+        (m.ambicao ?? 0) +
+        starBoost * 0.5,
+    ),
+    disciplina: clamp01(
+      42 +
+        a(player, 'fisico', 'resistencia') * 0.2 +
+        a(player, 'qi', 'tomadaDecisao') * 0.15 +
+        (m.disciplina ?? 0),
+    ),
+    confianca: clamp01(
+      40 +
+        overall * 0.3 +
+        a(player, 'qi', 'tomadaDecisao') * 0.15 +
+        (m.confianca ?? 0) +
+        starBoost * 0.6,
+    ),
+  }
+}
+
+export function normalizePersonality(player, overrides = {}) {
+  const derived = derivePersonality(player)
+  const out = {}
+  for (const key of PERSONALITY_KEYS) {
+    const raw = overrides[key]
+    out[key] = clamp01(raw != null ? raw : derived[key])
+  }
+  return out
+}
+
+/**
+ * Normaliza um registro: overall + tendências + personalidade.
  */
 export function normalizePlayer(raw) {
   const overall = raw.overall ?? calcOverall(raw)
@@ -125,6 +248,7 @@ export function normalizePlayer(raw) {
   return {
     ...base,
     tendencias: normalizeTendencies(base, raw.tendencias ?? {}),
+    personalidade: normalizePersonality(base, raw.personalidade ?? {}),
   }
 }
 
@@ -163,5 +287,15 @@ export function listTendencies(player) {
     key,
     label: TENDENCY_LABELS[key] ?? key,
     value: t[key] ?? 0,
+  }))
+}
+
+/** Lista personalidade para UI / debug. */
+export function listPersonality(player) {
+  const p = player?.personalidade ?? normalizePersonality(player ?? {})
+  return PERSONALITY_KEYS.map((key) => ({
+    key,
+    label: PERSONALITY_LABELS[key] ?? key,
+    value: p[key] ?? 0,
   }))
 }

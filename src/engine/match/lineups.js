@@ -1,6 +1,7 @@
 import { playerDb } from '../../data/players'
 import { getTeamById, TEAMS } from '../../data/teams'
 import { chooseBestStyle } from '../ai'
+import { calcRosterChemistry } from '../personality/chemistry'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
 
@@ -68,12 +69,7 @@ export function buildLineupFromDb(
   }
 
   const team = getTeamById(teamId) ?? TEAMS[0]
-  const chem =
-    55 +
-    Math.round(
-      lineup.reduce((s, p) => s + (p.overall - 70), 0) /
-        Math.max(1, lineup.length),
-    )
+  const chemistry = calcRosterChemistry(lineup)
 
   const ai = styleId
     ? { styleId, auto: false }
@@ -85,7 +81,7 @@ export function buildLineupFromDb(
     teamShort: team.short,
     team,
     players: lineup,
-    chemistry: Math.max(35, Math.min(90, chem)),
+    chemistry,
     fatigue: 0,
     styleId: ai.styleId,
   }

@@ -1,6 +1,12 @@
 import { MAX_DECISIONS_PER_TEAM_WEEK, SALARY_CAP } from '../../data/gm/constants'
 import { TEAMS } from '../../data/teams'
 import {
+  calcRenewWillingness,
+  calcSalaryDemandFactor,
+  calcTradeWillingness,
+  personalityContractScore,
+} from '../personality/contracts'
+import {
   draftProspect,
   releasePlayer,
   renewContract,
@@ -74,7 +80,7 @@ export function decideForTeam(gm, teamId, seasonState, rng = Math.random) {
     }
   }
 
-  // 3) Contratação de FA alinhada à personalidade
+  // 3) Contratação de FA alinhada à personalidade (franquia + jogador)
   if (
     decisions.length < MAX_DECISIONS_PER_TEAM_WEEK &&
     sit.rosterGap > 0 &&
@@ -82,16 +88,20 @@ export function decideForTeam(gm, teamId, seasonState, rng = Math.random) {
   ) {
     const fa = rankFreeAgents(state, sit, rng)
     const pick = fa[0]
-    if (pick && canAfford(state.contracts, teamId, pick.salario ?? 2_000_000)) {
+    const demandSalary = Math.round(
+      (pick?.salario ?? 2_000_000) * calcSalaryDemandFactor(pick),
+    )
+    if (pick && canAfford(state.contracts, teamId, demandSalary)) {
       tryPush(
         signFreeAgent(state, teamId, pick.id, {
+          yearlySalary: demandSalary,
           reason: `${sit.personality.label}: ${explainSign(sit, pick)}`,
         }),
       )
     }
   }
 
-  // 4) Renovação de contratos curtos
+  // 4) Renovação de contratos curtos (lealdade / ambição do jogador)
   if (decisions.length < MAX_DECISIONS_PER_TEAM_WEEK && w.renewStars > 0.6) {
     const expiring = sit.roster
       .map((p) => ({ p, c: state.contracts[p.id] }))
@@ -99,17 +109,22 @@ export function decideForTeam(gm, teamId, seasonState, rng = Math.random) {
       .sort((a, b) => scoreKeep(sit, b.p) - scoreKeep(sit, a.p))
 
     const target = expiring[0]
-    if (target && scoreKeep(sit, target.p) > 0.55 && rng() < w.renewStars * 0.7) {
+    const renewChance =
+      w.renewStars *
+      0.7 *
+      calcRenewWillingness(target?.p, sit.mode ?? sit.personalityId)
+    if (target && scoreKeep(sit, target.p) > 0.55 && rng() < renewChance) {
       tryPush(
         renewContract(state, teamId, target.p.id, {
           cap: SALARY_CAP,
+          salaryBump: 1.05 * calcSalaryDemandFactor(target.p),
           reason: `${sit.personality.label}: renovar peça-chave`,
         }),
       )
     }
   }
 
-  // 5) Troca baseada em necessidade / win-now
+  // 5) Troca — disposição do jogador (lealdade / ambição / temperamento)
   if (
     decisions.length < MAX_DECISIONS_PER_TEAM_WEEK &&
     w.tradeAggression > 0.8 &&
@@ -140,6 +155,7 @@ function scoreKeep(sit, player) {
   if (player.idade <= 25) score += 0.15 * w.youth
   if (player.idade >= 32) score -= 0.12 * w.youth
   if (sit.mode === 'contend') score += (player.overall / 100) * w.winNow * 0.25
+  score += personalityContractScore(player, sit)
   return score
 }
 
@@ -152,11 +168,13 @@ function scoreFa(sit, player) {
   if (player.idade >= 30) score -= 15 * w.youth
   if (sit.needs.includes(player.posicao)) score += 20
   if (sit.personalityId === 'financeira') {
-    score -= (player.salario ?? 0) / 1_000_000
+    score -=
+      ((player.salario ?? 0) * calcSalaryDemandFactor(player)) / 1_000_000
   }
   if (sit.mode === 'contend' || sit.personalityId === 'contender') {
     score += (player.overall ?? 0) * w.starHunting * 0.4
   }
+  score += personalityContractScore(player, sit) * 40
   return score
 }
 
@@ -179,9 +197,16 @@ function findTrade(gm, sit, seasonState, rng) {
   const partnerId = partners[Math.floor(rng() * partners.length)]
   const partnerSit = analyzeFranchise(gm, partnerId, seasonState)
 
-  const give = [...sit.roster].sort(
-    (a, b) => scoreKeep(sit, a) - scoreKeep(sit, b),
-  )[0]
+  const mode = sit.mode ?? sit.personalityId
+  const give = [...sit.roster]
+    .map((p) => ({
+      p,
+      score:
+        scoreKeep(sit, p) -
+        calcTradeWillingness(p, mode) * 0.35,
+    }))
+    .sort((a, b) => a.score - b.score)[0]?.p
+
   const get = [...partnerSit.roster].sort(
     (a, b) => scoreKeep(sit, b) - scoreKeep(sit, a),
   )[0]
@@ -189,10 +214,17 @@ function findTrade(gm, sit, seasonState, rng) {
   if (!give || !get) return null
   if (Math.abs((give.overall ?? 0) - (get.overall ?? 0)) > 12) return null
 
+  // Jogador muito leal resiste a ser embalado
+  if (calcTradeWillingness(give, mode) < 0.28 && rng() < 0.7) return null
+
   // Contender não troca estrela; reconstrução não busca veterano caro
   if (sit.personalityId === 'contender' && give.overall >= 84) return null
   if (sit.personalityId === 'reconstrucao' && get.idade >= 30) return null
-  if (sit.personalityId === 'financeira' && (get.salario ?? 0) > (give.salario ?? 0) * 1.15) {
+  if (
+    sit.personalityId === 'financeira' &&
+    (get.salario ?? 0) * calcSalaryDemandFactor(get) >
+      (give.salario ?? 0) * 1.15
+  ) {
     return null
   }
 

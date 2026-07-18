@@ -2,6 +2,11 @@ import { getActivity, WEEKLY_ACTIVITIES } from '../../data/career/activities'
 import { WEEKS_PER_SEASON } from '../../data/constants/career'
 import { triggerEvent } from '../events'
 import { processWeeklyProgression } from '../progression'
+import {
+  calcTeammateChemistryDelta,
+  sortActivitiesByPersonality,
+  suggestWeeklyActivity,
+} from '../personality'
 import { applyTraining, rangeRoll } from './activities'
 import { processWeeklyFinance, trySignSponsorship } from '../finance'
 import {
@@ -25,7 +30,7 @@ import {
 export function listAvailableActivities(state) {
   const injured = Boolean(state.injury)
 
-  return WEEKLY_ACTIVITIES.filter((activity) => {
+  const available = WEEKLY_ACTIVITIES.filter((activity) => {
     if (activity.requiresInjury && !injured) return false
     if (activity.requiresHealthy && injured && state.injury?.blocksTraining) {
       return false
@@ -37,6 +42,14 @@ export function listAvailableActivities(state) {
     type: a.type,
     label: a.label,
     description: a.description,
+  }))
+
+  // Personality Engine — ordena escolhas semanais pela personalidade
+  const sorted = sortActivitiesByPersonality(available, state.player)
+  const suggested = suggestWeeklyActivity(sorted, state.player)
+  return sorted.map((a) => ({
+    ...a,
+    suggested: suggested?.id === a.id,
   }))
 }
 
@@ -187,6 +200,17 @@ export function runCareerWeek(state, activityId, opts = {}) {
       sponsorships = [...sponsorships, signed.sponsorship]
       messages.push(...signed.messages)
     }
+  }
+
+  // Personality Engine — química / relações pelo perfil do jogador
+  const chemDelta = calcTeammateChemistryDelta(player, activity.type)
+  if (chemDelta) {
+    deltas.relCompanheiros += chemDelta
+    messages.push(
+      chemDelta > 0
+        ? `Personalidade: química do elenco +${chemDelta}.`
+        : `Personalidade: tensão no vestiário ${chemDelta}.`,
+    )
   }
 
   if (

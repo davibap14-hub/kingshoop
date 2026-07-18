@@ -122,6 +122,7 @@ export function resolveOnBallPressure({
   defender,
   helpDefender,
   isHome,
+  chemistry = 55,
   rng,
 }) {
   const attackScore = combineScore([
@@ -130,6 +131,7 @@ export function resolveOnBallPressure({
     { value: tendency(ballHandler, 'drive'), weight: 0.55 },
     { value: tendency(ballHandler, 'pass'), weight: 0.45 },
     { value: ballHandler?.overall ?? 70, weight: 0.5 },
+    { value: chemistry, weight: 0.45 },
     { value: 50 + homeBoost(isHome, 'ballSecurity') * 100, weight: 0.35 },
   ])
 

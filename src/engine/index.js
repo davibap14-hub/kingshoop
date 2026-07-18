@@ -16,6 +16,7 @@ export * from './gm'
 export * from './career'
 export * from './events'
 export * from './simulation'
+export * from './personality'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

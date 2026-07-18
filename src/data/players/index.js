@@ -9,6 +9,8 @@ export {
   ATTRIBUTE_GROUP_KEYS,
   TENDENCY_KEYS,
   TENDENCY_LABELS,
+  PERSONALITY_KEYS,
+  PERSONALITY_LABELS,
   PLAYER_FIELDS,
 } from './schema'
 
@@ -17,10 +19,13 @@ export {
   calcOverall,
   deriveTendencies,
   normalizeTendencies,
+  derivePersonality,
+  normalizePersonality,
   normalizePlayer,
   formatMoney,
   listFlatAttributes,
   listTendencies,
+  listPersonality,
 } from './utils'
 
 export { PLAYERS, PLAYER_COUNT } from './database'

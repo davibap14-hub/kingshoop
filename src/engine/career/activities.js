@@ -1,6 +1,7 @@
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { ARCHETYPES } from '../../data/constants/archetypes'
 import { MIN_ENERGY_TO_TRAIN } from '../../data/constants/career'
+import { calcTrainingPersonalityMultiplier } from '../personality/development'
 import { clamp } from '../utils/math'
 import { recomputePlayerOverall } from './state'
 
@@ -33,6 +34,7 @@ export function applyTraining(state, activity, rng = Math.random) {
   if (energy < MIN_ENERGY_TO_TRAIN) efficiency *= 0.45
   if (motivation < 40) efficiency *= 0.75
   if (motivation >= 80) efficiency *= 1.15
+  efficiency *= calcTrainingPersonalityMultiplier(state.player)
 
   const keys = pickTrainKeys(groupKey, rng)
   const attributeDeltas = {}
