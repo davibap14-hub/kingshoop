@@ -3,6 +3,7 @@ import { ROSTER_SIZE_MAX } from '../../data/gm/constants'
 import { TEAMS } from '../../data/teams'
 import { resolveFranchiseObjective } from '../franchise/objective'
 import { draftProspect } from '../gm/actions'
+import { hydrateDraftPicks, resolvePickOwner } from '../trade/picks.js'
 import { generateDraftClass } from './generate'
 import { buildDraftOrder, expandDraftPicks } from './order'
 import { selectProspectForTeam } from './select'
@@ -18,6 +19,7 @@ export function runDraft(gm, seasonState, rng = Math.random, opts = {}) {
     ...gm,
     draftClass: [...(gm.draftClass ?? [])],
     draftOrder: [...(gm.draftOrder ?? [])],
+    draftPicks: (gm.draftPicks ?? []).map((p) => ({ ...p })),
     freeAgents: [...(gm.freeAgents ?? [])],
     extraPlayers: [...(gm.extraPlayers ?? [])],
     contracts: { ...(gm.contracts ?? {}) },
@@ -38,8 +40,19 @@ export function runDraft(gm, seasonState, rng = Math.random, opts = {}) {
     Math.ceil((state.draftClass.length || 1) / Math.max(1, TEAMS.length)),
   )
   const cappedRounds = Math.min(rounds, maxPicksPerTeam)
-  const pickSlots = expandDraftPicks(state.draftOrder, cappedRounds, {
+  const naturalSlots = expandDraftPicks(state.draftOrder, cappedRounds, {
     snake: true,
+  })
+  // Trade Engine — dono da pick pode diferir do time original (standings)
+  state.draftPicks = hydrateDraftPicks(state.draftPicks)
+  const pickSlots = naturalSlots.map((slot) => {
+    const ownerId = resolvePickOwner(
+      state.draftPicks,
+      slot.teamId,
+      slot.round,
+      0,
+    )
+    return { ...slot, originalTeamId: slot.teamId, teamId: ownerId }
   })
 
   const picksTaken = Object.fromEntries(TEAMS.map((t) => [t.id, 0]))

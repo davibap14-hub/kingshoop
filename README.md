@@ -509,6 +509,24 @@ getMomentumView(state)
 
 Snapshot em `match.momentum` / `state.lastMomentum` (**Save v19**). UI: `MomentumPanel`.
 
+## Trade Engine
+
+`src/engine/trade/` + `src/data/trade/` — todas as trocas da liga.
+
+Valor de mercado automático por atleta: **overall · idade · potencial · contrato · personalidade · posição · necessidade do elenco · objetivo da franquia · salary cap**.
+
+IA negocia pacotes entre franquias (1×1, 2×1, 1×2, jogador+pick). Suporta **múltiplos jogadores e escolhas de draft**. Regras anti-irreal: matching salarial (125%+$5M), ratio de valor ≤1.22, NTC, limites de elenco, surplus mínimo do parceiro.
+
+```js
+calcPlayerMarketValue(player, contract)
+findBestNegotiatedTrade(gm, sit, seasonState)
+executeTrade(gm, proposal)
+validateTrade(gm, proposal, sitA, sitB)
+getTradeView(state)
+```
+
+Picks em `gm.draftPicks` · histórico `gm.lastTrades` (**Save v20**). UI: `TradePanel`.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

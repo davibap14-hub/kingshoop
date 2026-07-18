@@ -9,6 +9,7 @@ import { generateDraftClass, processDraft } from '../draft'
 import { getDraftBoard } from '../draft/select'
 import { updateAllFranchiseObjectives } from '../franchise/objective'
 import { processWeeklyScouting } from '../scouting'
+import { hydrateDraftPicks, rollDraftPicksAfterSeason } from '../trade/picks.js'
 import { appendGmLog, createGmState } from './state'
 import { decideForTeam } from './decide'
 
@@ -35,9 +36,13 @@ export function processWeeklyGm(state, opts = {}) {
     gm.draftComplete = false
     gm.draftOrder = []
     gm.lastDraft = null
+    gm.draftPicks = rollDraftPicksAfterSeason(gm.draftPicks)
     messages.push(
       `Draft Engine: nova classe ${seasonNumber} (${gm.draftClass.length} prospects + Mock Draft).`,
     )
+    messages.push('Trade Engine: escolhas de draft roladas para o novo ciclo.')
+  } else {
+    gm.draftPicks = hydrateDraftPicks(gm.draftPicks)
   }
 
   // Garante draft class na entrada da offseason
@@ -174,7 +179,7 @@ function formatDecision(d) {
     case 'renew':
       return `${d.teamId}: renova ${d.playerName}`
     case 'trade':
-      return `${d.teamId}: troca ${d.playerName} por ${d.acquiredName} (${d.partnerId})`
+      return `${d.teamId}: troca ${d.assetsSummary ?? `${d.playerName} por ${d.acquiredName}`} (${d.partnerId})`
     case 'draft':
       return `${d.teamId}: draft #${d.pickNumber} ${d.playerName}${
         d.universidade ? ` (${d.universidade})` : ''

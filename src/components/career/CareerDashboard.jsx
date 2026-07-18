@@ -28,6 +28,7 @@ import PlaybookPanel from './PlaybookPanel'
 import DefensePanel from './DefensePanel'
 import FatiguePanel from './FatiguePanel'
 import MomentumPanel from './MomentumPanel'
+import TradePanel from './TradePanel'
 import CoachPanel from './CoachPanel'
 import InjuryPanel from './InjuryPanel'
 import RelationshipPanel from './RelationshipPanel'
@@ -148,6 +149,7 @@ export default function CareerDashboard() {
           <DefensePanel />
           <FatiguePanel />
           <MomentumPanel />
+          <TradePanel />
           <ChemistryPanel />
           <InjuryPanel />
           <CoachPanel />

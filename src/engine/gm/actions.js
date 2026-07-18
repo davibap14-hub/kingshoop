@@ -1,5 +1,6 @@
 import { DEFAULT_CONTRACT_YEARS, ROSTER_SIZE_MAX } from '../../data/gm/constants'
 import { calcBalancedSalary, calcBalancedRenewBump } from '../balance'
+import { tradePlayers as tradePlayersEngine } from '../trade/execute.js'
 import { canAfford } from './cap'
 import { resolvePlayer } from './situation'
 
@@ -13,8 +14,10 @@ function cloneGm(gm) {
     contracts: { ...(gm.contracts ?? {}) },
     draftClass: [...(gm.draftClass ?? [])],
     draftOrder: [...(gm.draftOrder ?? [])],
+    draftPicks: (gm.draftPicks ?? []).map((p) => ({ ...p })),
     extraPlayers: [...(gm.extraPlayers ?? [])],
     playerOverrides: { ...(gm.playerOverrides ?? {}) },
+    lastTrades: [...(gm.lastTrades ?? [])],
     log: [...(gm.log ?? [])],
   }
 }
@@ -130,52 +133,10 @@ export function renewContract(gm, teamId, playerId, opts = {}) {
 }
 
 /**
- * Troca 1 por 1 entre times.
+ * Troca — delegada à Trade Engine (suporta 1×1 e pacotes).
  */
 export function tradePlayers(gm, teamA, playerA, teamB, playerB, reason = 'Troca') {
-  const next = cloneGm(gm)
-  const rosterA = next.rosters[teamA] ?? []
-  const rosterB = next.rosters[teamB] ?? []
-  if (!rosterA.includes(playerA) || !rosterB.includes(playerB)) {
-    return { ok: false, gm, decision: null }
-  }
-
-  // Contract Engine — No-Trade Clause bloqueia troca
-  const playerAObj = resolvePlayer(next, playerA)
-  const playerBObj = resolvePlayer(next, playerB)
-  if (
-    playerAObj?.clauses?.tradeClause === 'full' ||
-    playerBObj?.clauses?.tradeClause === 'full'
-  ) {
-    return { ok: false, gm, decision: null }
-  }
-
-  next.rosters[teamA] = rosterA.map((id) => (id === playerA ? playerB : id))
-  next.rosters[teamB] = rosterB.map((id) => (id === playerB ? playerA : id))
-
-  if (next.contracts[playerA]) {
-    next.contracts[playerA] = { ...next.contracts[playerA], teamId: teamB }
-  }
-  if (next.contracts[playerB]) {
-    next.contracts[playerB] = { ...next.contracts[playerB], teamId: teamA }
-  }
-
-  const pA = resolvePlayer(next, playerA)
-  const pB = resolvePlayer(next, playerB)
-
-  const decision = {
-    type: 'trade',
-    teamId: teamA,
-    partnerId: teamB,
-    playerId: playerA,
-    playerName: pA?.nome ?? playerA,
-    acquiredId: playerB,
-    acquiredName: pB?.nome ?? playerB,
-    reason,
-    at: Date.now(),
-  }
-
-  return { ok: true, gm: next, decision }
+  return tradePlayersEngine(gm, teamA, playerA, teamB, playerB, reason)
 }
 
 export function draftProspect(gm, teamId, prospectId, pickNumber) {

@@ -16,6 +16,7 @@ import { generateDraftClass as generateDraftClassFromEngine } from '../draft/gen
 import { createScoutingState } from '../scouting/state.js'
 import { ensureLeaguePlaybooks } from '../playbook/generate.js'
 import { createPlaybookEngineState } from '../playbook/state.js'
+import { hydrateDraftPicks } from '../trade/picks.js'
 
 /** @deprecated use Draft Engine `generateDraftClass` */
 export function generateDraftClass(seasonNumber, rng = Math.random) {
@@ -129,6 +130,10 @@ export function createGmState(overrides = {}) {
     scouting: createScoutingState(overrides.scouting ?? {}),
     /** Playbook Engine — jogadas por franquia */
     playbooks,
+    /** Trade Engine — escolhas de draft negociáveis */
+    draftPicks: hydrateDraftPicks(overrides.draftPicks),
+    /** Trade Engine — histórico recente de trocas */
+    lastTrades: overrides.lastTrades ?? [],
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

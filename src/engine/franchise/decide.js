@@ -1,5 +1,4 @@
 import { MAX_DECISIONS_PER_TEAM_WEEK, SALARY_CAP } from '../../data/gm/constants'
-import { TEAMS } from '../../data/teams'
 import {
   balanceDemandFactor,
   calcBalancedRenewBump,
@@ -8,19 +7,18 @@ import {
 import {
   calcRenewWillingness,
   calcSalaryDemandFactor,
-  calcTradeWillingness,
   personalityContractScore,
 } from '../personality/contracts'
 import {
   releasePlayer,
   renewContract,
   signFreeAgent,
-  tradePlayers,
 } from '../gm/actions'
 import { canAfford } from '../gm/cap'
-import { analyzeFranchise, resolvePlayer } from '../gm/situation'
+import { resolvePlayer } from '../gm/situation'
 import { getReport } from '../scouting/state.js'
 import { getScoutedView } from '../scouting/report.js'
+import { findBestNegotiatedTrade, executeTrade } from '../trade'
 import { resolveFranchiseObjective } from './objective'
 
 /**
@@ -234,23 +232,26 @@ function buildActionCandidates(gm, sit, seasonState) {
     })
   }
 
-  // —— Trade (melhor par determinístico) ——
-  const trade = findBestTrade(gm, sit, seasonState)
+  // —— Trade Engine — pacotes multi-jogador + picks (anti-irreal) ——
+  const trade = findBestNegotiatedTrade(gm, sit, seasonState)
   if (trade) {
+    const keyAssets = [
+      ...trade.proposal.assetsA.map(
+        (a) => a.playerId ?? a.pickId ?? 'x',
+      ),
+      ...trade.proposal.assetsB.map(
+        (a) => a.playerId ?? a.pickId ?? 'x',
+      ),
+    ].join('-')
     candidates.push({
       type: 'trade',
-      key: `trade-${trade.giveId}-${trade.getId}`,
+      key: `trade-${trade.partnerId}-${keyAssets}`,
       score: trade.score,
       minScore: 16 + (1.2 - w.tradeAggression) * 10,
       execute: (state) =>
-        tradePlayers(
-          state,
-          teamId,
-          trade.giveId,
-          trade.partnerId,
-          trade.getId,
-          `${sit.objective.label}: ${trade.reason}`,
-        ),
+        executeTrade(state, trade.proposal, {
+          validation: trade.validation,
+        }),
     })
   }
 
@@ -358,89 +359,5 @@ function explainSign(sit, player) {
   return 'reforço de elenco'
 }
 
-/**
- * Avalia todos os parceiros e pares — escolhe o melhor score.
- * Sem aleatoriedade.
- */
-export function findBestTrade(gm, sit, seasonState) {
-  const w = sit.weights
-  if ((w.tradeAggression ?? 1) < 0.7) return null
-
-  let best = null
-
-  for (const partner of TEAMS) {
-    if (partner.id === sit.teamId) continue
-    const partnerSit = analyzeFranchise(gm, partner.id, seasonState)
-
-    const giveCandidates = [...sit.roster]
-      .map((p) => ({
-        p,
-        score:
-          scoreKeep(sit, p) -
-          calcTradeWillingness(p, sit.objectiveId) * 0.4,
-      }))
-      .sort((a, b) => a.score - b.score)
-
-    const getCandidates = [...partnerSit.roster]
-      .map((p) => ({
-        p,
-        score: scoreKeep(sit, p),
-      }))
-      .sort((a, b) => b.score - a.score)
-
-    for (const give of giveCandidates.slice(0, 3)) {
-      for (const get of getCandidates.slice(0, 3)) {
-        const tradeScore = evaluateTradePair(sit, give.p, get.p, partnerSit)
-        if (tradeScore == null) continue
-        if (!best || tradeScore > best.score) {
-          best = {
-            giveId: give.p.id,
-            getId: get.p.id,
-            partnerId: partner.id,
-            score: tradeScore,
-            reason: `troca com ${partnerSit.teamShort} (${sit.objective.label})`,
-          }
-        }
-      }
-    }
-  }
-
-  return best
-}
-
-function evaluateTradePair(sit, give, get, partnerSit) {
-  if (!give || !get) return null
-  if (Math.abs((give.overall ?? 0) - (get.overall ?? 0)) > 12) return null
-
-  const willingness = calcTradeWillingness(give, sit.objectiveId)
-  if (willingness < 0.3) return null
-
-  if (sit.objectiveId === 'title' && give.overall >= 84) return null
-  if (
-    (sit.objectiveId === 'tank' || sit.objectiveId === 'development') &&
-    get.idade >= 31
-  ) {
-    return null
-  }
-  if (sit.objectiveId === 'economy') {
-    const getCost =
-      (get.salario ?? 0) * calcSalaryDemandFactor(get)
-    const giveCost = give.salario ?? 0
-    if (getCost > giveCost * 1.12) return null
-  }
-
-  // Título não manda estrela; tank prefere enviar veterano e receber jovem
-  let score = 10 * (sit.weights.tradeAggression ?? 1)
-  score += (scoreKeep(sit, get) - scoreKeep(sit, give)) * 35
-  score += willingness * 8
-
-  if (sit.needs.includes(get.posicao)) score += 12
-  if (sit.objectiveId === 'tank' && get.idade <= 23) score += 10
-  if (sit.objectiveId === 'title' && get.overall >= give.overall) score += 8
-  if (partnerSit.avgOvr < sit.avgOvr && sit.objectiveId === 'title') score += 3
-
-  // desempate estável
-  score += (get.id.charCodeAt(get.id.length - 1) % 7) * 0.01
-
-  return score
-}
+/** @deprecated use Trade Engine `findBestNegotiatedTrade` */
+export { findBestNegotiatedTrade as findBestTrade } from '../trade'

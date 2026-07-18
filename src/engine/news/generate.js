@@ -198,10 +198,13 @@ export function generateWeekNews(factsInput, opts = {}) {
   // —— Decisões GM ——
   for (const d of facts.decisions ?? []) {
     if (d.type === 'trade') {
+      const summary =
+        d.assetsSummary ??
+        `${d.playerName} ⇄ ${d.acquiredName ?? 'peça'}`
       push({
         category: 'trade',
-        title: `Troca: ${teamLabel(d.teamId)} movimenta ${d.playerName}`,
-        summary: `${teamLabel(d.teamId)} envia ${d.playerName} e recebe ${d.acquiredName ?? 'peça'} de ${teamLabel(d.partnerId)}. ${d.reason ?? ''}`,
+        title: `Troca: ${teamLabel(d.teamId)} ⇄ ${teamLabel(d.partnerId)}`,
+        summary: `${teamLabel(d.teamId)} e ${teamLabel(d.partnerId)}: ${summary}. ${d.reason ?? ''}`,
         impact: impact('trade', {
           magnitude: 4,
           description: 'Mercado reage à troca; química dos elencos em xeque.',

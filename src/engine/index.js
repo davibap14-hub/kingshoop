@@ -38,6 +38,7 @@ export * from './playbook'
 export * from './defense'
 export * from './fatigue'
 export * from './momentum'
+export * from './trade'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,
