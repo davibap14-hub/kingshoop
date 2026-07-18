@@ -38,6 +38,7 @@ src/
  │    ├── chemistry/
  │    ├── injuries/
  │    ├── coaches/
+ │    ├── scouting/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -65,6 +66,25 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Scouting Engine
+
+`src/engine/scouting/` + `src/data/scouting/` — observação de talentos (Draft + Free Agency).
+
+Cada prospect: **potencial oculto · personalidade · tendências · fraquezas · pontos fortes**.
+
+Quanto maior o **investimento** em scouting, mais precisas as estimativas (overall, faixa de potencial, revelação de traços).
+
+A **Franchise AI** consome relatórios em `selectProspectForTeam` (Draft) e `scoreFa` (Free Agency) — nunca decide só com valores true.
+
+```js
+processWeeklyScouting({ scouting, gm, week, phase })
+buildScoutReport(player, teamId, investment)
+getScoutedView(player, report)
+getScoutingView(state)
+```
+
+Persistido em `gm.scouting` (Save **v10**). UI: `ScoutingPanel` (fog of war).
 
 ## Coach Engine
 

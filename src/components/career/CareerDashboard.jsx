@@ -23,6 +23,7 @@ import ChemistryPanel from './ChemistryPanel'
 import CoachPanel from './CoachPanel'
 import InjuryPanel from './InjuryPanel'
 import RelationshipPanel from './RelationshipPanel'
+import ScoutingPanel from './ScoutingPanel'
 import SavePanel from './SavePanel'
 import SeasonPanel from './SeasonPanel'
 import WeekControls from './WeekControls'
@@ -137,6 +138,7 @@ export default function CareerDashboard() {
           <ChemistryPanel />
           <InjuryPanel />
           <CoachPanel />
+          <ScoutingPanel />
           <HistoryPanel />
           <SeasonPanel />
           <GmPanel />

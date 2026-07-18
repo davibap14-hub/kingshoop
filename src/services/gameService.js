@@ -25,6 +25,7 @@ import {
   getChemistryView,
   getInjuryView,
   getCoachView,
+  getScoutingView,
   getSeasonView,
   GM_PERSONALITIES,
   resolveContractDecision,
@@ -198,6 +199,11 @@ export const gameService = {
   /** Coach Engine — Interface só lê */
   getCoachView(state) {
     return getCoachView(state)
+  },
+
+  /** Scouting Engine — Interface só lê (fog of war) */
+  getScoutingView(state) {
+    return getScoutingView(state)
   },
 
   /** Contract Engine */

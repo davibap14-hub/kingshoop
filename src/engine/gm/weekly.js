@@ -8,6 +8,7 @@ import { TEAMS } from '../../data/teams'
 import { generateDraftClass, processDraft } from '../draft'
 import { getDraftBoard } from '../draft/select'
 import { updateAllFranchiseObjectives } from '../franchise/objective'
+import { processWeeklyScouting } from '../scouting'
 import { appendGmLog, createGmState } from './state'
 import { decideForTeam } from './decide'
 
@@ -68,7 +69,20 @@ export function processWeeklyGm(state, opts = {}) {
     )
   }
 
-  // Draft Engine — semanas 45–46
+  // Scouting Engine — investimento + relatórios (antes de Draft/FA)
+  const scoutResult = processWeeklyScouting({
+    scouting: gm.scouting,
+    gm,
+    seasonState,
+    week,
+    seasonNumber,
+    phase,
+    seasonRolled,
+  })
+  gm = scoutResult.gm
+  messages.push(...scoutResult.messages)
+
+  // Draft Engine — semanas 45–46 (IA usa relatórios de scouting)
   if (
     phase === SEASON_PHASES.offseason &&
     week >= DRAFT_RUN_WEEK_START &&
@@ -82,7 +96,7 @@ export function processWeeklyGm(state, opts = {}) {
     messages.push(...(draft.messages ?? []))
   }
 
-  // Franchise AI — mercado (decisões determinísticas por objetivo)
+  // Franchise AI — mercado FA (também consome Scouting Engine)
   const marketWeek =
     phase === SEASON_PHASES.offseason ||
     phase === SEASON_PHASES.awards ||
@@ -124,6 +138,7 @@ export function processWeeklyGm(state, opts = {}) {
       freeAgents: gm.freeAgents.length,
       draftRemaining: (gm.draftClass ?? []).length,
       draftComplete: gm.draftComplete,
+      scouting: scoutResult.summary,
     },
   }
 }
@@ -180,7 +195,10 @@ export function getGmView(gm, opts = {}) {
     freeAgentsCount: gm.freeAgents?.length ?? 0,
     draftRemaining: gm.draftClass?.length ?? 0,
     draftComplete: gm.draftComplete,
-    draftBoard: getDraftBoard(gm.draftClass ?? []).slice(0, 12),
+    draftBoard: getDraftBoard(gm.draftClass ?? [], {
+      scouting: gm.scouting,
+      teamId,
+    }).slice(0, 12),
     lastDraft: gm.lastDraft ?? null,
     lastWeekDecisions: gm.lastWeekDecisions ?? [],
     recentLog: (gm.log ?? []).slice(-12).reverse(),

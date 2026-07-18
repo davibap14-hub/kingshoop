@@ -19,6 +19,8 @@ import {
 } from '../gm/actions'
 import { canAfford } from '../gm/cap'
 import { analyzeFranchise, resolvePlayer } from '../gm/situation'
+import { getReport } from '../scouting/state.js'
+import { getScoutedView } from '../scouting/report.js'
 import { resolveFranchiseObjective } from './objective'
 
 /**
@@ -164,7 +166,10 @@ function buildActionCandidates(gm, sit, seasonState) {
         seasonNumber: seasonState.seasonNumber ?? 1,
         demandFactor: balanceDemandFactor(calcSalaryDemandFactor(pick)),
       })
-      const fit = scoreFa(sit, pick)
+      const faReport = gm.scouting
+        ? getReport(gm.scouting, teamId, pick.id)
+        : null
+      const fit = scoreFa(sit, pick, faReport)
       const score =
         fit * 0.08 +
         w.signFloor * 10 +
@@ -279,11 +284,19 @@ export function scoreKeep(sit, player) {
   return score
 }
 
-export function scoreFa(sit, player) {
+/**
+ * Score de FA — Franchise AI usa visão scoutada (investimento ↑ → precisão ↑).
+ */
+export function scoreFa(sit, player, report = null) {
+  const view = getScoutedView(player, report)
   const w = sit.weights ?? sit.personality?.weights ?? {}
+  const confidence = (view?.confidence ?? 10) / 100
+  const overall = view?.overall ?? player.overall ?? 70
+  const potencial = view?.potencial ?? player.potencial ?? 70
+
   let score = 0
-  score += (player.overall ?? 70) * (w.winNow ?? 1)
-  score += (player.potencial ?? 70) * (w.potential ?? 1) * 0.85
+  score += overall * (w.winNow ?? 1)
+  score += potencial * (w.potential ?? 1) * 0.85 * (0.5 + confidence * 0.5)
   if (player.idade <= 24) score += 26 * (w.youth ?? 1)
   if (player.idade >= 30) score -= 16 * (w.youth ?? 1)
   if (sit.needs?.includes(player.posicao)) score += 24
@@ -292,22 +305,42 @@ export function scoreFa(sit, player) {
     score -= ((player.salario ?? 0) * calcSalaryDemandFactor(player)) / 900_000
   }
   if (sit.objectiveId === 'title') {
-    score += (player.overall ?? 0) * (w.starHunting ?? 1) * 0.45
+    score += overall * (w.starHunting ?? 1) * 0.45
   }
   if (sit.objectiveId === 'tank' || sit.objectiveId === 'development') {
-    score += Math.max(0, (player.potencial ?? 70) - (player.overall ?? 70)) * 1.4
+    score += Math.max(0, potencial - overall) * 1.4 * (0.55 + confidence * 0.45)
   }
 
-  score += personalityContractScore(player, sit) * 40
+  // Personalidade scoutada vs fallback
+  if (view?.personalidade) {
+    score += personalityContractScore(
+      { ...player, personalidade: view.personalidade },
+      sit,
+    ) * 40
+  } else {
+    score += personalityContractScore(player, sit) * 28
+  }
+
+  for (const s of view?.strengths ?? []) {
+    score += Math.max(0, (s.value ?? 50) - 72) * 0.2 * confidence
+  }
+  for (const wk of view?.weaknesses ?? []) {
+    score -= Math.max(0, 42 - (wk.value ?? 50)) * 0.18 * confidence
+  }
+
+  score -= (1 - confidence) * 10
   return score
 }
 
 function rankFreeAgents(gm, sit) {
+  const scouting = gm.scouting ?? null
   return (gm.freeAgents ?? [])
     .map((id) => resolvePlayer(gm, id))
     .filter(Boolean)
     .sort((a, b) => {
-      const diff = scoreFa(sit, b) - scoreFa(sit, a)
+      const reportA = scouting ? getReport(scouting, sit.teamId, a.id) : null
+      const reportB = scouting ? getReport(scouting, sit.teamId, b.id) : null
+      const diff = scoreFa(sit, b, reportB) - scoreFa(sit, a, reportA)
       if (diff !== 0) return diff
       return String(a.id).localeCompare(String(b.id))
     })

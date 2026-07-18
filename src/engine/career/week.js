@@ -618,6 +618,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     relationships: relResult.summary,
     chemistry: chemResult.summary,
     coaches: coachResult.summary,
+    scouting: gmResult.summary?.scouting ?? null,
     historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,

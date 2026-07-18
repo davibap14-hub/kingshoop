@@ -13,6 +13,7 @@ import { createChemistryState } from '../chemistry/state.js'
 import { ensureLeagueCoaches } from '../coaches/generate.js'
 import { createCoachEngineState } from '../coaches/state.js'
 import { generateDraftClass as generateDraftClassFromEngine } from '../draft/generate'
+import { createScoutingState } from '../scouting/state.js'
 
 /** @deprecated use Draft Engine `generateDraftClass` */
 export function generateDraftClass(seasonNumber, rng = Math.random) {
@@ -117,6 +118,8 @@ export function createGmState(overrides = {}) {
     coaches: ensureLeagueCoaches(
       createCoachEngineState(overrides.coaches ?? {}),
     ),
+    /** Scouting Engine — investimento + relatórios por time */
+    scouting: createScoutingState(overrides.scouting ?? {}),
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

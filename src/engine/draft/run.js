@@ -63,7 +63,11 @@ export function runDraft(gm, seasonState, rng = Math.random, opts = {}) {
         label: resolved.label,
       },
     }
-    const choice = selectProspectForTeam(state.draftClass, sit)
+    const choice = selectProspectForTeam(
+      state.draftClass,
+      sit,
+      state.scouting ?? gm.scouting ?? null,
+    )
     if (!choice) break
 
     const result = draftProspect(state, slot.teamId, choice.id, slot.pickNumber)
