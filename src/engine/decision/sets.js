@@ -8,6 +8,7 @@ import { DECISION_IDS } from '../../data/decision'
 import { boostToScoreFactor } from '../chemistry/effects'
 import { combineScore } from '../simulation/weights'
 import { decide } from './decide.js'
+import { dnaSetBias } from '../dna/factors.js'
 import { attr, situationBundle, tendency } from './factors.js'
 import { decidePostPlayer } from './roles.js'
 
@@ -52,6 +53,7 @@ export function decideOffensiveSet({
         { value: offChem, weight: cw.offenseEfficiency * 0.6 },
         { value: teamChem, weight: cw.aiDecision * 0.5 },
         { value: setBias.pick_and_roll ?? 50, weight: 0.55 },
+        { value: dnaSetBias(handler, 'pick_and_roll'), weight: 0.85 },
         { value: sitBoost * 100, weight: 0.45, scale: 100 },
       ]),
     },
@@ -67,6 +69,7 @@ export function decideOffensiveSet({
         { value: passChem, weight: cw.setPassBias * 0.35, invert: true },
         { value: teamChem, weight: cw.aiDecision * 0.35 },
         { value: setBias.isolation ?? 50, weight: 0.55 },
+        { value: dnaSetBias(handler, 'isolation'), weight: 0.85 },
         // Iso sobe sob alta pressão / ego do handler já no role
         { value: sit.pressure, weight: 0.35 },
         { value: sitBoost * 100, weight: 0.3, scale: 100 },
@@ -83,6 +86,7 @@ export function decideOffensiveSet({
         { value: cutChem, weight: cw.setCutBias * 0.7 },
         { value: offChem, weight: cw.offenseEfficiency * 0.5 },
         { value: setBias.drive ?? 50, weight: 0.55 },
+        { value: dnaSetBias(handler, 'drive'), weight: 0.85 },
         { value: sit.fatigue, weight: 0.4, invert: true },
         { value: sitBoost * 100, weight: 0.35, scale: 100 },
       ]),
@@ -101,6 +105,7 @@ export function decideOffensiveSet({
         },
         { value: offChem, weight: cw.offenseEfficiency * 0.45 },
         { value: setBias.post_up ?? 50, weight: 0.55 },
+        { value: dnaSetBias(postPlayer ?? handler, 'post_up'), weight: 0.7 },
         { value: sitBoost * 100, weight: 0.3, scale: 100 },
       ]),
       meta: { postPlayer },
@@ -116,6 +121,7 @@ export function decideOffensiveSet({
         { value: passChem, weight: cw.setPassBias },
         { value: teamChem, weight: cw.aiDecision * 0.55 },
         { value: setBias.cut ?? 50, weight: 0.55 },
+        { value: dnaSetBias(handler, 'cut'), weight: 0.85 },
         { value: sitBoost * 100, weight: 0.4, scale: 100 },
       ]),
     },
@@ -130,6 +136,7 @@ export function decideOffensiveSet({
         { value: attr(handler, 'fisico.velocidade'), weight: 1.0 },
         { value: (ctx.stylePace ?? 1) * 60, weight: 0.5 },
         { value: cutChem, weight: cw.movement * 0.6 },
+        { value: dnaSetBias(handler, 'fast_break'), weight: 0.9 },
         { value: sit.fatigue, weight: 0.5, invert: true },
         { value: sit.momentum, weight: 0.55 },
       ]),

@@ -99,6 +99,8 @@ export const PLAYER_FIELDS = [
   'qi',
   'tendencias',
   'personalidade',
+  'dna',
+  'dnaAnchor',
   'potencial',
   'popularidade',
   'arquetipo',

@@ -31,6 +31,7 @@ export const SITUATION_FACTOR_WEIGHTS = {
   attributes: 1.0,
   tendencies: 1.05,
   personality: 0.55,
+  dna: 0.9, // Player DNA Engine — identidade em toda decisão
   chemistry: 0.7,
   coach: 0.55,
   fatigue: 0.65,

@@ -8,6 +8,7 @@ import {
 } from '../../data/simulation/constants'
 import { decidePossessionPlan, resolveTeamStyle } from '../ai'
 import { buildLineupChemistryEffects } from '../chemistry'
+import { ensurePlayerDna } from '../dna'
 import {
   applyPossessionToBox,
   computeMvp,
@@ -18,11 +19,12 @@ import { simulatePossessionDetailed } from './possession'
 import { resetPbpSeq, stampScoreOnEvents } from './playbyplay'
 
 function withPlayerProfile(player) {
-  return {
+  const withDna = ensurePlayerDna({
     ...player,
     tendencias: normalizeTendencies(player, player?.tendencias ?? {}),
     personalidade: normalizePersonality(player, player?.personalidade ?? {}),
-  }
+  })
+  return withDna
 }
 
 function normalizeSide(side, { isHome }) {

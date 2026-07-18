@@ -40,6 +40,7 @@ src/
  │    ├── coaches/
  │    ├── scouting/
  │    ├── personality/
+ │    ├── dna/
  │    ├── career/
  │    ├── match/
  │    ├── progression/
@@ -57,6 +58,7 @@ src/
  │    ├── chemistry/
  │    ├── injuries/
  │    ├── personality/
+ │    ├── dna/
  │    ├── teams/
  │    ├── events/
  │    ├── coaches/
@@ -463,13 +465,36 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Player DNA Engine
+
+`src/engine/dna/` + `src/data/dna/` — identidade única de cada jogador.
+
+Traços: **Ritmo · Agressividade · Confiança · Clutch · Criatividade · Consistência · Tendência a erros · Assumir responsabilidade · Preferência infiltração / arremesso / passe / contra-ataque**.
+
+- O DNA **nunca muda completamente** — só evolui lentamente (âncora ± drift).
+- A **Decision Engine** usa o DNA em **todas** as decisões (`scoreCandidate` + bias de sets).
+- Dois jogadores com atributos iguais jogam de maneira diferente.
+- Lógica isolada da Interface.
+
+```js
+generatePlayerDna(player)
+ensurePlayerDna(player)
+evolvePlayerDna(player, context)
+processWeeklyDna({ player, gm, currentTeamId, week })
+dnaFactors(player, role)
+dnaSetBias(handler, setId)
+getDnaView(state)
+```
+
+Persistido no Save (**v15**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
+
 ## Decision Engine
 
 `src/engine/decision/` + `src/data/decision/` — **cérebro da simulação**.
 
 Decide todas as ações de uma posse com **sistema de pesos** (nunca RNG puro), considerando simultaneamente:
 
-Atributos · Tendências · Personalidade · Química · Coach · Fadiga · Momentum · Matchup · Placar · Tempo restante · Pressão · Importância da partida.
+Atributos · Tendências · Personalidade · DNA · Química · Coach · Fadiga · Momentum · Matchup · Placar · Tempo restante · Pressão · Importância da partida.
 
 Decide: quem arma · corta · recebe · infiltra · pede screen · pick and roll · arremessa · isola · tenta roubo · contesta · pega rebote.
 
@@ -497,7 +522,7 @@ evaluateAchievements(achievements, state)
 getAchievementsView(state)
 ```
 
-Persistido em `state.achievements` via Save Engine (**v14**). UI: `AchievementsPanel`.
+Persistido em `state.achievements` via Save Engine (**v15**). UI: `AchievementsPanel`.
 
 ## Story Engine
 

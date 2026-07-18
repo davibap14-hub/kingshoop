@@ -7,7 +7,7 @@ import { clamp } from '../utils/math'
 
 /**
  * Monta o contexto de decisão a partir do estado da partida / posse.
- * Inclui: atributos (via players), tendências, personalidade, química,
+ * Inclui: atributos (via players), tendências, personalidade, DNA, química,
  * coach, fadiga, momentum, matchup, placar, tempo, pressão, importância.
  */
 export function buildPossessionDecisionContext({

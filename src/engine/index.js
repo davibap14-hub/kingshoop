@@ -33,6 +33,7 @@ export * from './events'
 export * from './decision'
 export * from './simulation'
 export * from './personality'
+export * from './dna'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

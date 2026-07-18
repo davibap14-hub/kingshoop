@@ -8,6 +8,7 @@ import { DEFAULT_ARCHETYPE_ID, ARCHETYPES } from '../../data/constants/archetype
 import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
+import { ensurePlayerDna } from '../dna'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
 import {
   createEmptyCareerStats,
@@ -41,7 +42,7 @@ export function buildStatsFromArchetype(archetypeId = DEFAULT_ARCHETYPE_ID) {
   const base = arch.baseStats
 
   // Expande stats simples do arquétipo para o schema detalhado do banco.
-  return normalizePlayer({
+  return ensurePlayerDna(normalizePlayer({
     id: 'career_player',
     nome: 'Rookie',
     idade: 19,
@@ -74,7 +75,7 @@ export function buildStatsFromArchetype(archetypeId = DEFAULT_ARCHETYPE_ID) {
     popularidade: 20,
     valorMercado: 5_000_000,
     salario: 1_500_000,
-  })
+  }))
 }
 
 export function createDefaultContract(teamId = DEFAULT_TEAM_ID, yearlySalary = 1_500_000) {
@@ -95,7 +96,9 @@ export function createDefaultContract(teamId = DEFAULT_TEAM_ID, yearlySalary = 1
  */
 export function createCareerState(overrides = {}) {
   const archetypeId = overrides.archetypeId ?? DEFAULT_ARCHETYPE_ID
-  const player = overrides.player ?? buildStatsFromArchetype(archetypeId)
+  const player = ensurePlayerDna(
+    overrides.player ?? buildStatsFromArchetype(archetypeId),
+  )
   const statusSeed = {
     ...DEFAULT_CAREER_STATUS,
     popularidade: player.popularidade ?? DEFAULT_CAREER_STATUS.popularidade,

@@ -2,7 +2,7 @@
  * Decision Engine — cérebro da simulação.
  *
  * Decide todas as ações de uma posse com sistema de pesos:
- * Atributos · Tendências · Personalidade · Química · Coach ·
+ * Atributos · Tendências · Personalidade · DNA · Química · Coach ·
  * Fadiga · Momentum · Matchup · Placar · Tempo · Pressão · Importância
  *
  * Nunca utiliza apenas números aleatórios.
@@ -26,6 +26,8 @@ export {
   personalityFactors,
   scoreCandidate,
 } from './factors.js'
+
+export { dnaFactors, dnaSetBias, dnaExecutionModifiers } from '../dna'
 
 export { decide, decideDuel } from './decide.js'
 

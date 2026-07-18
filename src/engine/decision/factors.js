@@ -4,6 +4,7 @@
  */
 
 import { SITUATION_FACTOR_WEIGHTS } from '../../data/decision'
+import { dnaFactors } from '../dna/factors.js'
 import { attr, combineScore, tendency } from '../simulation/weights'
 import { personality } from './context.js'
 
@@ -129,10 +130,13 @@ export function scoreCandidate(p, role, ctx, base = {}) {
   const sit = situationBundle(ctx, role === 'steal' || role === 'contest' || role === 'rebound' ? 'defense' : 'offense')
   const w = SITUATION_FACTOR_WEIGHTS
 
+  const dnaScore = dnaFactors(p, role)
+
   const factors = [
     { value: base.attrScore ?? p.overall ?? 70, weight: w.attributes },
     { value: base.tendencyScore ?? 50, weight: w.tendencies },
     { value: personalityFactors(p, role) * 100, weight: w.personality, scale: 100 },
+    { value: dnaScore, weight: (w.dna ?? 0.9) },
     { value: base.chemistryScore ?? ctx.chemistry ?? 50, weight: w.chemistry },
     { value: base.coachScore ?? 50, weight: w.coach },
     { value: sit.fatigue, weight: w.fatigue, invert: true },
@@ -163,6 +167,7 @@ export function scoreCandidate(p, role, ctx, base = {}) {
       attr: base.attrScore,
       tendency: base.tendencyScore,
       personality: personalityFactors(p, role),
+      dna: dnaScore,
       chemistry: base.chemistryScore,
       fatigue: sit.fatigue,
       pressure: sit.pressure,

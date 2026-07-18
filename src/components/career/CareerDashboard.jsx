@@ -23,6 +23,7 @@ import HistoryPanel from './HistoryPanel'
 import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
 import ChemistryPanel from './ChemistryPanel'
+import DnaPanel from './DnaPanel'
 import CoachPanel from './CoachPanel'
 import InjuryPanel from './InjuryPanel'
 import RelationshipPanel from './RelationshipPanel'
@@ -138,6 +139,7 @@ export default function CareerDashboard() {
           <NewsPanel />
           <ContractPanel />
           <RelationshipPanel />
+          <DnaPanel />
           <ChemistryPanel />
           <InjuryPanel />
           <CoachPanel />

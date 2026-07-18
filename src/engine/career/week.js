@@ -39,6 +39,7 @@ import { processWeeklyGm } from '../gm'
 import { resolvePlayer } from '../gm/situation'
 import { processWeeklyAchievements } from '../achievements'
 import { processWeeklyAnalytics } from '../analytics'
+import { processWeeklyDna } from '../dna'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import {
@@ -478,6 +479,21 @@ export function runCareerWeek(state, activityId, opts = {}) {
   messages.push(...coachResult.messages)
   const gmWithCoaches = coachResult.gm ?? gmWithChemistry
 
+  // Player DNA Engine — evolução lenta da identidade (preso à âncora)
+  const dnaResult = processWeeklyDna({
+    player,
+    gm: gmWithCoaches,
+    currentTeamId: contractResult.currentTeamId ?? state.currentTeamId,
+    week: calendar.currentWeek,
+    activityType: activity.type,
+    weekResults: seasonResult.weekResults ?? [],
+    playingTimeShare:
+      state.playingTimeShare ?? priorRelEffects.playingTimeShare ?? 24,
+  })
+  player = dnaResult.player ?? player
+  const gmWithDna = dnaResult.gm ?? gmWithCoaches
+  messages.push(...dnaResult.messages)
+
   // Analytics Engine — estatísticas avançadas (PER, TS%, ratings, WS, PIE…)
   const analyticsResult = processWeeklyAnalytics({
     analytics: state.analytics,
@@ -497,7 +513,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     week: calendar.currentWeek,
     seasonNumber: calendar.currentSeason,
     gmDecisions: gmResult.decisions ?? gmResult.summary?.decisions ?? [],
-    gm: gmWithCoaches,
+    gm: gmWithDna,
   })
   messages.push(...historyResult.messages)
 
@@ -510,7 +526,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     careerInjury: injury,
     seasonSummary: seasonResult.summary,
     gmSummary: gmResult.summary,
-    gmState: gmWithCoaches,
+    gmState: gmWithDna,
     previousSeason: { objectives: state.gm?.objectives ?? {} },
     newsFeed: state.newsFeed ?? [],
   })
@@ -574,7 +590,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injuryEngine,
     progression: progResult.nextProgression,
     season: seasonResult.season,
-    gm: gmWithCoaches,
+    gm: gmWithDna,
     leagueHistory: historyResult.leagueHistory,
     analytics: analyticsResult.analytics,
     weekNews: newsResult.weekNews,
@@ -637,6 +653,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     scouting: gmResult.summary?.scouting ?? null,
     historyEngine: historyResult.summary,
     analytics: analyticsResult.summary,
+    dna: dnaResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,
