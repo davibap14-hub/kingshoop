@@ -197,6 +197,33 @@ export function generateWeekNews(factsInput, opts = {}) {
 
   // —— Decisões GM ——
   for (const d of facts.decisions ?? []) {
+    if (d.type === 'record_broken') {
+      const scopeLabel =
+        d.scope === 'franchise' ? 'franquia' : 'NBA'
+      const prev =
+        d.previousValue != null ? ` (supera ${d.previousValue})` : ''
+      push({
+        category: 'record',
+        title: `Recorde da ${scopeLabel}: ${d.label ?? d.key}`,
+        summary: `${d.holderName ?? d.holderId} estabelece ${d.label ?? d.key} com ${d.value}${prev}. ${d.note ?? d.reason ?? ''}`,
+        impact: impact('record', {
+          magnitude: d.scope === 'league' ? 5 : 4,
+          description: 'Livro de recordes atualizado — History e Legacy reagem.',
+          deltas: d.aboutPlayerTeam
+            ? { popularidade: 2, motivacao: 1 }
+            : { popularidade: 1 },
+        }),
+        refs: {
+          playerId: d.holderKind === 'player' ? d.holderId : null,
+          teamId: d.teamId,
+          scope: d.scope,
+          bucket: d.bucket,
+          key: d.key,
+        },
+        aboutPlayerTeam: Boolean(d.aboutPlayerTeam),
+      })
+    }
+
     if (d.type === 'legacy_tier_up' || d.type === 'legacy_recognized') {
       push({
         category: 'legacy',

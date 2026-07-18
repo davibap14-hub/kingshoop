@@ -40,8 +40,14 @@ export function buildAchievementMetrics(state = {}, effects = null) {
   const winPct = seasonGames > 0 ? seasonWins / seasonGames : 0
 
   const awards = history.awards ?? []
-  const records = history.records ?? {}
-  const recordsCount = Object.values(records).filter(Boolean).length
+  const historyRecords = history.records ?? {}
+  const recordsBook = state.records ?? null
+  const pidName = state.playerName ?? state.player?.nome
+  const held = countPlayerRecords(recordsBook, historyRecords, pid, pidName)
+  const recordsCount = held.total || Object.values(historyRecords).filter(Boolean).length
+  const recordsBroken = recordsBook?.careerBreaks ?? counters.recordsBroken ?? 0
+  const leagueRecordsHeld = held.league
+  const franchiseRecordsHeld = held.franchise
 
   const teamsPlayed = new Set(counters.teamsPlayed ?? [])
   if (state.currentTeamId) teamsPlayed.add(state.currentTeamId)
@@ -179,6 +185,9 @@ export function buildAchievementMetrics(state = {}, effects = null) {
     investmentsCount: Object.keys(finance.investments ?? {}).length ||
       (Array.isArray(finance.investments) ? finance.investments.length : 0),
     recordsCount,
+    recordsBroken,
+    leagueRecordsHeld,
+    franchiseRecordsHeld,
     analyticsGames: analytics?.totals?.games ?? 0,
     scoutingReports,
     achievementsUnlocked: Object.keys(ach.unlocked ?? {}).length,
@@ -202,6 +211,39 @@ export function buildAchievementMetrics(state = {}, effects = null) {
   }
 
   return metrics
+}
+
+function countPlayerRecords(recordsBook, historyRecords, playerId, playerName) {
+  let league = 0
+  let franchise = 0
+  const match = (entry) =>
+    entry &&
+    (entry.holderId === playerId ||
+      entry.holderName === playerName ||
+      entry.holder === playerName ||
+      entry.playerId === playerId ||
+      entry.playerName === playerName)
+
+  if (recordsBook?.league) {
+    for (const bucket of Object.values(recordsBook.league)) {
+      for (const entry of Object.values(bucket ?? {})) {
+        if (match(entry)) league += 1
+      }
+    }
+    for (const book of Object.values(recordsBook.franchise ?? {})) {
+      for (const bucket of Object.values(book ?? {})) {
+        for (const entry of Object.values(bucket ?? {})) {
+          if (match(entry)) franchise += 1
+        }
+      }
+    }
+  } else {
+    for (const rec of Object.values(historyRecords ?? {})) {
+      if (match(rec)) league += 1
+    }
+  }
+
+  return { league, franchise, total: league + franchise }
 }
 
 /**

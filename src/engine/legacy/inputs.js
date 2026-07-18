@@ -14,6 +14,7 @@ export function gatherLegacyInputs({
   gm = null,
   analytics = null,
   dynasty = null,
+  records = null,
   playerOverride = null,
   status = null,
 } = {}) {
@@ -63,17 +64,21 @@ export function gatherLegacyInputs({
     100,
   )
 
-  // Recordes all-time (holder)
+  // Recordes all-time (Records Engine canônico → fallback History)
   let recordsHeld = 0
-  for (const rec of Object.values(history?.records ?? {})) {
-    if (!rec) continue
-    if (
-      rec.holderId === playerId ||
-      rec.holder === name ||
-      rec.playerId === playerId ||
-      rec.playerName === name
-    ) {
-      recordsHeld += 1
+  if (records?.league || records?.franchise) {
+    recordsHeld = countHeldFromRecordsBook(records, playerId, name)
+  } else {
+    for (const rec of Object.values(history?.records ?? {})) {
+      if (!rec) continue
+      if (
+        rec.holderId === playerId ||
+        rec.holder === name ||
+        rec.playerId === playerId ||
+        rec.playerName === name
+      ) {
+        recordsHeld += 1
+      }
     }
   }
 
@@ -180,4 +185,28 @@ function findTeamForPlayer(gm, playerId) {
     if ((ids ?? []).includes(playerId)) return teamId
   }
   return null
+}
+
+function countHeldFromRecordsBook(records, playerId, name) {
+  let n = 0
+  const match = (entry) =>
+    entry &&
+    (entry.holderId === playerId ||
+      entry.holderName === name ||
+      entry.holder === name ||
+      entry.playerId === playerId)
+
+  for (const bucket of Object.values(records.league ?? {})) {
+    for (const entry of Object.values(bucket ?? {})) {
+      if (match(entry)) n += 1
+    }
+  }
+  for (const book of Object.values(records.franchise ?? {})) {
+    for (const bucket of Object.values(book ?? {})) {
+      for (const entry of Object.values(bucket ?? {})) {
+        if (match(entry)) n += 1
+      }
+    }
+  }
+  return n
 }

@@ -2,10 +2,6 @@ import { accumulateCareerTotals, creditSeasonHonors } from '../hallOfFame'
 import { appendSeasonToHistory, buildSeasonArchive } from './archive.js'
 import { evaluateHallOfFame } from './hof.js'
 import {
-  extractRecordCandidatesFromWeek,
-  updateLeagueRecords,
-} from './records.js'
-import {
   appendRetirements,
   extractRetirementsFromGm,
 } from './retirements.js'
@@ -15,11 +11,12 @@ import { accumulateWeekTotals } from './totals.js'
 /**
  * History Engine — pipeline semanal.
  *
- * - Atualiza totais (MVP de jogo, TDs) e recordes
+ * - Atualiza totais (MVP de jogo, TDs)
  * - Registra aposentadorias
  * - No roll de temporada: arquiva a temporada ANTERIOR (antes do reset)
  * - Avalia Hall da Fama
  *
+ * Recordes all-time / franquia: Records Engine (após este passo).
  * Nenhuma temporada arquivada é removida.
  */
 export function processWeeklyHistory({
@@ -97,27 +94,8 @@ export function processWeeklyHistory({
   history = accumulateWeekTotals(history, weekResults)
   history = accumulateCareerTotals(history, weekResults)
 
-  // 3) Recordes all-time
-  const weekCandidates = extractRecordCandidatesFromWeek(
-    weekResults,
-    seasonNumber,
-    week,
-  )
-  const beforeRecords = history.records
-  history = {
-    ...history,
-    records: updateLeagueRecords(history.records, weekCandidates),
-  }
-  for (const [key, cand] of Object.entries(weekCandidates)) {
-    const prev = beforeRecords?.[key]?.value
-    if (cand && (prev == null || cand.value > prev)) {
-      messages.push(
-        `Recorde: ${key} → ${cand.value}${cand.note ? ` (${cand.note})` : ''}.`,
-      )
-    }
-  }
-
-  // 4) Aposentadorias
+  // 3) Aposentadorias
+  // (Recordes: Records Engine — processWeeklyRecords)
   const retirements = extractRetirementsFromGm(
     gmDecisions,
     gm,
@@ -131,7 +109,7 @@ export function processWeeklyHistory({
     }
   }
 
-  // 5) Hall of Fame Engine — pontuação + classificação na aposentadoria
+  // 4) Hall of Fame Engine — pontuação + classificação na aposentadoria
   const hof = evaluateHallOfFame({
     history,
     gm,
@@ -161,7 +139,7 @@ export function processWeeklyHistory({
       retirements: history.retirements?.length ?? 0,
       hallOfFame: history.hallOfFame?.length ?? 0,
       hofBallots: history.hofBallots?.length ?? 0,
-      recordsSet: Object.keys(weekCandidates).length,
+      recordsSet: 0,
       inductees: hof.inductees,
       ballots: hof.ballots ?? [],
       newRetirements: retirements,

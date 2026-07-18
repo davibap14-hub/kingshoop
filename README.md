@@ -579,6 +579,25 @@ getLegacyView(state)
 
 Estado em `state.legacy` (**Save v23**). Sem painel obrigatório.
 
+## Records Engine
+
+`src/engine/records/` + `src/data/records/` — controla todos os recordes da liga.
+
+Categorias: **pontos · rebotes · assistências · roubos · tocos · triple-doubles · vitórias · temporadas · sequências · recordes de franquia · recordes da NBA** (jogo / temporada / carreira).
+
+Sempre que um recorde é quebrado:
+1. Atualiza o History Engine (`leagueHistory.records`)
+2. Gera notícia (`record_broken`)
+3. Cria progresso de conquistas (`recordsBroken`, `leagueRecordsHeld`, …)
+4. Atualiza o Legacy Engine (insumo `records`)
+
+```js
+processWeeklyRecords({ records, leagueHistory, weekResults, standings, analytics, … })
+getRecordsView(state)
+```
+
+Estado em `state.records` (**Save v24**). Sem painel obrigatório.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

@@ -51,6 +51,7 @@ import {
 } from '../expansion'
 import { processWeeklyDynasty } from '../dynasty'
 import { processWeeklyLegacy } from '../legacy'
+import { processWeeklyRecords } from '../records'
 import {
   applyStatusDeltas,
   createCareerState,
@@ -639,10 +640,41 @@ export function runCareerWeek(state, activityId, opts = {}) {
   })
   messages.push(...historyResult.messages)
 
-  // Dynasty Engine — detecta dinastias no arquivo (após History, antes de News)
+  // Records Engine — livros liga/franquia (após History, antes de Dynasty/Legacy)
+  const recordsResult = processWeeklyRecords({
+    records: state.records,
+    leagueHistory: historyResult.leagueHistory,
+    weekResults: seasonResult.weekResults ?? [],
+    standings: seasonResult.season?.standings ?? state.season?.standings,
+    previousSeason: calendar.seasonRolled ? previousSeason : null,
+    seasonRolled: calendar.seasonRolled,
+    analytics: analyticsResult.analytics,
+    seasonNumber: calendar.currentSeason,
+    week: calendar.currentWeek,
+    playerTeamId: state.currentTeamId,
+    careerPlayerId: player?.id ?? 'career_player',
+    careerPlayerName: state.playerName ?? player?.nome,
+  })
+  messages.push(...recordsResult.messages)
+  if (recordsResult.decisions?.length) {
+    gmResult.decisions = [
+      ...(gmResult.decisions ?? []),
+      ...recordsResult.decisions,
+    ]
+    gmResult.summary = {
+      ...gmResult.summary,
+      decisions: gmResult.decisions,
+      decisionsCount: gmResult.decisions.length,
+      records: recordsResult.summary,
+    }
+  }
+  const leagueHistoryAfterRecords = recordsResult.leagueHistory
+  const recordsState = recordsResult.records
+
+  // Dynasty Engine — detecta dinastias no arquivo (após History/Records, antes de News)
   const dynastyResult = processWeeklyDynasty({
     dynasty: state.dynasty,
-    leagueHistory: historyResult.leagueHistory,
+    leagueHistory: leagueHistoryAfterRecords,
     seasonRolled: calendar.seasonRolled,
     seasonNumber: calendar.currentSeason,
     gm: gmWithDna,
@@ -664,13 +696,14 @@ export function runCareerWeek(state, activityId, opts = {}) {
   const leagueHistoryAfterDynasty = dynastyResult.leagueHistory
   const dynastyState = dynastyResult.dynasty
 
-  // Legacy Engine — Legacy Score (após History/Dynasty, antes de News/Story)
+  // Legacy Engine — Legacy Score (após History/Records/Dynasty, antes de News/Story)
   const legacyResult = processWeeklyLegacy({
     legacy: state.legacy,
     leagueHistory: leagueHistoryAfterDynasty,
     gm: gmAfterDynasty,
     analytics: analyticsResult.analytics,
     dynasty: dynastyState,
+    records: recordsState,
     player,
     status,
     seasonNumber: calendar.currentSeason,
@@ -770,6 +803,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     fatigue,
     lastMomentum,
     expansion: expansionState,
+    records: recordsState,
     dynasty: dynastyState,
     legacy: legacyState,
     progression: progResult.nextProgression,

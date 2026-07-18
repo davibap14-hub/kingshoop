@@ -866,7 +866,7 @@ add({
 add({
   id: 'col_records_1',
   name: 'Nome nos recordes',
-  description: 'Tenha ao menos 1 recorde all-time no History Engine.',
+  description: 'Detenha ao menos 1 recorde (liga ou franquia) na Records Engine.',
   category: 'colecionaveis',
   metric: 'recordsCount',
   target: 1,
@@ -875,11 +875,56 @@ add({
 add({
   id: 'col_records_3',
   name: 'Livro de recordes',
-  description: 'Tenha 3 recordes all-time registrados.',
+  description: 'Detenha 3 recordes (liga ou franquia).',
   category: 'colecionaveis',
   metric: 'recordsCount',
   target: 3,
   reward: { xp: 150, popularidade: 4, dinheiro: 35000 },
+})
+add({
+  id: 'col_records_league_1',
+  name: 'Recorde da NBA',
+  description: 'Detenha ao menos 1 recorde all-time da liga.',
+  category: 'colecionaveis',
+  metric: 'leagueRecordsHeld',
+  target: 1,
+  reward: { xp: 120, popularidade: 4, dinheiro: 30000 },
+})
+add({
+  id: 'col_records_franchise_1',
+  name: 'Lenda da franquia',
+  description: 'Detenha ao menos 1 recorde de franquia.',
+  category: 'colecionaveis',
+  metric: 'franchiseRecordsHeld',
+  target: 1,
+  reward: { xp: 80, popularidade: 3, dinheiro: 15000 },
+})
+add({
+  id: 'col_records_break_1',
+  name: 'Quebrando marcas',
+  description: 'Quebre 1 recorde (liga ou franquia) na carreira.',
+  category: 'colecionaveis',
+  metric: 'recordsBroken',
+  target: 1,
+  reward: { xp: 100, popularidade: 3, motivacao: 2, dinheiro: 25000 },
+})
+add({
+  id: 'col_records_break_3',
+  name: 'Caçador de recordes',
+  description: 'Quebre 3 recordes na carreira.',
+  category: 'colecionaveis',
+  metric: 'recordsBroken',
+  target: 3,
+  reward: { xp: 180, popularidade: 5, dinheiro: 50000 },
+})
+add({
+  id: 'col_records_break_5',
+  name: 'Reescrevendo a história',
+  description: 'Quebre 5 recordes na carreira.',
+  category: 'colecionaveis',
+  metric: 'recordsBroken',
+  target: 5,
+  reward: { xp: 280, popularidade: 8, dinheiro: 90000, felicidade: 3 },
 })
 add({
   id: 'col_analytics_tracked',

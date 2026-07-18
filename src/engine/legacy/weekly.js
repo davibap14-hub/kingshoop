@@ -16,6 +16,7 @@ export function processWeeklyLegacy({
   gm = null,
   analytics = null,
   dynasty = null,
+  records = null,
   player = null,
   status = null,
   seasonNumber = 1,
@@ -49,6 +50,7 @@ export function processWeeklyLegacy({
       gm,
       analytics,
       dynasty,
+      records,
       playerOverride:
         playerId === (player?.id ?? 'career_player') ? player : null,
       status: playerId === (player?.id ?? 'career_player') ? status : null,
