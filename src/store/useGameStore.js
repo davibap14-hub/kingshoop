@@ -25,6 +25,7 @@ function pickCareerFields(state) {
     lastEvent: state.lastEvent,
     history: state.history,
     careerStats: state.careerStats,
+    leagueHistory: state.leagueHistory,
     season: state.season,
     gm: state.gm,
     weekNews: state.weekNews,

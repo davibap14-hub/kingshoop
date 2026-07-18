@@ -13,6 +13,7 @@ import {
   createEmptyCareerStats,
   createEmptyHistory,
 } from '../save/history'
+import { createLeagueHistory } from '../history/state'
 import { createGmState } from '../gm/state'
 import { createSeasonState } from '../season/state'
 import { createProgressionState } from '../progression/xp'
@@ -140,6 +141,7 @@ export function createCareerState(overrides = {}) {
     newsFeed: overrides.newsFeed ?? [],
     history: overrides.history ?? createEmptyHistory(),
     careerStats: overrides.careerStats ?? createEmptyCareerStats(),
+    leagueHistory: createLeagueHistory(overrides.leagueHistory),
     season:
       overrides.season ??
       createSeasonState({

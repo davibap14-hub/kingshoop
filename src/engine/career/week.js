@@ -16,6 +16,7 @@ import {
   updateCareerStatsAfterWeek,
 } from '../save'
 import { processWeeklyGm } from '../gm'
+import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import { rollInjury, tickInjury } from './injuries'
 import {
@@ -268,6 +269,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
   messages.push(...progResult.messages)
 
   // Season Engine — atualiza toda a liga na semana avançada
+  // Guarda a temporada anterior para o History Engine arquivar no roll
+  const previousSeason = state.season
   const seasonResult = processWeeklySeason(
     {
       ...state,
@@ -308,6 +311,19 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...gmResult.messages)
 
+  // History Engine — arquivo permanente (antes do reset já capturado em previousSeason)
+  const historyResult = processWeeklyHistory({
+    leagueHistory: state.leagueHistory,
+    previousSeason: calendar.seasonRolled ? previousSeason : null,
+    seasonRolled: calendar.seasonRolled,
+    weekResults: seasonResult.weekResults ?? [],
+    week: calendar.currentWeek,
+    seasonNumber: calendar.currentSeason,
+    gmDecisions: gmResult.decisions ?? gmResult.summary?.decisions ?? [],
+    gm: gmResult.gm,
+  })
+  messages.push(...historyResult.messages)
+
   // News Engine — manchetes da liga com base nos fatos da semana
   const newsResult = processWeeklyNews({
     week: calendar.currentWeek,
@@ -344,6 +360,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmResult.gm,
+    leagueHistory: historyResult.leagueHistory,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
     currentWeek: calendar.currentWeek,
@@ -387,6 +404,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     },
     season: seasonResult.summary,
     gm: gmResult.summary,
+    historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

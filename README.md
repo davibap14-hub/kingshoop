@@ -31,6 +31,7 @@ src/
  │    ├── draft/
  │    ├── franchise/
  │    ├── news/
+ │    ├── history/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -42,6 +43,7 @@ src/
  │    ├── draft/
  │    ├── franchise/
  │    ├── news/
+ │    ├── history/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -52,6 +54,31 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## History Engine
+
+`src/engine/history/` + `src/data/history/` — arquivo permanente da liga.
+
+Salva entre temporadas (nada é descartado):
+
+- Todos os MVPs e premiações
+- Campeões
+- Estatísticas de cada temporada
+- Líderes da liga
+- Recordes all-time
+- Hall da Fama
+- Aposentadorias
+
+No roll de temporada, a Season Engine anterior é arquivada **antes** do reset. O log semanal (`history`, cap 120) é separado de `leagueHistory` (ilimitado).
+
+```js
+processWeeklyHistory({ leagueHistory, previousSeason, seasonRolled, weekResults, gmDecisions })
+// → { leagueHistory, summary, messages }
+
+getHistoryView(leagueHistory)
+```
+
+Persistido no Save System (`SAVE_VERSION` 4). UI: `HistoryPanel`.
 
 ## News Engine
 

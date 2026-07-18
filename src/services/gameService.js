@@ -17,6 +17,7 @@ import {
   capPressure,
   getConferenceTables,
   getGmView,
+  getHistoryView,
   getSeasonView,
   GM_PERSONALITIES,
   investCash,
@@ -154,6 +155,11 @@ export const gameService = {
   /** General Manager Engine — Interface só lê */
   getGmView(state) {
     return getGmView(state.gm, { teamId: state.currentTeamId })
+  },
+
+  /** History Engine — Interface só lê */
+  getHistoryView(state) {
+    return getHistoryView(state.leagueHistory)
   },
 
   analyzeFranchise(state, teamId) {

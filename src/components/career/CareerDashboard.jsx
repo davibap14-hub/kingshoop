@@ -13,6 +13,7 @@ import CareerPanel from './CareerPanel'
 import EventChoicePanel from './EventChoicePanel'
 import FinancePanel from './FinancePanel'
 import GmPanel from './GmPanel'
+import HistoryPanel from './HistoryPanel'
 import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
 import SavePanel from './SavePanel'
@@ -123,6 +124,7 @@ export default function CareerDashboard() {
           <EventChoicePanel />
           <WeekControls />
           <NewsPanel />
+          <HistoryPanel />
           <SeasonPanel />
           <GmPanel />
           <SavePanel />
