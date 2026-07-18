@@ -542,6 +542,26 @@ syncLeagueTeams(activeTeamIds)
 
 Estado em `state.expansion` · registry `TEAMS` (**Save v21**).
 
+## Dynasty Engine
+
+`src/engine/dynasty/` + `src/data/dynasty/` — identifica dinastias históricas automaticamente.
+
+Critérios (janela de 8 temporadas): **títulos · finais consecutivas · vitórias · domínio (win%) · MVPs · proxy All-NBA** (MVP / Finals MVP / título+domínio).
+
+Tiers: emergente · dinastia · super dinastia. Ao reconhecer:
+- News (`dynasty_recognized` / `dynasty_upgrade`)
+- Achievements (métricas `dynasty*`)
+- Registro em `leagueHistory.dynasties`
+- Reputação da franquia + bias de contratação na Franchise AI
+
+```js
+processWeeklyDynasty({ dynasty, leagueHistory, seasonRolled, seasonNumber, gm })
+detectDynasties(leagueHistory)
+applyDynastyToWeights(weights, dynastyState, teamId)
+```
+
+Estado em `state.dynasty` (**Save v22**). Sem painel de UI.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.
@@ -628,7 +648,7 @@ A **Simulation Engine** consome a Decision Engine em toda posse (`possession.js`
 
 ## Achievement Engine
 
-`src/engine/achievements/` + `src/data/achievements/` — **282 conquistas** com progresso.
+`src/engine/achievements/` + `src/data/achievements/` — **287 conquistas** com progresso.
 
 Categorias: Carreira · Temporada · Partida · Financeiro · Relacionamentos · Títulos · Estatísticas · Colecionáveis.
 

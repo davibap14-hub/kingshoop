@@ -115,6 +115,20 @@ export function buildAchievementMetrics(state = {}, effects = null) {
         : 0,
     chemistryPairs,
     championships: history.champions?.length ?? 0,
+    // Dynasty Engine
+    dynastiesRecognized: history.dynasties?.length ?? 0,
+    dynastyActive: state.dynasty?.active?.[state.currentTeamId] ? 1 : 0,
+    dynastyTierRank: (() => {
+      const t = state.dynasty?.active?.[state.currentTeamId]?.tier
+      if (t === 'super') return 3
+      if (t === 'dynasty') return 2
+      if (t === 'rising') return 1
+      return 0
+    })(),
+    dynastyTitlesBest: Math.max(
+      0,
+      ...(history.dynasties ?? []).map((d) => d.criteria?.titles ?? 0),
+    ),
     seasonMvps: history.mvps?.length ?? 0,
     awardsCount: awards.length,
     hofBallots: history.hofBallots?.length ?? 0,

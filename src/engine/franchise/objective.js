@@ -2,6 +2,10 @@ import {
   FRANCHISE_OBJECTIVES,
   PERSONALITY_DEFAULT_OBJECTIVE,
 } from '../../data/franchise/objectives'
+import {
+  applyDynastyToWeights,
+  getDynastySigningBias,
+} from '../dynasty/effects.js'
 import { analyzeFranchise } from '../gm/situation'
 
 /**
@@ -24,12 +28,37 @@ export function resolveFranchiseObjective(gm, teamId, seasonState = {}) {
   const best = candidates[0]
   const objective = FRANCHISE_OBJECTIVES[best.id] ?? FRANCHISE_OBJECTIVES.playoffs
 
+  // Dynasty Engine — reputação / bias de contratação
+  const dynastyState = {
+    active: gm.dynastyAura
+      ? Object.fromEntries(
+          Object.entries(gm.dynastyAura).map(([id, a]) => [
+            id,
+            {
+              tier: a.tier,
+              signingBias: a.signingBias ?? 1,
+              reputationBoost: 0,
+            },
+          ]),
+        )
+      : {},
+    franchiseReputation: gm.franchiseReputation ?? {},
+  }
+  const dynastyBias = getDynastySigningBias(dynastyState, teamId)
+  const weights = applyDynastyToWeights(
+    objective.weights,
+    dynastyState,
+    teamId,
+  )
+
   return {
     teamId,
     objectiveId: objective.id,
     objective,
     label: objective.label,
-    reason: best.reason,
+    reason: dynastyBias.active
+      ? `${best.reason} · aura de dinastia (${dynastyBias.tier})`
+      : best.reason,
     score: best.score,
     candidates: candidates.map((c) => ({
       id: c.id,
@@ -37,7 +66,8 @@ export function resolveFranchiseObjective(gm, teamId, seasonState = {}) {
       reason: c.reason,
     })),
     situation: sit,
-    weights: objective.weights,
+    weights,
+    dynastyBias,
   }
 }
 

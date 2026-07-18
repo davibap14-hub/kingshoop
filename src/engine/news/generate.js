@@ -197,6 +197,29 @@ export function generateWeekNews(factsInput, opts = {}) {
 
   // —— Decisões GM ——
   for (const d of facts.decisions ?? []) {
+    if (d.type === 'dynasty_recognized' || d.type === 'dynasty_upgrade') {
+      const c = d.criteria ?? {}
+      push({
+        category: 'dynasty',
+        title:
+          d.type === 'dynasty_upgrade'
+            ? `${d.teamShort ?? teamLabel(d.teamId)} eleva a dinastia`
+            : `Dinastia: ${d.teamShort ?? teamLabel(d.teamId)} entra para a história`,
+        summary: `${d.tierLabel ?? 'Dinastia'} (${d.fromSeason ?? '?'}–${d.toSeason ?? '?'}): ${c.titles ?? 0} títulos, ${c.consecutiveFinals ?? 0} finais seguidas, ${c.mvps ?? 0} MVP(s), domínio em ${c.dominanceSeasons ?? 0} temporada(s). ${d.reason ?? ''}`,
+        impact: impact('dynasty', {
+          magnitude: d.tier === 'super' ? 6 : d.tier === 'dynasty' ? 5 : 4,
+          description:
+            'Reputação da franquia sobe; mercado de estrelas reage à aura de dinastia.',
+          deltas:
+            d.teamId === playerTeamId
+              ? { popularidade: 3, motivacao: 2, felicidade: 1 }
+              : { popularidade: 1 },
+        }),
+        refs: { teamId: d.teamId, dynastyId: d.dynastyId, tier: d.tier },
+        aboutPlayerTeam: d.teamId === playerTeamId,
+      })
+    }
+
     if (d.type === 'expansion') {
       push({
         category: 'expansion',

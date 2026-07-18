@@ -197,6 +197,10 @@ function formatDecision(d) {
       return `Expansão: ${(d.teamIds ?? []).join(', ').toUpperCase()} entram na liga`
     case 'expansion_draft':
       return `${d.teamId}: Expansion Draft #${d.pickNumber} ${d.playerName} (de ${d.fromTeamId})`
+    case 'dynasty_recognized':
+      return `Dinastia: ${d.teamShort ?? d.teamId} — ${d.tierLabel ?? d.tier}`
+    case 'dynasty_upgrade':
+      return `Dinastia: ${d.teamShort ?? d.teamId} sobe para ${d.tierLabel ?? d.tier}`
     default:
       return `${d.teamId ?? 'liga'}: ${d.type}`
   }

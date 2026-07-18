@@ -14,6 +14,7 @@ import {
 } from '../relationships'
 import { hydrateFatigueState } from '../fatigue'
 import { hydrateExpansionState } from '../expansion'
+import { hydrateDynastyState } from '../dynasty'
 import {
   createInjuryEngineState,
   hydrateInjuryEngine,
@@ -54,6 +55,7 @@ export function buildSaveSnapshot(state) {
     expansion: structuredCloneSafe(
       hydrateExpansionState(state.expansion ?? null),
     ),
+    dynasty: structuredCloneSafe(hydrateDynastyState(state.dynasty ?? null)),
     pendingEvent: structuredCloneSafe(state.pendingEvent),
     lastEventResult: structuredCloneSafe(state.lastEventResult),
     lastWeekResult: structuredCloneSafe(state.lastWeekResult),
@@ -154,6 +156,7 @@ export function hydrateSaveToOverrides(payload) {
     fatigue: hydrateFatigueState(snap.fatigue),
     lastMomentum: snap.lastMomentum ?? null,
     expansion: hydrateExpansionState(snap.expansion ?? null),
+    dynasty: hydrateDynastyState(snap.dynasty ?? null),
     pendingEvent: snap.pendingEvent,
     lastEventResult: snap.lastEventResult,
     lastWeekResult: snap.lastWeekResult,

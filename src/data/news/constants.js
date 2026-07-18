@@ -21,6 +21,7 @@ export const NEWS_CATEGORIES = {
   blowout: { id: 'blowout', label: 'Passeio', tone: 'neutral' },
   franchise: { id: 'franchise', label: 'Franquia', tone: 'neutral' },
   expansion: { id: 'expansion', label: 'Expansão', tone: 'positive' },
+  dynasty: { id: 'dynasty', label: 'Dinastia', tone: 'positive' },
 }
 
 export const NEWS_CATEGORY_IDS = Object.keys(NEWS_CATEGORIES)

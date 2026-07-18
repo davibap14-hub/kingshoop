@@ -18,6 +18,7 @@ import { canAfford } from '../gm/cap'
 import { resolvePlayer } from '../gm/situation'
 import { getReport } from '../scouting/state.js'
 import { getScoutedView } from '../scouting/report.js'
+import { dynastyFaScoreBonus } from '../dynasty/effects.js'
 import { findBestNegotiatedTrade, executeTrade } from '../trade'
 import { resolveFranchiseObjective } from './objective'
 
@@ -33,6 +34,7 @@ export function decideForFranchise(gm, teamId, seasonState = {}) {
     objective: resolved.objective,
     objectiveReason: resolved.reason,
     weights: resolved.weights,
+    dynastyBias: resolved.dynastyBias ?? null,
     // compat com código que lê personality.weights
     personality: {
       ...resolved.situation.personality,
@@ -330,6 +332,21 @@ export function scoreFa(sit, player, report = null) {
   }
 
   score -= (1 - confidence) * 10
+
+  // Dynasty Engine — franquias lendárias atraem estrelas
+  if (sit.dynastyBias?.active) {
+    score += dynastyFaScoreBonus(
+      {
+        active: { [sit.teamId]: sit.dynastyBias },
+        franchiseReputation: {
+          [sit.teamId]: sit.dynastyBias.reputation ?? 50,
+        },
+      },
+      sit.teamId,
+      overall,
+    )
+  }
+
   return score
 }
 

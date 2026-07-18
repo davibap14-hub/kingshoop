@@ -20,6 +20,7 @@ function pickCareerFields(state) {
     fatigue: state.fatigue,
     lastMomentum: state.lastMomentum,
     expansion: state.expansion,
+    dynasty: state.dynasty,
     pendingEvent: state.pendingEvent,
     lastEventResult: state.lastEventResult,
     lastWeekResult: state.lastWeekResult,

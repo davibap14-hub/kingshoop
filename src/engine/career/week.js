@@ -49,6 +49,7 @@ import {
   applyLeagueExpansion,
   hydrateExpansionState,
 } from '../expansion'
+import { processWeeklyDynasty } from '../dynasty'
 import {
   applyStatusDeltas,
   createCareerState,
@@ -637,6 +638,31 @@ export function runCareerWeek(state, activityId, opts = {}) {
   })
   messages.push(...historyResult.messages)
 
+  // Dynasty Engine — detecta dinastias no arquivo (após History, antes de News)
+  const dynastyResult = processWeeklyDynasty({
+    dynasty: state.dynasty,
+    leagueHistory: historyResult.leagueHistory,
+    seasonRolled: calendar.seasonRolled,
+    seasonNumber: calendar.currentSeason,
+    gm: gmWithDna,
+  })
+  messages.push(...dynastyResult.messages)
+  if (dynastyResult.decisions?.length) {
+    gmResult.decisions = [
+      ...(gmResult.decisions ?? []),
+      ...dynastyResult.decisions,
+    ]
+    gmResult.summary = {
+      ...gmResult.summary,
+      decisions: gmResult.decisions,
+      decisionsCount: gmResult.decisions.length,
+      dynasty: dynastyResult.summary,
+    }
+  }
+  const gmAfterDynasty = dynastyResult.gm ?? gmWithDna
+  const leagueHistoryAfterDynasty = dynastyResult.leagueHistory
+  const dynastyState = dynastyResult.dynasty
+
   // News Engine — manchetes da liga com base nos fatos da semana
   const newsResult = processWeeklyNews({
     week: calendar.currentWeek,
@@ -646,7 +672,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     careerInjury: injury,
     seasonSummary: seasonResult.summary,
     gmSummary: gmResult.summary,
-    gmState: gmWithDna,
+    gmState: gmAfterDynasty,
     previousSeason: { objectives: state.gm?.objectives ?? {} },
     newsFeed: state.newsFeed ?? [],
   })
@@ -711,10 +737,11 @@ export function runCareerWeek(state, activityId, opts = {}) {
     fatigue,
     lastMomentum,
     expansion: expansionState,
+    dynasty: dynastyState,
     progression: progResult.nextProgression,
     season: seasonResult.season,
-    gm: gmWithDna,
-    leagueHistory: historyResult.leagueHistory,
+    gm: gmAfterDynasty,
+    leagueHistory: leagueHistoryAfterDynasty,
     analytics: analyticsResult.analytics,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
@@ -788,6 +815,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       calendarVersion: expansionState.calendarVersion,
       picks: expansionState.lastExpansionDraft?.picks?.length ?? 0,
     },
+    dynasty: dynastyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

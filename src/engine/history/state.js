@@ -31,6 +31,8 @@ export function createLeagueHistory(overrides = {}) {
     tripleDoubleTotals: overrides.tripleDoubleTotals ?? {},
     /** Expansion Engine — ondas de expansão da liga */
     expansions: overrides.expansions ?? [],
+    /** Dynasty Engine — dinastias históricas reconhecidas */
+    dynasties: overrides.dynasties ?? [],
   }
 }
 

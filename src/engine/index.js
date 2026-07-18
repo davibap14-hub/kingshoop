@@ -40,6 +40,7 @@ export * from './fatigue'
 export * from './momentum'
 export * from './trade'
 export * from './expansion'
+export * from './dynasty'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

@@ -572,6 +572,53 @@ add({
   reward: { dinheiro: 40000, xp: 180, popularidade: 4 },
 })
 
+// Dynasty Engine
+add({
+  id: 'tit_dynasty_rising',
+  name: 'Era emergente',
+  description: 'O History Engine reconhece uma dinastia emergente na liga.',
+  category: 'titulos',
+  metric: 'dynastiesRecognized',
+  target: 1,
+  reward: { xp: 200, popularidade: 5, dinheiro: 40000, felicidade: 2 },
+})
+add({
+  id: 'tit_dynasty_active',
+  name: 'Vestindo a dinastia',
+  description: 'Jogue em uma franquia classificada como dinastia ativa.',
+  category: 'titulos',
+  metric: 'dynastyActive',
+  target: 1,
+  reward: { xp: 220, popularidade: 6, motivacao: 3, dinheiro: 50000 },
+})
+add({
+  id: 'tit_dynasty_full',
+  name: 'Dinastia completa',
+  description: 'Esteja em uma franquia no tier Dinastia (não só emergente).',
+  category: 'titulos',
+  metric: 'dynastyTierRank',
+  target: 2,
+  reward: { xp: 280, popularidade: 8, dinheiro: 80000, felicidade: 4 },
+})
+add({
+  id: 'tit_dynasty_super',
+  name: 'Super dinastia',
+  description: 'Esteja em uma franquia no tier Super dinastia.',
+  category: 'titulos',
+  metric: 'dynastyTierRank',
+  target: 3,
+  reward: { xp: 400, popularidade: 12, dinheiro: 150000, felicidade: 6 },
+})
+add({
+  id: 'tit_dynasty_3peat',
+  name: 'Três coroas',
+  description: 'Uma dinastia no arquivo acumule 3 títulos na janela.',
+  category: 'titulos',
+  metric: 'dynastyTitlesBest',
+  target: 3,
+  reward: { xp: 350, popularidade: 10, dinheiro: 120000 },
+})
+
 // ─── Estatísticas ───────────────────────────────────────────
 const careerPts = [100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000]
 careerPts.forEach((n, i) => {
