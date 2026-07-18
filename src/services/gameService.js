@@ -29,6 +29,7 @@ import {
   getPlaybookView,
   getDefenseView,
   getFatigueView,
+  getMomentumView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -237,6 +238,11 @@ export const gameService = {
   /** Fatigue Engine — Interface só lê */
   getFatigueView(state) {
     return getFatigueView(state)
+  },
+
+  /** Momentum Engine — Interface só lê */
+  getMomentumView(state) {
+    return getMomentumView(state)
   },
 
   /** Injury Engine — Interface só lê */

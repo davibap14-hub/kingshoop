@@ -10,6 +10,10 @@ import {
   withFatigueLineup,
 } from '../fatigue'
 import {
+  buildMomentumEffects,
+  withMomentumLineup,
+} from '../momentum'
+import {
   buildPossessionDecisionContext,
   decideBallHandler,
   decideCutter,
@@ -79,8 +83,18 @@ export function simulatePossessionDetailed({
     quarter,
     context.timeRemainingHint ?? 0.5,
   )
-  const offensePlayers = withFatigueLineup(offensePlayersIn, offenseFatigueFx)
-  const defensePlayers = withFatigueLineup(defensePlayersIn, defenseFatigueFx)
+  // Fatigue → Momentum (modificadores pequenos e progressivos)
+  const offenseMomFx =
+    context.offenseMomentumEffects ??
+    buildMomentumEffects(context.offenseMomentum ?? 50)
+  const defenseMomFx =
+    context.defenseMomentumEffects ??
+    buildMomentumEffects(context.defenseMomentum ?? 50)
+
+  let offensePlayers = withFatigueLineup(offensePlayersIn, offenseFatigueFx)
+  let defensePlayers = withFatigueLineup(defensePlayersIn, defenseFatigueFx)
+  offensePlayers = withMomentumLineup(offensePlayers, offenseMomFx)
+  defensePlayers = withMomentumLineup(defensePlayers, defenseMomFx)
 
   // —— Decision Engine: contexto ponderado da posse ——
   const decisionCtx = buildPossessionDecisionContext({
@@ -97,6 +111,9 @@ export function simulatePossessionDetailed({
       fatigue: offenseFatigueFx.simFatigue ?? context.fatigue,
       fatigueEffects: offenseFatigueFx,
       defenseFatigueEffects: defenseFatigueFx,
+      momentumValue: offenseMomFx.decisionScore,
+      momentumEffects: offenseMomFx,
+      defenseMomentumEffects: defenseMomFx,
     },
     possessionIndex: context.possessionIndex ?? 0,
     possessionsThisQuarter: context.possessionsThisQuarter ?? 24,
@@ -840,6 +857,8 @@ export function simulatePossessionDetailed({
       scorerId: shooter.id,
       assisterId: assister?.id ?? null,
       isThree: pts === 3,
+      shotType: shot.shotType,
+      finishStyle: finishAction,
       events,
       keepsPossession: false,
       transitionNext: false,
@@ -933,6 +952,8 @@ function packResult(payload) {
     fouledId: payload.fouledId ?? null,
     isThree: Boolean(payload.isThree),
     missedById: payload.missedById ?? null,
+    shotType: payload.shotType ?? null,
+    finishStyle: payload.finishStyle ?? null,
     keepsPossession: Boolean(payload.keepsPossession),
     transitionNext: Boolean(payload.transitionNext),
     defenseScheme: payload.defenseScheme ?? null,

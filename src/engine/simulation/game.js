@@ -10,6 +10,12 @@ import { decidePossessionPlan, resolveTeamStyle } from '../ai'
 import { buildLineupChemistryEffects } from '../chemistry'
 import { ensurePlayerDna } from '../dna'
 import {
+  buildMomentumEffects,
+  createGameMomentum,
+  summarizeMomentumForSave,
+  updateMomentumFromPossession,
+} from '../momentum'
+import {
   applyPossessionToBox,
   computeMvp,
   createTeamBox,
@@ -98,6 +104,14 @@ export function simulateGame(input = {}, opts = {}) {
   let allowFastBreak = false
   let possessionCount = 0
 
+  // Momentum Engine — estado psicológico da partida
+  let momentumState = createGameMomentum({
+    homeTeamId: home.team.id,
+    awayTeamId: away.team.id,
+    rivalry: opts.rivalry ?? input.rivalry,
+    isPlayoff: Boolean(opts.isPlayoff ?? input.isPlayoff),
+  })
+
   const runPossession = (quarter, momentKey) => {
     const offense = offenseIsHome ? home : away
     const defense = offenseIsHome ? away : home
@@ -118,6 +132,12 @@ export function simulateGame(input = {}, opts = {}) {
     const fatigue =
       offense.fatigue +
       (typeof quarter === 'number' ? (quarter - 1) * 6 : 28)
+
+    const offenseMom = offenseIsHome ? momentumState.home : momentumState.away
+    const defenseMom = offenseIsHome ? momentumState.away : momentumState.home
+    const offenseMomentumEffects = buildMomentumEffects(offenseMom.value)
+    const defenseMomentumEffects = buildMomentumEffects(defenseMom.value)
+
     const result = simulatePossessionDetailed({
       offensePlayers: offense.players,
       defensePlayers: defense.players,
@@ -146,10 +166,16 @@ export function simulateGame(input = {}, opts = {}) {
         fatigue,
         offenseSideFatigue: offense.fatigue,
         defenseSideFatigue: defense.fatigue,
+        // Momentum Engine — momento psicológico
+        offenseMomentum: offenseMom.value,
+        defenseMomentum: defenseMom.value,
+        offenseMomentumEffects,
+        defenseMomentumEffects,
+        momentumValue: offenseMomentumEffects.decisionScore,
         offensePlan,
         momentKey,
         scoreDiff,
-        momentumBias: scoreDiff * 1.5,
+        quarter,
         isPlayoff: Boolean(opts.isPlayoff ?? input.isPlayoff),
         gameImportance: opts.gameImportance ?? input.gameImportance ?? 50,
         possessionIndex: possessionCount,
@@ -163,6 +189,32 @@ export function simulateGame(input = {}, opts = {}) {
     if (result.points > 0) {
       if (offenseIsHome) homeScore += result.points
       else awayScore += result.points
+    }
+
+    // Momentum Engine — atualiza após a posse (acertos, erros, tocos, 3s…)
+    const prevTimeouts =
+      (momentumState.timeoutCount?.home ?? 0) +
+      (momentumState.timeoutCount?.away ?? 0)
+    momentumState = updateMomentumFromPossession(momentumState, result, {
+      offenseIsHome,
+      quarter,
+      scoreDiff,
+      momentKey,
+    })
+    const nextTimeouts =
+      (momentumState.timeoutCount?.home ?? 0) +
+      (momentumState.timeoutCount?.away ?? 0)
+    if (nextTimeouts > prevTimeouts) {
+      const side =
+        momentumState.lastTimeoutTeamId === home.team.id ? 'Casa' : 'Fora'
+      playByPlay.push({
+        quarter,
+        clock: typeof quarter === 'number' ? `Q${quarter}` : String(quarter),
+        action: 'timeout',
+        text: `Timeout (${side}) — Momentum Engine recupera a confiança.`,
+        homeScore,
+        awayScore,
+      })
     }
 
     const stamped = stampScoreOnEvents(result.events, homeScore, awayScore)
@@ -295,6 +347,12 @@ export function simulateGame(input = {}, opts = {}) {
     possessionCount,
     /** Play-by-Play completo da Simulation Engine */
     playByPlay,
+    /** Momentum Engine — snapshot final da partida */
+    momentum: summarizeMomentumForSave(
+      momentumState,
+      home.team.name,
+      away.team.name,
+    ),
     /** compat com log curto antigo */
     possessionLog: playByPlay.slice(-20).map((e) => ({
       quarter: e.quarter,

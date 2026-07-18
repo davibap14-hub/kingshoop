@@ -444,6 +444,20 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...seasonResult.messages)
 
+  // Momentum Engine — captura o jogo do time da carreira (última partida)
+  const playerGame = (seasonResult.weekResults ?? []).find(
+    (g) =>
+      g.homeId === state.currentTeamId || g.awayId === state.currentTeamId,
+  )
+  const lastMomentum = playerGame?.momentum ?? state.lastMomentum ?? null
+  if (playerGame?.momentum) {
+    const h = playerGame.momentum.home?.value ?? 50
+    const a = playerGame.momentum.away?.value ?? 50
+    messages.push(
+      `Momentum Engine: ${playerGame.homeShort} ${Math.round(h)} · ${playerGame.awayShort} ${Math.round(a)}.`,
+    )
+  }
+
   // General Manager Engine — decisões automáticas das franquias
   const gmResult = processWeeklyGm(
     {
@@ -649,6 +663,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injury,
     injuryEngine,
     fatigue,
+    lastMomentum,
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmWithDna,
@@ -718,6 +733,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     playbook: playbookResult.summary,
     defense: defenseResult.summary,
     fatigue: fatigueResult.summary,
+    momentum: lastMomentum,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

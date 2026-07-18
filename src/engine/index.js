@@ -37,6 +37,7 @@ export * from './dna'
 export * from './playbook'
 export * from './defense'
 export * from './fatigue'
+export * from './momentum'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

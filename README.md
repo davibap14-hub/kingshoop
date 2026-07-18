@@ -491,6 +491,24 @@ getFatigueView(state)
 
 Persistido em `state.fatigue` (**Save v18**). UI: `FatiguePanel`.
 
+## Momentum Engine
+
+`src/engine/momentum/` + `src/data/momentum/` — momento psicológico da partida.
+
+Fatores: **sequência de acertos · sequência de erros · torcida · clutch · rivalidade · timeout · enterradas · tocos · bolas de três consecutivas**.
+
+Altera temporariamente (modificadores pequenos e progressivos, teto **±7%**): confiança, tomada de decisão, precisão e agressividade. Soft caps 18–82.
+
+```js
+createGameMomentum({ homeTeamId, awayTeamId, rivalry, isPlayoff })
+updateMomentumFromPossession(state, result, ctx)
+buildMomentumEffects(value)
+withMomentumLineup(players, effects)
+getMomentumView(state)
+```
+
+Snapshot em `match.momentum` / `state.lastMomentum` (**Save v19**). UI: `MomentumPanel`.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

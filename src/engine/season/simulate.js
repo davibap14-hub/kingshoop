@@ -1,3 +1,4 @@
+import { SEASON_PHASES } from '../../data/season/constants'
 import { analyzeGameBox } from '../analytics'
 import { resolveSideGameFatigue } from '../fatigue'
 import { careerInjurySimFatigue } from '../injuries'
@@ -71,7 +72,15 @@ export function simulateGames(games, seasonState, opts = {}) {
       isCareerTeam: game.awayId === playerTeamId,
     })
 
-    const match = simulateGame({ home, away }, { rng })
+    const isPlayoff =
+      game.phase === SEASON_PHASES.playoffs ||
+      game.phase === SEASON_PHASES.finals ||
+      game.phase === 'playoffs' ||
+      game.phase === 'finals'
+    const match = simulateGame(
+      { home, away, isPlayoff },
+      { rng, isPlayoff },
+    )
     const performances = extractPerformances(match, {
       homeId: game.homeId,
       awayId: game.awayId,
@@ -128,6 +137,8 @@ export function simulateGames(games, seasonState, opts = {}) {
       },
       performances,
       summary: match.summary,
+      /** Momentum Engine — snapshot psicológico da partida */
+      momentum: match.momentum ?? null,
     }
 
     results.push(entry)

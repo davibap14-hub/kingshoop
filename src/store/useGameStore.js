@@ -18,6 +18,7 @@ function pickCareerFields(state) {
     injury: state.injury,
     injuryEngine: state.injuryEngine,
     fatigue: state.fatigue,
+    lastMomentum: state.lastMomentum,
     pendingEvent: state.pendingEvent,
     lastEventResult: state.lastEventResult,
     lastWeekResult: state.lastWeekResult,

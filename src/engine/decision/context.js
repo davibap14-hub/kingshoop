@@ -64,12 +64,13 @@ export function buildPossessionDecisionContext({
     100,
   )
 
-  // Momentum: sequência / placar recente (proxy)
+  // Momentum Engine — valor psicológico (com leve influência de placar/fadiga)
+  const momentumCore =
+    context.momentumValue != null
+      ? Number(context.momentumValue)
+      : 50 + scoreDiff * 1.1 + (context.momentumBias ?? 0)
   const momentum = clamp(
-    50 +
-      scoreDiff * 2.2 +
-      (context.momentumBias ?? 0) -
-      (context.fatigue ?? 0) * 0.15,
+    momentumCore - (context.fatigue ?? 0) * 0.08,
     0,
     100,
   )
@@ -121,6 +122,8 @@ export function buildPossessionDecisionContext({
     playbookCategoryBias: context.playbookCategoryBias ?? null,
     defenseBias: context.defenseBias ?? null,
     defenseCoach: context.defenseCoach ?? null,
+    momentumEffects: context.momentumEffects ?? null,
+    defenseMomentumEffects: context.defenseMomentumEffects ?? null,
     matchup,
     styleThreeBias: context.styleThreeBias ?? 0,
     stylePace: context.stylePace ?? 1,

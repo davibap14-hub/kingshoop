@@ -178,6 +178,8 @@ export function createCareerState(overrides = {}) {
     ),
     /** Fatigue Engine — carga partida/semana/temporada */
     fatigue: hydrateFatigueState(overrides.fatigue),
+    /** Momentum Engine — snapshot da última partida do time */
+    lastMomentum: overrides.lastMomentum ?? null,
     pendingEvent: overrides.pendingEvent ?? null,
     lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,
