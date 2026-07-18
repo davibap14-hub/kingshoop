@@ -1,5 +1,6 @@
 /**
- * Interface — exibe o resultado da Simulation Engine (inclui Play-by-Play).
+ * Interface — exibe Simulation Engine + pacote da Presentation Engine.
+ * A Presentation nunca altera o resultado; só interpreta para a UI.
  */
 
 import { Card, CardHeader, Badge } from '../ui'
@@ -105,7 +106,41 @@ function PlayByPlay({ events = [] }) {
   )
 }
 
-export default function MatchResult({ result }) {
+function HighlightsReel({ highlights = [] }) {
+  if (!highlights.length) return null
+  return (
+    <Card padding="lg">
+      <CardHeader
+        subtitle="Presentation Engine"
+        title="Destaques"
+        action={<Badge tone="blue">{highlights.length}</Badge>}
+      />
+      <ul className="mt-2 space-y-2">
+        {highlights.map((h) => (
+          <li
+            key={h.id}
+            className="rounded-md border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs"
+          >
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge tone="neutral">{h.label ?? h.type}</Badge>
+              <span className="text-slate-400">
+                {typeof h.quarter === 'number' ? `Q${h.quarter}` : h.quarter}
+              </span>
+              {h.score && (
+                <span className="tabular-nums text-slate-400">
+                  {h.score.home}–{h.score.away}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-slate-700">{h.text}</p>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
+export default function MatchResult({ result, presentation = null }) {
   if (!result) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -118,16 +153,20 @@ export default function MatchResult({ result }) {
 
   const { placarFinal, mvp, quarters, boxScore, summary, styles, playByPlay } =
     result
+  const highlights = presentation?.highlights ?? []
+  const stepCount = presentation?.sequence?.length ?? 0
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           Simulation Engine
+          {presentation ? ' · Presentation Engine' : ''}
           {result.overtime ? ' · Prorrogação' : ''}
           {result.possessionCount
             ? ` · ${result.possessionCount} posses`
             : ''}
+          {stepCount ? ` · ${stepCount} passos` : ''}
         </p>
         <div className="mt-3 flex items-center justify-center gap-6">
           <div>
@@ -185,6 +224,8 @@ export default function MatchResult({ result }) {
           ))}
         </div>
       </div>
+
+      <HighlightsReel highlights={highlights} />
 
       {mvp && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">

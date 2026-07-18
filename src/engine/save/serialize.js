@@ -17,6 +17,7 @@ import { hydrateExpansionState } from '../expansion'
 import { hydrateDynastyState } from '../dynasty'
 import { hydrateLegacyState } from '../legacy'
 import { hydrateRecordsState } from '../records'
+import { hydratePresentationState } from '../presentation'
 import {
   createInjuryEngineState,
   hydrateInjuryEngine,
@@ -59,6 +60,9 @@ export function buildSaveSnapshot(state) {
     ),
     records: structuredCloneSafe(
       hydrateRecordsState(state.records ?? null, state.leagueHistory ?? null),
+    ),
+    presentation: structuredCloneSafe(
+      hydratePresentationState(state.presentation ?? null),
     ),
     dynasty: structuredCloneSafe(hydrateDynastyState(state.dynasty ?? null)),
     legacy: structuredCloneSafe(hydrateLegacyState(state.legacy ?? null)),
@@ -163,6 +167,7 @@ export function hydrateSaveToOverrides(payload) {
     lastMomentum: snap.lastMomentum ?? null,
     expansion: hydrateExpansionState(snap.expansion ?? null),
     records: hydrateRecordsState(snap.records ?? null, snap.leagueHistory ?? null),
+    presentation: hydratePresentationState(snap.presentation ?? null),
     dynasty: hydrateDynastyState(snap.dynasty ?? null),
     legacy: hydrateLegacyState(snap.legacy ?? null),
     pendingEvent: snap.pendingEvent,

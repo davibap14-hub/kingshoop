@@ -33,6 +33,11 @@ import {
   getTradeView,
   getLegacyView,
   getRecordsView,
+  getPresentationView,
+  presentMatch,
+  getPresentationStep,
+  getAnimationCueAt,
+  updatePresentationPrefs,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -130,6 +135,25 @@ export const gameService = {
   runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
     const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
     return simulateGame(matchup)
+  },
+
+  /**
+   * Presentation Engine — interpreta o resultado da simulação (não altera).
+   */
+  presentMatch(matchResult, opts = {}) {
+    return presentMatch(matchResult, opts)
+  },
+
+  getPresentationStep(presentation, stepIndex) {
+    return getPresentationStep(presentation, stepIndex)
+  },
+
+  getAnimationCueAt(presentation, stepIndex) {
+    return getAnimationCueAt(presentation, stepIndex)
+  },
+
+  updatePresentationPrefs(presentationState, patch) {
+    return updatePresentationPrefs(presentationState, patch)
   },
 
   chooseBestStyle(players) {
@@ -261,6 +285,11 @@ export const gameService = {
   /** Records Engine — Interface só lê */
   getRecordsView(state) {
     return getRecordsView(state)
+  },
+
+  /** Presentation Engine — Interface só lê */
+  getPresentationView(state) {
+    return getPresentationView(state)
   },
 
   /** Injury Engine — Interface só lê */

@@ -598,6 +598,30 @@ getRecordsView(state)
 
 Estado em `state.records` (**Save v24**). Sem painel obrigatório.
 
+## Presentation Engine
+
+`src/engine/presentation/` + `src/data/presentation/` — experiência visual sobre a Simulation Engine.
+
+**Sem lógica de jogo.** Nunca altera resultados da simulação — só interpreta os dados gerados.
+
+Responsabilidades:
+- Sequência dos eventos da partida
+- Destaques
+- Narração textual
+- Comentários
+- Estatísticas em tempo real (timeline a partir do PBP)
+- Animações como *cues* para a Interface disparar
+- Ordem de exibição dos acontecimentos
+
+```js
+presentMatch(simulateGame(...))
+getPresentationStep(presentation, index)
+getAnimationCueAt(presentation, index)
+getPresentationView(state)
+```
+
+On-demand (sandbox `/match`); prefs em `state.presentation` (**Save v25**). UI: `MatchPanel` / `MatchResult`.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

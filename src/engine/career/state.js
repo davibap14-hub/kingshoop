@@ -15,6 +15,7 @@ import { ensureGmForActiveLeague } from '../expansion/ensure.js'
 import { hydrateDynastyState } from '../dynasty'
 import { hydrateLegacyState } from '../legacy'
 import { hydrateRecordsState } from '../records'
+import { hydratePresentationState } from '../presentation'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
 import {
   createEmptyCareerStats,
@@ -192,6 +193,8 @@ export function createCareerState(overrides = {}) {
       overrides.records,
       overrides.leagueHistory ?? null,
     ),
+    /** Presentation Engine — prefs de exibição (sem lógica de jogo) */
+    presentation: hydratePresentationState(overrides.presentation),
     /** Dynasty Engine — dinastias ativas / reputação */
     dynasty: hydrateDynastyState(overrides.dynasty),
     /** Legacy Engine — Legacy Score / ranking histórico */

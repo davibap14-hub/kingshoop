@@ -21,6 +21,7 @@ function pickCareerFields(state) {
     lastMomentum: state.lastMomentum,
     expansion: state.expansion,
     records: state.records,
+    presentation: state.presentation,
     dynasty: state.dynasty,
     legacy: state.legacy,
     pendingEvent: state.pendingEvent,

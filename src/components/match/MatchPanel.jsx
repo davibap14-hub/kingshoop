@@ -10,6 +10,7 @@ export default function MatchPanel() {
   const homeTeamId = useMatchStore((s) => s.homeTeamId)
   const awayTeamId = useMatchStore((s) => s.awayTeamId)
   const lastMatch = useMatchStore((s) => s.lastMatch)
+  const lastPresentation = useMatchStore((s) => s.lastPresentation)
   const isSimulating = useMatchStore((s) => s.isSimulating)
   const setHomeTeam = useMatchStore((s) => s.setHomeTeam)
   const setAwayTeam = useMatchStore((s) => s.setAwayTeam)
@@ -18,9 +19,9 @@ export default function MatchPanel() {
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader
-        eyebrow="Simulation Engine"
+        eyebrow="Simulation · Presentation"
         title="Posse a posse"
-        description="Cada posse usa pesos combinados (PnR, isolation, drive, kick out, post, fast break…) e gera Play-by-Play completo."
+        description="A Simulation Engine gera o resultado; a Presentation Engine só interpreta — sequência, destaques, narração e cues de animação."
         action={
           <Button
             variant="accent"
@@ -69,7 +70,7 @@ export default function MatchPanel() {
         </div>
       </Card>
 
-      <MatchResult result={lastMatch} />
+      <MatchResult result={lastMatch} presentation={lastPresentation} />
     </div>
   )
 }
