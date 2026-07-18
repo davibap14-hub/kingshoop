@@ -1,6 +1,7 @@
 import { SAVE_VERSION } from '../../data/save/constants'
 import { createAnalyticsState } from '../analytics/state.js'
 import { createLeagueHistory } from '../history/state'
+import { createStoryState } from '../story/state.js'
 import {
   createContractEngineState,
   migrateLegacyContract,
@@ -62,6 +63,7 @@ export function buildSaveSnapshot(state) {
     analytics: structuredCloneSafe(
       state.analytics ?? createAnalyticsState(),
     ),
+    story: structuredCloneSafe(state.story ?? createStoryState()),
     relationships: structuredCloneSafe(
       state.relationships ?? createRelationshipsState(),
     ),
@@ -149,6 +151,7 @@ export function hydrateSaveToOverrides(payload) {
     careerStats: snap.careerStats ?? createEmptyCareerStats(),
     leagueHistory: createLeagueHistory(snap.leagueHistory),
     analytics: createAnalyticsState(snap.analytics),
+    story: createStoryState(snap.story),
     relationships: snap.relationships
       ? createRelationshipsState(snap.relationships)
       : hydrateRelationshipsFromStatus(snap.status ?? {}),

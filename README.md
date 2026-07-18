@@ -463,21 +463,25 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
-## Event Engine
+## Story Engine
 
-`src/engine/events/` + `src/data/events/catalog.js` (80 eventos).
+`src/engine/story/` + `src/data/story/` — narrativas procedurais em **cadeias** (substitui eventos fixos).
 
-Cada evento: `id`, `categoria`, `peso`, `probabilidade`, `condicoes`, `efeitos`, `texto`, `escolhas` (2–4).
+Histórias são geradas dinamicamente a partir de: relacionamentos, personalidade, popularidade, desempenho, time, cidade, patrocínios, treinador, companheiros e liga.
+
+Cada história possui: **Título · Descrição · Contexto · Escolhas · Consequências · Continuação futura**.
+
+Decisões gravam **flags** e avançam **cadeias abertas** — a próxima história pode ser continuação, não um evento isolado.
 
 ```js
-import { rollEvent, resolveEventChoice, triggerEvent } from './engine'
-
-const event = rollEvent(state)
-const result = resolveEventChoice(state, event.id, 'a')
-// result.effects.deltas → mudanças na carreira
+triggerStory(state, { activityType }, { rng })
+resolveStoryChoice(state, storyId, choiceId)
+generateStory(state, context, rng)
+getStoryView(state)
 ```
 
-Categorias: Treino, Família, Dinheiro, Mídia, Companheiros, Lesões, Treinador, Patrocínio, NBA, Torcedores.
+Persistido em `state.story` (Save **v13**). UI: `EventChoicePanel` (porta `pendingEvent`).  
+`triggerEvent` / `resolveEventChoice` permanecem como aliases de compatibilidade.
 
 ## Career Engine
 

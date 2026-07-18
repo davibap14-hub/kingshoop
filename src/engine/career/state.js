@@ -20,6 +20,7 @@ import {
 } from '../contracts'
 import { createAnalyticsState } from '../analytics/state.js'
 import { createLeagueHistory } from '../history/state'
+import { createStoryState } from '../story/state.js'
 import {
   calculateRelationshipEffects,
   createRelationshipsState,
@@ -183,6 +184,7 @@ export function createCareerState(overrides = {}) {
     careerStats: overrides.careerStats ?? createEmptyCareerStats(),
     leagueHistory: createLeagueHistory(overrides.leagueHistory),
     analytics: createAnalyticsState(overrides.analytics),
+    story: createStoryState(overrides.story),
     relationships,
     relationshipEffects,
     playingTimeShare:

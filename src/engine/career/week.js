@@ -1,6 +1,6 @@
 import { getActivity, WEEKLY_ACTIVITIES } from '../../data/career/activities'
 import { WEEKS_PER_SEASON } from '../../data/constants/career'
-import { triggerEvent } from '../events'
+import { triggerStory } from '../story'
 import { processWeeklyProgression } from '../progression'
 import {
   calcTeammateChemistryDelta,
@@ -112,7 +112,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
   if (state.pendingEvent) {
     return {
       ok: false,
-      error: 'Resolva o evento pendente antes de avançar a semana.',
+      error: 'Resolva a história pendente antes de avançar a semana.',
       activityId,
       effects: null,
       nextState: null,
@@ -584,18 +584,21 @@ export function runCareerWeek(state, activityId, opts = {}) {
     pendingEvent: null,
   }
 
+  // Story Engine — história procedural (cadeias narrativas)
   // Evita dois pendentes na mesma semana — contrato tem prioridade
   if (!nextState.pendingContractOffer) {
-    const eventRoll = triggerEvent(
+    const storyRoll = triggerStory(
       nextState,
       { activityType: activity.type, activityId: activity.id },
       { rng },
     )
 
-    if (eventRoll.triggered) {
-      nextState = eventRoll.nextState
+    if (storyRoll.triggered) {
+      nextState = storyRoll.nextState
+      const kind =
+        storyRoll.mode === 'continuation' ? 'continuação' : 'nova história'
       messages.push(
-        `Evento: ${eventRoll.event.categoriaLabel} — escolha pendente.`,
+        `Story Engine (${kind}): ${storyRoll.event.categoriaLabel} — escolha pendente.`,
       )
     }
   }

@@ -1,12 +1,8 @@
 /**
- * Event Engine — API pública.
+ * Event Engine — ponte compatível para a Story Engine procedural.
  *
- * Eventos possuem: id, categoria, peso, probabilidade, condições,
- * efeitos, texto e escolhas (2–4). Cada escolha altera atributos de carreira.
- *
- * Fluxo:
- *   rollEvent(state) → evento | null
- *   resolveEventChoice(state, eventId, choiceId) → { effects, nextState }
+ * O catálogo fixo CAREER_EVENTS não alimenta mais o fluxo semanal.
+ * Histórias são geradas dinamicamente (cadeias + memória).
  */
 
 export {
@@ -17,41 +13,8 @@ export {
   rollEvent,
   cloneEvent,
   getCategoryMeta,
-  summarizeEventForUi,
 } from './eligibility'
 
-export { resolveEventChoice } from './resolve'
-
-import { rollEvent, summarizeEventForUi, cloneEvent } from './eligibility'
-
-/**
- * Tenta disparar um evento e, se houver, devolve payload para a Interface.
- * Não aplica efeitos de escolha — só efeitos base opcionais ficam pendentes.
- */
-export function triggerEvent(state, context = {}, opts = {}) {
-  const rng = opts.rng ?? Math.random
-  const event = rollEvent(state, context, rng)
-
-  if (!event) {
-    return {
-      ok: true,
-      triggered: false,
-      event: null,
-      pendingEvent: null,
-      nextState: { ...state, pendingEvent: null },
-    }
-  }
-
-  const pendingEvent = summarizeEventForUi(cloneEvent(event), state.player)
-
-  return {
-    ok: true,
-    triggered: true,
-    event: pendingEvent,
-    pendingEvent,
-    nextState: {
-      ...state,
-      pendingEvent,
-    },
-  }
-}
+export { summarizeStoryForUi as summarizeEventForUi } from '../story/generate.js'
+export { resolveStoryChoice as resolveEventChoice } from '../story/resolve.js'
+export { triggerStory as triggerEvent } from '../story/trigger.js'

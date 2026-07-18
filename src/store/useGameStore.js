@@ -28,6 +28,7 @@ function pickCareerFields(state) {
     careerStats: state.careerStats,
     leagueHistory: state.leagueHistory,
     analytics: state.analytics,
+    story: state.story,
     relationships: state.relationships,
     relationshipEffects: state.relationshipEffects,
     playingTimeShare: state.playingTimeShare,
