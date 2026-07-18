@@ -463,6 +463,26 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Decision Engine
+
+`src/engine/decision/` + `src/data/decision/` — **cérebro da simulação**.
+
+Decide todas as ações de uma posse com **sistema de pesos** (nunca RNG puro), considerando simultaneamente:
+
+Atributos · Tendências · Personalidade · Química · Coach · Fadiga · Momentum · Matchup · Placar · Tempo restante · Pressão · Importância da partida.
+
+Decide: quem arma · corta · recebe · infiltra · pede screen · pick and roll · arremessa · isola · tenta roubo · contesta · pega rebote.
+
+```js
+buildPossessionDecisionContext({ … })
+decideBallHandler(players, ctx, rng)
+decideScreener / decideCutter / decideReceiver / decideShooter / …
+decide(decisionId, options, ctx, rng)
+decideDuel(decisionId, scoreA, scoreB, ctx, rng)
+```
+
+A **Simulation Engine** consome a Decision Engine em toda posse (`possession.js` + `actors.js` + `actions.js`).
+
 ## Achievement Engine
 
 `src/engine/achievements/` + `src/data/achievements/` — **282 conquistas** com progresso.

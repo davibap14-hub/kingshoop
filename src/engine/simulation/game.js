@@ -111,6 +111,9 @@ export function simulateGame(input = {}, opts = {}) {
       momentKey,
     })
 
+    const fatigue =
+      offense.fatigue +
+      (typeof quarter === 'number' ? (quarter - 1) * 6 : 28)
     const result = simulatePossessionDetailed({
       offensePlayers: offense.players,
       defensePlayers: defense.players,
@@ -126,10 +129,21 @@ export function simulateGame(input = {}, opts = {}) {
         chemistryEffects: offense.chemistryEffects,
         defenseChemistryEffects: defense.chemistryEffects,
         coachSetBias: offense.coachSetBias ?? {},
+        coach: offense.coach ?? null,
         styleThreeBias: offensePlan?.threeBias ?? 0,
         stylePace: offense.style?.match?.pace ?? 1,
         styleMotion: offense.styleId === 'fast_pace' ? 0.8 : 0.5,
         clockLabel: typeof quarter === 'number' ? `Q${quarter}` : String(quarter),
+        // Decision Engine — fatores situacionais
+        fatigue,
+        offensePlan,
+        momentKey,
+        scoreDiff,
+        momentumBias: scoreDiff * 1.5,
+        isPlayoff: Boolean(opts.isPlayoff ?? input.isPlayoff),
+        gameImportance: opts.gameImportance ?? input.gameImportance ?? 50,
+        possessionIndex: possessionCount,
+        possessionsThisQuarter: basePossessions,
       },
       rng,
     })

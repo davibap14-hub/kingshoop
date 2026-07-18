@@ -1,12 +1,9 @@
 /**
  * Simulation Engine — API pública.
  *
- * - events: micro-eventos de carreira (legado)
- * - game: simulação completa posse a posse com Play-by-Play
- *
- * Cada posse usa pesos combinados de atributos + Tendências (0–100):
- * Shoot3, Drive, Pass, Isolation, Post Up, Fast Break, Alley Oop,
- * Step Back, Fadeaway.
+ * Cada posse é dirigida pela Decision Engine (cérebro ponderado):
+ * atributos · tendências · personalidade · química · coach ·
+ * fadiga · momentum · matchup · placar · tempo · pressão · importância.
  */
 
 export { rollWeeklyEvent } from './events'
@@ -20,3 +17,17 @@ export {
   tendency,
 } from './weights'
 export { PLAY_ACTIONS, PLAY_ACTION_LABELS } from '../../data/simulation/constants'
+
+// Re-export Decision Engine (usada pela simulação)
+export {
+  decide,
+  decideDuel,
+  buildPossessionDecisionContext,
+  decideBallHandler,
+  decideScreener,
+  decideCutter,
+  decideReceiver,
+  decideShooter,
+  decideRebounder,
+  decideStealer,
+} from '../decision'

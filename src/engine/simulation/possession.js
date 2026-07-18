@@ -2,14 +2,19 @@ import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { PLAY_ACTIONS } from '../../data/simulation/constants'
 import { boostToScoreFactor } from '../chemistry/effects'
 import {
+  buildPossessionDecisionContext,
+  decideBallHandler,
+  decideCutter,
+  decideDuel,
+  decideHelpDefender,
+  decidePrimaryDefender,
+  decideReceiver,
+  decideScreener,
+  decideStealer,
+} from '../decision'
+import {
   chooseFinishStyle,
   chooseOffensiveSet,
-  pickBallHandler,
-  pickCutter,
-  pickHelpDefender,
-  pickIndividualDefender,
-  pickKickTarget,
-  pickScreener,
   resolveOnBallPressure,
   resolveRebound,
   resolveShot,
@@ -52,27 +57,39 @@ export function simulatePossessionDetailed({
     )
   }
 
-  const chemistryEffects = context.chemistryEffects ?? null
-  const defChemistryEffects = context.defenseChemistryEffects ?? null
-
-  // —— Ball Handler (tendência Pass + química de pares) ——
-  const ballHandler = pickBallHandler(offensePlayers, rng, {
-    preferPerimeter: true,
-    chemistryEffects,
+  // —— Decision Engine: contexto ponderado da posse ——
+  const decisionCtx = buildPossessionDecisionContext({
+    offensePlayers,
+    defensePlayers,
+    offenseTeam,
+    defenseTeam,
+    quarter,
+    homeScore,
+    awayScore,
+    offenseIsHome,
+    context,
+    possessionIndex: context.possessionIndex ?? 0,
+    possessionsThisQuarter: context.possessionsThisQuarter ?? 24,
   })
+
+  const chemistryEffects = decisionCtx.chemistryEffects
+  const defChemistryEffects = decisionCtx.defenseChemistryEffects
+
+  // Quem arma · quem marca · quem contesta (Decision Engine)
+  const ballHandler = decideBallHandler(offensePlayers, decisionCtx, rng)
   push({
     action: PLAY_ACTIONS.ball_handler,
     text: `${ballHandler.nome} inicia a posse com a bola.`,
     actors: { ballHandler: ballHandler.nome },
   })
 
-  const defender = pickIndividualDefender(defensePlayers, ballHandler, rng)
-  const help = pickHelpDefender(
+  const defender = decidePrimaryDefender(
     defensePlayers,
-    defender,
+    ballHandler,
+    decisionCtx,
     rng,
-    defChemistryEffects,
   )
+  const help = decideHelpDefender(defensePlayers, defender, decisionCtx, rng)
   push({
     action: PLAY_ACTIONS.individual_defense,
     text: `${defender.nome} marca ${ballHandler.nome} no perímetro.`,
@@ -84,8 +101,12 @@ export function simulatePossessionDetailed({
     defender,
     helpDefender: help,
     isHome: offenseIsHome,
-    chemistry: context.chemistry ?? chemistryEffects?.teamChemistry ?? 55,
+    chemistry: decisionCtx.chemistry,
     chemistryEffects,
+    pressure: decisionCtx.pressure,
+    importance: decisionCtx.importance,
+    fatigue: decisionCtx.fatigue,
+    momentum: decisionCtx.momentum,
     rng,
   })
 
@@ -98,10 +119,19 @@ export function simulatePossessionDetailed({
   }
 
   if (pressure.winner === 'defense') {
+    const stealer = decideStealer(
+      defensePlayers,
+      ballHandler,
+      defender,
+      decisionCtx,
+      rng,
+    )
     const stealScore = combineScore([
-      { value: attr(defender, 'defesa.roubo'), weight: 1.3 },
+      { value: attr(stealer, 'defesa.roubo'), weight: 1.3 },
       { value: pressure.defenseScore * 100, weight: 0.9, scale: 100 },
       { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 0.8, invert: true },
+      { value: decisionCtx.pressure, weight: 0.35 },
+      { value: decisionCtx.fatigue, weight: 0.3, invert: true },
     ])
     const holdScore = combineScore([
       { value: pressure.attackScore * 100, weight: 1.0, scale: 100 },
@@ -109,21 +139,28 @@ export function simulatePossessionDetailed({
       { value: attr(ballHandler, 'qi.passe'), weight: 0.8 },
       { value: attr(ballHandler, 'fisico.forca'), weight: 0.45 },
       {
-        value: chemistryEffects?.teamChemistry ?? context.chemistry ?? 55,
+        value: chemistryEffects?.teamChemistry ?? decisionCtx.chemistry,
         weight: CHEMISTRY_SIM_WEIGHTS.onBallPressure,
       },
+      { value: decisionCtx.momentum, weight: 0.35 },
     ])
-    const stealDuel = contestedSelect(stealScore, holdScore, rng)
+    const stealDuel = decideDuel(
+      'steal_duel',
+      stealScore,
+      holdScore,
+      decisionCtx,
+      rng,
+    )
     if (stealDuel.winner === 'a') {
       push({
         action: PLAY_ACTIONS.individual_defense,
-        text: `Roubo de ${defender.nome}!`,
-        actors: { stealer: defender.nome },
+        text: `Roubo de ${stealer.nome}!`,
+        actors: { stealer: stealer.nome },
       })
       return packResult({
         outcome: 'steal',
         points: 0,
-        stealerId: defender.id,
+        stealerId: stealer.id,
         turnoversById: ballHandler.id,
         events,
         keepsPossession: false,
@@ -131,16 +168,20 @@ export function simulatePossessionDetailed({
       })
     }
 
-    const toDuel = contestedSelect(
+    const toDuel = decideDuel(
+      'pressure_turnover',
       combineScore([
         { value: pressure.defenseScore * 100, weight: 1, scale: 100 },
         { value: 48, weight: 0.5 },
+        { value: decisionCtx.pressure, weight: 0.4 },
       ]),
       combineScore([
         { value: pressure.attackScore * 100, weight: 1, scale: 100 },
         { value: tendency(ballHandler, 'pass'), weight: 0.6 },
         { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 0.8 },
+        { value: decisionCtx.fatigue, weight: 0.35, invert: true },
       ]),
+      decisionCtx,
       rng,
     )
     if (toDuel.winner === 'a') {
@@ -164,7 +205,8 @@ export function simulatePossessionDetailed({
     offensePlayers,
     ballHandler,
     context: {
-      allowFastBreak: Boolean(context.allowFastBreak),
+      ...decisionCtx,
+      allowFastBreak: Boolean(decisionCtx.allowFastBreak),
       transitionDefense:
         combineScore(
           defensePlayers.map((p) => ({
@@ -172,11 +214,8 @@ export function simulatePossessionDetailed({
             weight: 1,
           })),
         ) * 100,
-      styleThreeBias: context.styleThreeBias ?? 0,
-      stylePace: context.stylePace ?? 1,
-      styleMotion: context.styleMotion ?? 0.5,
-      chemistry: context.chemistry ?? chemistryEffects?.teamChemistry ?? 55,
       chemistryEffects,
+      coachSetBias: decisionCtx.coachSetBias,
     },
     rng,
   })
@@ -211,7 +250,7 @@ export function simulatePossessionDetailed({
     finishAction = fbFinish.action
     openLook = true
   } else if (setId === 'pick_and_roll') {
-    screener = pickScreener(offensePlayers, ballHandler, rng, chemistryEffects)
+    screener = decideScreener(offensePlayers, ballHandler, decisionCtx, rng)
     const pairScreen =
       chemistryEffects?.pairScoreBetween?.(ballHandler.id, screener.id) ?? 50
     push({
@@ -298,11 +337,11 @@ export function simulatePossessionDetailed({
         actors: { ballHandler: ballHandler.nome, screener: screener.nome },
       })
     } else if (branch === 'kick') {
-      const kickTo = pickKickTarget(
+      const kickTo = decideReceiver(
         offensePlayers,
         ballHandler,
+        decisionCtx,
         rng,
-        chemistryEffects,
       )
       push({
         action: PLAY_ACTIONS.kick_out,
@@ -423,11 +462,11 @@ export function simulatePossessionDetailed({
     })
 
     if (pressure.helpCommitted) {
-      const kickTo = pickKickTarget(
+      const kickTo = decideReceiver(
         offensePlayers,
         ballHandler,
+        decisionCtx,
         rng,
-        chemistryEffects,
       )
       const kickDuel = contestedSelect(
         combineScore([
@@ -503,13 +542,13 @@ export function simulatePossessionDetailed({
     }
     openLook = pressure.winner === 'offense'
   } else if (setId === 'cut') {
-    screener = pickScreener(offensePlayers, ballHandler, rng, chemistryEffects)
-    const cutter = pickCutter(
+    screener = decideScreener(offensePlayers, ballHandler, decisionCtx, rng)
+    const cutter = decideCutter(
       offensePlayers,
       ballHandler,
       screener,
+      decisionCtx,
       rng,
-      chemistryEffects,
     )
     push({
       action: PLAY_ACTIONS.screen,
@@ -615,6 +654,7 @@ export function simulatePossessionDetailed({
       offensePlayers,
       defensePlayers,
       isHome: offenseIsHome,
+      decisionCtx,
       rng,
     })
     return finishWithRebound({
@@ -710,6 +750,7 @@ export function simulatePossessionDetailed({
     offensePlayers,
     defensePlayers,
     isHome: offenseIsHome,
+    decisionCtx,
     rng,
   })
 

@@ -1,5 +1,5 @@
 import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
-import { ACTION_SET_BASE_WEIGHTS, HOME_FACTORS } from '../../data/simulation/constants'
+import { HOME_FACTORS } from '../../data/simulation/constants'
 import { boostToScoreFactor } from '../chemistry/effects'
 import {
   pickBallHandler,
@@ -17,11 +17,12 @@ import {
   tendency,
   weightedSelect,
 } from './weights'
+import { decideOffensiveSet } from '../decision/sets.js'
+import { decidePostPlayer } from '../decision/roles.js'
+import { decideDuel } from '../decision/decide.js'
 
 /**
- * Escolhe o set ofensivo com pesos combinados
- * (attrs + tendências + contexto + química).
- * Nunca aleatório puro.
+ * Set ofensivo — Decision Engine (pesos situacionais completos).
  */
 export function chooseOffensiveSet({
   offensePlayers,
@@ -29,124 +30,45 @@ export function chooseOffensiveSet({
   context,
   rng,
 }) {
-  const handler = ballHandler
-  const postPlayer = pickPostPlayer(offensePlayers, rng)
-  const chem = context.chemistryEffects
-  const cw = chem?.weights ?? CHEMISTRY_SIM_WEIGHTS
-  const offChem = boostToScoreFactor(chem?.offenseEfficiency)
-  const passChem = boostToScoreFactor(chem?.passBoost ?? chem?.aiPassBias)
-  const cutChem = boostToScoreFactor(chem?.movementBoost ?? chem?.aiCutBias)
-  const teamChem = chem?.teamChemistry ?? context.chemistry ?? 55
-  // Coach Engine — bias de jogadas (sistema ofensivo)
-  const setBias = context.coachSetBias ?? {}
-  const coachSetW = 0.55
-
-  const sets = [
-    {
-      id: 'pick_and_roll',
-      score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.pick_and_roll * 70, weight: 0.7 },
-        { value: attr(handler, 'qi.tomadaDecisao'), weight: 0.8 },
-        { value: tendency(handler, 'pass'), weight: 1.1 },
-        { value: tendency(handler, 'drive'), weight: 0.7 },
-        { value: tendency(postPlayer, 'alleyOop'), weight: 0.5 },
-        { value: context.styleThreeBias * 100, weight: 0.25 },
-        { value: passChem, weight: cw.setPassBias },
-        { value: offChem, weight: cw.offenseEfficiency * 0.6 },
-        { value: teamChem, weight: cw.aiDecision * 0.5 },
-        { value: setBias.pick_and_roll ?? 50, weight: coachSetW },
-      ]),
-    },
-    {
-      id: 'isolation',
-      score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.isolation * 70, weight: 0.6 },
-        { value: tendency(handler, 'isolation'), weight: 1.5 },
-        { value: tendency(handler, 'stepBack'), weight: 0.6 },
-        { value: tendency(handler, 'fadeaway'), weight: 0.5 },
-        { value: attr(handler, 'arremesso.midRange'), weight: 0.7 },
-        { value: handler?.overall ?? 70, weight: 0.4 },
-        // Iso sofre um pouco com química alta (preferência coletiva)
-        { value: passChem, weight: cw.setPassBias * 0.35, invert: true },
-        { value: teamChem, weight: cw.aiDecision * 0.35 },
-        { value: setBias.isolation ?? 50, weight: coachSetW },
-      ]),
-    },
-    {
-      id: 'drive',
-      score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.drive * 70, weight: 0.6 },
-        { value: tendency(handler, 'drive'), weight: 1.5 },
-        { value: attr(handler, 'fisico.velocidade'), weight: 0.9 },
-        { value: attr(handler, 'arremesso.bandeja'), weight: 0.7 },
-        { value: context.stylePace * 50, weight: 0.35 },
-        { value: cutChem, weight: cw.setCutBias * 0.7 },
-        { value: offChem, weight: cw.offenseEfficiency * 0.5 },
-        { value: setBias.drive ?? 50, weight: coachSetW },
-      ]),
-    },
-    {
-      id: 'post_up',
-      score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.post_up * 70, weight: 0.55 },
-        { value: tendency(postPlayer, 'postUp'), weight: 1.6 },
-        { value: attr(postPlayer, 'fisico.forca'), weight: 0.9 },
-        { value: attr(postPlayer, 'arremesso.bandeja'), weight: 0.6 },
-        { value: postPlayer?.overall ?? 65, weight: 0.4 },
-        {
-          value: chem?.pairScoreBetween?.(handler?.id, postPlayer?.id) ?? 50,
-          weight: cw.pass,
-        },
-        { value: offChem, weight: cw.offenseEfficiency * 0.45 },
-        { value: setBias.post_up ?? 50, weight: coachSetW },
-      ]),
-      meta: { postPlayer },
-    },
-    {
-      id: 'cut',
-      score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.cut * 70, weight: 0.6 },
-        { value: tendency(handler, 'pass'), weight: 1.3 },
-        { value: attr(handler, 'qi.visao'), weight: 0.9 },
-        { value: context.styleMotion * 80, weight: 0.45 },
-        { value: cutChem, weight: cw.setCutBias },
-        { value: passChem, weight: cw.setPassBias },
-        { value: teamChem, weight: cw.aiDecision * 0.55 },
-        { value: setBias.cut ?? 50, weight: coachSetW },
-      ]),
-    },
-  ]
-
-  if (context.allowFastBreak) {
-    sets.push({
-      id: 'fast_break',
-      score: combineScore([
-        { value: 70, weight: 0.7 },
-        { value: tendency(handler, 'fastBreak'), weight: 1.6 },
-        { value: attr(handler, 'fisico.velocidade'), weight: 1.0 },
-        { value: context.transitionDefense, weight: 0.85, invert: true },
-        { value: context.stylePace * 60, weight: 0.5 },
-        { value: cutChem, weight: cw.movement * 0.6 },
-      ]),
-      mult: 1.25,
-    })
+  const ctx = {
+    ...context,
+    chemistry: context.chemistry ?? context.chemistryEffects?.teamChemistry ?? 55,
+    chemistryEffects: context.chemistryEffects,
+    coachSetBias: context.coachSetBias ?? {},
+    styleThreeBias: context.styleThreeBias ?? 0,
+    stylePace: context.stylePace ?? 1,
+    styleMotion: context.styleMotion ?? 0.5,
+    allowFastBreak: Boolean(context.allowFastBreak),
+    fatigue: context.fatigue ?? 0,
+    momentum: context.momentum ?? 50,
+    pressure: context.pressure ?? 45,
+    importance: context.importance ?? 50,
+    scoreDiff: context.scoreDiff ?? 0,
+    quarter: context.quarter ?? 1,
+    timeRemaining: context.timeRemaining ?? 0.5,
   }
-
-  return weightedSelect(sets, rng)
+  return decideOffensiveSet({
+    offensePlayers,
+    ballHandler,
+    ctx,
+    rng,
+  })
 }
 
-/** Escolhe o jogador de post com base na tendência Post Up. */
-export function pickPostPlayer(offensePlayers, rng) {
-  const entries = offensePlayers.map((p) => ({
-    id: p.id,
-    player: p,
-    score: combineScore([
-      { value: tendency(p, 'postUp'), weight: 1.5 },
-      { value: attr(p, 'fisico.forca'), weight: 0.9 },
-      { value: ['C', 'PF'].includes(p.posicao) ? 85 : 40, weight: 0.7 },
-    ]),
-  }))
-  return weightedSelect(entries, rng)?.player ?? offensePlayers[0]
+/** Post player — Decision Engine. */
+export function pickPostPlayer(offensePlayers, rng, context = {}) {
+  return decidePostPlayer(offensePlayers, {
+    chemistry: context.chemistry ?? 55,
+    chemistryEffects: context.chemistryEffects,
+    coachSetBias: context.coachSetBias ?? {},
+    fatigue: context.fatigue ?? 0,
+    momentum: context.momentum ?? 50,
+    pressure: context.pressure ?? 45,
+    importance: context.importance ?? 50,
+    scoreDiff: context.scoreDiff ?? 0,
+    quarter: context.quarter ?? 1,
+    timeRemaining: context.timeRemaining ?? 0.5,
+  }, rng)
 }
 
 /**
@@ -160,12 +82,17 @@ export function resolveOnBallPressure({
   isHome,
   chemistry = 55,
   chemistryEffects = null,
+  pressure = 45,
+  importance = 50,
+  fatigue = 0,
+  momentum = 50,
   rng,
 }) {
   const cw = chemistryEffects?.weights ?? CHEMISTRY_SIM_WEIGHTS
   const teamChem = chemistryEffects?.teamChemistry ?? chemistry
   const passChem = boostToScoreFactor(chemistryEffects?.passBoost)
   const moveChem = boostToScoreFactor(chemistryEffects?.movementBoost)
+  const decisionCtx = { pressure, importance, fatigue, momentum }
 
   const attackScore = combineScore([
     { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 1.0 },
@@ -177,6 +104,8 @@ export function resolveOnBallPressure({
     { value: passChem, weight: cw.pass * 0.55 },
     { value: moveChem, weight: cw.movement * 0.45 },
     { value: 50 + homeBoost(isHome, 'ballSecurity') * 100, weight: 0.35 },
+    { value: fatigue, weight: 0.45, invert: true },
+    { value: pressure, weight: 0.25 },
   ])
 
   const defenseScore = combineScore([
@@ -184,6 +113,7 @@ export function resolveOnBallPressure({
     { value: attr(defender, 'defesa.roubo'), weight: 1.0 },
     { value: attr(defender, 'fisico.velocidade'), weight: 0.9 },
     { value: defender?.overall ?? 70, weight: 0.5 },
+    { value: fatigue * 0.6, weight: 0.35, invert: true },
   ])
 
   const helpChem =
@@ -194,9 +124,16 @@ export function resolveOnBallPressure({
     { value: attr(helpDefender, 'qi.tomadaDecisao'), weight: 0.9 },
     { value: attr(helpDefender, 'defesa.roubo'), weight: 0.7 },
     { value: helpChem, weight: cw.defense * 0.7 },
+    { value: importance, weight: 0.3 },
   ])
 
-  const helpCommit = contestedSelect(helpScore, 0.55, rng)
+  const helpCommit = decideDuel(
+    'help_commit',
+    helpScore,
+    0.55,
+    decisionCtx,
+    rng,
+  )
   const effectiveDefense =
     helpCommit.winner === 'a'
       ? combineScore([
@@ -205,7 +142,13 @@ export function resolveOnBallPressure({
         ])
       : defenseScore
 
-  const duel = contestedSelect(attackScore, effectiveDefense, rng)
+  const duel = decideDuel(
+    'on_ball_pressure',
+    attackScore,
+    effectiveDefense,
+    decisionCtx,
+    rng,
+  )
 
   return {
     attackScore,
@@ -477,22 +420,45 @@ function resolveFtPoints(shooter, attempts, rng) {
 }
 
 /**
- * Rebound ofensivo vs defensivo — pesos combinados.
+ * Rebound ofensivo vs defensivo — Decision Engine.
  */
 export function resolveRebound({
   offensePlayers,
   defensePlayers,
   isHome,
+  decisionCtx = null,
   rng,
 }) {
-  const offPlayer = pickRebounder(offensePlayers, rng, { offensive: true })
-  const defPlayer = pickRebounder(defensePlayers, rng, { offensive: false })
+  const ctx = decisionCtx ?? {
+    fatigue: 0,
+    momentum: 50,
+    pressure: 45,
+    importance: 50,
+    scoreDiff: 0,
+    quarter: 1,
+    timeRemaining: 0.5,
+    chemistry: 50,
+  }
+  const offPlayer = pickRebounder(
+    offensePlayers,
+    rng,
+    { offensive: true },
+    ctx,
+  )
+  const defPlayer = pickRebounder(
+    defensePlayers,
+    rng,
+    { offensive: false },
+    ctx,
+  )
 
   const orbScore = combineScore([
     { value: attr(offPlayer, 'fisico.impulsao'), weight: 1.2 },
     { value: attr(offPlayer, 'fisico.forca'), weight: 1.1 },
     { value: attr(offPlayer, 'qi.tomadaDecisao'), weight: 0.5 },
     { value: 38 + homeBoost(isHome, 'finish') * 80, weight: 0.6 },
+    { value: ctx.fatigue, weight: 0.35, invert: true },
+    { value: ctx.momentum, weight: 0.3 },
   ])
 
   const drbScore = combineScore([
@@ -500,9 +466,10 @@ export function resolveRebound({
     { value: attr(defPlayer, 'fisico.forca'), weight: 1.0 },
     { value: attr(defPlayer, 'defesa.garrafao'), weight: 0.9 },
     { value: 55, weight: 0.7 },
+    { value: ctx.pressure, weight: 0.25 },
   ])
 
-  const duel = contestedSelect(orbScore, drbScore, rng)
+  const duel = decideDuel('rebound_duel', orbScore, drbScore, ctx, rng)
   if (duel.winner === 'a') {
     return {
       type: 'offensive_rebound',

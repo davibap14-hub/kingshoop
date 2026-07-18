@@ -30,6 +30,7 @@ export * from './coaches'
 export * from './scouting'
 export * from './career'
 export * from './events'
+export * from './decision'
 export * from './simulation'
 export * from './personality'
 export {
