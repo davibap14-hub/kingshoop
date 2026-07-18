@@ -17,8 +17,12 @@ export function createLeagueHistory(overrides = {}) {
     leaders: overrides.leaders ?? [],
     /** Recordes all-time */
     records: overrides.records ?? createEmptyRecords(),
-    /** Hall da Fama */
+    /** Hall da Fama (induzidos) */
     hallOfFame: overrides.hallOfFame ?? [],
+    /** Votações HOF permanentes (inclui "Não entrou") */
+    hofBallots: overrides.hofBallots ?? [],
+    /** Totais de carreira por jogador (pts/ast/reb + prêmios) */
+    careerTotals: overrides.careerTotals ?? {},
     /** Aposentadorias registradas */
     retirements: overrides.retirements ?? [],
     /** MVPs de partida acumulados (nome → contagem / detalhes) */

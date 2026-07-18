@@ -26,7 +26,12 @@ export {
   extractRecordCandidatesFromSeasonArchive,
 } from './records.js'
 export { buildSeasonArchive, appendSeasonToHistory } from './archive.js'
-export { evaluateHallOfFame } from './hof.js'
+export {
+  evaluateHallOfFame,
+  createHofEntry,
+  isInHallOfFame,
+  getHofBallot,
+} from './hof.js'
 export {
   extractRetirementsFromGm,
   appendRetirements,

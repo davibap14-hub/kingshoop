@@ -33,6 +33,7 @@ export function getHistoryView(leagueHistory) {
     leaders: [...h.leaders].reverse(),
     records,
     hallOfFame: [...h.hallOfFame].reverse(),
+    hofBallots: [...(h.hofBallots ?? [])].reverse(),
     retirements: [...h.retirements].reverse(),
     topGameMvps: Object.entries(h.gameMvpTotals || {})
       .map(([id, count]) => ({ id, count }))

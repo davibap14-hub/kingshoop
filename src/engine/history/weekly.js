@@ -1,3 +1,4 @@
+import { accumulateCareerTotals, creditSeasonHonors } from '../hallOfFame'
 import { appendSeasonToHistory, buildSeasonArchive } from './archive.js'
 import { evaluateHallOfFame } from './hof.js'
 import {
@@ -50,6 +51,7 @@ export function processWeeklyHistory({
     })
     if (archive) {
       history = appendSeasonToHistory(history, archive)
+      history = creditSeasonHonors(history, archive)
       messages.push(
         `History Engine: temporada ${archive.season} arquivada (permanente).`,
       )
@@ -66,8 +68,9 @@ export function processWeeklyHistory({
     }
   }
 
-  // 2) Totais permanentes da semana atual
+  // 2) Totais permanentes da semana atual (+ carreira para HOF)
   history = accumulateWeekTotals(history, weekResults)
+  history = accumulateCareerTotals(history, weekResults)
 
   // 3) Recordes all-time
   const weekCandidates = extractRecordCandidatesFromWeek(
@@ -103,13 +106,20 @@ export function processWeeklyHistory({
     }
   }
 
-  // 5) Hall da Fama
+  // 5) Hall of Fame Engine — pontuação + classificação na aposentadoria
   const hof = evaluateHallOfFame({
     history,
     gm,
     retiredPlayerIds: retirements.map((r) => r.playerId),
+    retirements,
+    evaluatedSeason: seasonNumber,
   })
   history = hof.history
+  for (const ballot of hof.ballots ?? []) {
+    messages.push(
+      `HOF (${ballot.classificationLabel}): ${ballot.name} — score ${ballot.score}.`,
+    )
+  }
   for (const ind of hof.inductees) {
     messages.push(`Hall da Fama: ${ind.name} — ${ind.reason}.`)
   }
@@ -125,8 +135,10 @@ export function processWeeklyHistory({
       awards: history.awards?.length ?? 0,
       retirements: history.retirements?.length ?? 0,
       hallOfFame: history.hallOfFame?.length ?? 0,
+      hofBallots: history.hofBallots?.length ?? 0,
       recordsSet: Object.keys(weekCandidates).length,
       inductees: hof.inductees,
+      ballots: hof.ballots ?? [],
       newRetirements: retirements,
     },
   }

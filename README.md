@@ -67,6 +67,32 @@ src/
  └── assets/
 ```
 
+## Hall of Fame Engine
+
+`src/engine/hallOfFame/` + `src/data/hallOfFame/` — votação automática na aposentadoria.
+
+Pontuação (0–100) com pesos para: **Títulos · MVPs · All-Star · All-NBA · DPOY · Pontos · Assistências · Rebotes · Longevidade · Popularidade**.
+
+Classificação:
+
+| Score | Classe |
+|------:|--------|
+| ≥ 78 | Primeira votação |
+| ≥ 55 | Hall da Fama |
+| &lt; 55 | Não entrou |
+
+Toda votação (incluindo “Não entrou”) é salva permanentemente em `leagueHistory.hofBallots`; induzidos também em `leagueHistory.hallOfFame`. Totais de carreira em `leagueHistory.careerTotals`.
+
+```js
+processHallOfFameBallots({ history, gm, retirements, evaluatedSeason })
+evaluateRetiredPlayer({ retirement, history, gm })
+accumulateCareerTotals(history, weekResults)
+creditSeasonHonors(history, archive)
+getHallOfFameView(state)
+```
+
+Integrado via `processWeeklyHistory` no roll de aposentadorias. Persistido no Save (**v11**). UI: `HallOfFamePanel`.
+
 ## Scouting Engine
 
 `src/engine/scouting/` + `src/data/scouting/` — observação de talentos (Draft + Free Agency).
@@ -213,7 +239,8 @@ Salva entre temporadas (nada é descartado):
 - Estatísticas de cada temporada
 - Líderes da liga
 - Recordes all-time
-- Hall da Fama
+- Hall da Fama + votações HOF (Hall of Fame Engine)
+- Totais de carreira (pts/ast/reb + honras)
 - Aposentadorias
 
 No roll de temporada, a Season Engine anterior é arquivada **antes** do reset. O log semanal (`history`, cap 120) é separado de `leagueHistory` (ilimitado).
@@ -223,9 +250,10 @@ processWeeklyHistory({ leagueHistory, previousSeason, seasonRolled, weekResults,
 // → { leagueHistory, summary, messages }
 
 getHistoryView(leagueHistory)
+getHallOfFameView(state)
 ```
 
-Persistido no Save System (`SAVE_VERSION` 4). UI: `HistoryPanel`.
+Persistido no Save System (`SAVE_VERSION` 11). UI: `HistoryPanel` + `HallOfFamePanel`.
 
 ## News Engine
 

@@ -5,13 +5,13 @@
 /** Nunca descartar temporadas arquivadas */
 export const HISTORY_KEEP_ALL_SEASONS = true
 
-/** Critérios mínimos para Hall da Fama */
+/**
+ * Legado — a votação atual usa scores ponderados em
+ * `data/hallOfFame` (Primeira votação / Hall da Fama / Não entrou).
+ */
 export const HOF_THRESHOLDS = {
-  minMvpSeasons: 1,
-  minChampionships: 1,
-  minFinalsMvp: 1,
-  minGameMvps: 25,
-  minAge: 34,
+  firstBallotMinScore: 78,
+  hallOfFameMinScore: 55,
   autoInductOnRetirement: true,
 }
 

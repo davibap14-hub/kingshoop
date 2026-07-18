@@ -124,9 +124,38 @@ export default function HistoryPanel() {
           {view.hallOfFame.slice(0, 8).map((h) => (
             <li key={`hof-${h.playerId}`} className="text-sm text-slate-700">
               <span className="font-semibold text-navy">{h.name}</span>
+              {h.classificationLabel ? (
+                <>
+                  {' '}
+                  <Badge tone="blue">{h.classificationLabel}</Badge>
+                </>
+              ) : null}
+              {h.score != null ? (
+                <span className="text-slate-500"> · {h.score}</span>
+              ) : null}
               {h.inductedSeason != null ? ` · T${h.inductedSeason}` : null}
               {h.reason ? (
                 <span className="text-slate-500"> — {h.reason}</span>
+              ) : null}
+            </li>
+          ))}
+        </Section>
+
+        <Section title="Votações HOF" empty="Nenhuma votação ainda.">
+          {(view.hofBallots ?? []).slice(0, 8).map((b) => (
+            <li
+              key={`ballot-${b.playerId}-${b.evaluatedSeason ?? ''}`}
+              className="text-sm text-slate-700"
+            >
+              <span className="font-semibold text-navy">{b.name}</span>
+              {b.classificationLabel ? (
+                <>
+                  {' '}
+                  <Badge tone="neutral">{b.classificationLabel}</Badge>
+                </>
+              ) : null}
+              {b.score != null ? (
+                <span className="text-slate-500"> · {b.score}</span>
               ) : null}
             </li>
           ))}

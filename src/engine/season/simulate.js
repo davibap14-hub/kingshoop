@@ -85,6 +85,7 @@ export function simulateGames(games, seasonState, opts = {}) {
             assists: match.mvp.assists,
           }
         : null,
+      boxSummary: flattenBoxSummary(match.boxScore),
       performances,
       summary: match.summary,
     }
@@ -99,4 +100,23 @@ export function simulateGames(games, seasonState, opts = {}) {
   }
 
   return { standings, results, weekResults, messages }
+}
+
+/** Linhas de box score para Career Totals / Hall of Fame. */
+function flattenBoxSummary(boxScore) {
+  if (!boxScore) return []
+  const lines = []
+  for (const side of [boxScore.home, boxScore.away]) {
+    if (!side?.players) continue
+    for (const p of side.players) {
+      lines.push({
+        playerId: p.id ?? null,
+        playerName: p.nome ?? p.name ?? null,
+        points: p.points ?? 0,
+        assists: p.assists ?? 0,
+        rebounds: p.rebounds ?? 0,
+      })
+    }
+  }
+  return lines
 }
