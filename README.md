@@ -37,6 +37,7 @@ src/
  │    ├── contracts/
  │    ├── chemistry/
  │    ├── injuries/
+ │    ├── coaches/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -64,6 +65,22 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Coach Engine
+
+`src/engine/coaches/` + `src/data/coaches/` — técnicos com decisões automáticas por pesos.
+
+Cada treinador possui: **sistema ofensivo · sistema defensivo · rotação · confiança em jovens · rigor · motivação · desenvolvimento**.
+
+Influencia: minutos, jogadas, treinos, desenvolvimento e relação com atletas.
+
+```js
+processWeeklyCoaches({ coaches, gm, careerTeamId, weekResults, … })
+decideCoachWeek(coach, context) // foco, minutos, estilo, relação
+getCoachView(state)
+```
+
+Persistido em `gm.coaches` (Save **v9**). UI: `CoachPanel`.
 
 ## Injury Engine
 

@@ -37,6 +37,9 @@ export function chooseOffensiveSet({
   const passChem = boostToScoreFactor(chem?.passBoost ?? chem?.aiPassBias)
   const cutChem = boostToScoreFactor(chem?.movementBoost ?? chem?.aiCutBias)
   const teamChem = chem?.teamChemistry ?? context.chemistry ?? 55
+  // Coach Engine — bias de jogadas (sistema ofensivo)
+  const setBias = context.coachSetBias ?? {}
+  const coachSetW = 0.55
 
   const sets = [
     {
@@ -51,6 +54,7 @@ export function chooseOffensiveSet({
         { value: passChem, weight: cw.setPassBias },
         { value: offChem, weight: cw.offenseEfficiency * 0.6 },
         { value: teamChem, weight: cw.aiDecision * 0.5 },
+        { value: setBias.pick_and_roll ?? 50, weight: coachSetW },
       ]),
     },
     {
@@ -65,6 +69,7 @@ export function chooseOffensiveSet({
         // Iso sofre um pouco com química alta (preferência coletiva)
         { value: passChem, weight: cw.setPassBias * 0.35, invert: true },
         { value: teamChem, weight: cw.aiDecision * 0.35 },
+        { value: setBias.isolation ?? 50, weight: coachSetW },
       ]),
     },
     {
@@ -77,6 +82,7 @@ export function chooseOffensiveSet({
         { value: context.stylePace * 50, weight: 0.35 },
         { value: cutChem, weight: cw.setCutBias * 0.7 },
         { value: offChem, weight: cw.offenseEfficiency * 0.5 },
+        { value: setBias.drive ?? 50, weight: coachSetW },
       ]),
     },
     {
@@ -92,6 +98,7 @@ export function chooseOffensiveSet({
           weight: cw.pass,
         },
         { value: offChem, weight: cw.offenseEfficiency * 0.45 },
+        { value: setBias.post_up ?? 50, weight: coachSetW },
       ]),
       meta: { postPlayer },
     },
@@ -105,6 +112,7 @@ export function chooseOffensiveSet({
         { value: cutChem, weight: cw.setCutBias },
         { value: passChem, weight: cw.setPassBias },
         { value: teamChem, weight: cw.aiDecision * 0.55 },
+        { value: setBias.cut ?? 50, weight: coachSetW },
       ]),
     },
   ]

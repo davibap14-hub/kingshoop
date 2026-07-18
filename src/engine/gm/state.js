@@ -10,6 +10,8 @@ import {
 import { playerDb } from '../../data/players'
 import { TEAMS } from '../../data/teams'
 import { createChemistryState } from '../chemistry/state.js'
+import { ensureLeagueCoaches } from '../coaches/generate.js'
+import { createCoachEngineState } from '../coaches/state.js'
 import { generateDraftClass as generateDraftClassFromEngine } from '../draft/generate'
 
 /** @deprecated use Draft Engine `generateDraftClass` */
@@ -111,6 +113,10 @@ export function createGmState(overrides = {}) {
     playerOverrides: overrides.playerOverrides ?? {},
     /** Chemistry Engine — matriz de pares (−100…+100) */
     chemistry: createChemistryState(overrides.chemistry ?? {}),
+    /** Coach Engine — head coach por franquia */
+    coaches: ensureLeagueCoaches(
+      createCoachEngineState(overrides.coaches ?? {}),
+    ),
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

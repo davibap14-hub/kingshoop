@@ -9,12 +9,21 @@ import {
 } from '../personality'
 import { processSeasonalBalance } from '../balance'
 import { processWeeklyChemistry } from '../chemistry'
+import {
+  buildCoachEffects,
+  deriveMedicalStaffFromCoach,
+  ensureLeagueCoaches,
+  getTeamCoach,
+  mergeCoachIntoRelationshipEffects,
+  processWeeklyCoaches,
+} from '../coaches'
 import { processWeeklyContracts } from '../contracts'
 import { processWeeklyInjuries } from '../injuries'
 import { processWeeklyNews } from '../news'
 import { clamp } from '../utils/math'
 import {
   applyEventToRelationships,
+  applyRelationshipDelta,
   calculateRelationshipEffects,
   processWeeklyRelationships,
   syncStatusFromRelationships,
@@ -217,16 +226,29 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
-  // Injury Engine — risco, fadiga, condição, recuperação / nova lesão
-  const medicalStaff = clamp(
-    Math.round(
-      42 +
-        (state.relationships?.coach ?? 50) * 0.28 +
-        (priorRelEffects?.chemistryBonus ?? 0),
-    ),
-    28,
-    92,
-  )
+  // Coach Engine — staff médico e efeitos da decisão anterior
+  const coachesEarly = ensureLeagueCoaches(state.gm?.coaches, {
+    seasonNumber: state.currentSeason,
+  })
+  const careerCoachEarly = getTeamCoach(coachesEarly, state.currentTeamId)
+  const lastCoachDecision =
+    [...(coachesEarly.lastDecisions ?? [])]
+      .reverse()
+      .find((d) => d.teamId === state.currentTeamId) ?? null
+  const earlyCoachEffects = careerCoachEarly
+    ? buildCoachEffects(careerCoachEarly, lastCoachDecision)
+    : null
+  const medicalStaff =
+    deriveMedicalStaffFromCoach(careerCoachEarly) ??
+    clamp(
+      Math.round(
+        42 +
+          (state.relationships?.coach ?? 50) * 0.28 +
+          (priorRelEffects?.chemistryBonus ?? 0),
+      ),
+      28,
+      92,
+    )
   const projectedStatus = {
     ...state.status,
     energia: clamp(
@@ -335,14 +357,18 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   const playerStats = syncPlayerStatsFromDetailed(player)
 
-  // Progression Engine — XP semanal (Balance + Relationship)
+  // Progression Engine — XP semanal (Balance + Relationship + Coach)
+  const progRelEffects = mergeCoachIntoRelationshipEffects(
+    relResult.effects,
+    earlyCoachEffects,
+  )
   const progResult = processWeeklyProgression(
     {
       ...state,
       status,
       injury,
       player,
-      relationshipEffects: relResult.effects,
+      relationshipEffects: progRelEffects,
     },
     activity,
     rng,
@@ -431,6 +457,25 @@ export function runCareerWeek(state, activityId, opts = {}) {
   messages.push(...chemResult.messages)
   const gmWithChemistry = chemResult.gm ?? gmResult.gm
 
+  // Coach Engine — decisões automáticas (minutos, foco, estilo, relação)
+  const coachResult = processWeeklyCoaches({
+    coaches: gmWithChemistry?.coaches,
+    gm: gmWithChemistry,
+    careerTeamId: contractResult.currentTeamId ?? state.currentTeamId,
+    player,
+    relationships: relResult.relationships,
+    activityType: activity.type,
+    trainingSuccess,
+    injured: Boolean(injury),
+    weekResults: seasonResult.weekResults ?? [],
+    week: calendar.currentWeek,
+    seasonNumber: calendar.currentSeason,
+    seasonRolled: calendar.seasonRolled,
+    rng,
+  })
+  messages.push(...coachResult.messages)
+  const gmWithCoaches = coachResult.gm ?? gmWithChemistry
+
   // History Engine — arquivo permanente (antes do reset já capturado em previousSeason)
   const historyResult = processWeeklyHistory({
     leagueHistory: state.leagueHistory,
@@ -440,7 +485,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     week: calendar.currentWeek,
     seasonNumber: calendar.currentSeason,
     gmDecisions: gmResult.decisions ?? gmResult.summary?.decisions ?? [],
-    gm: gmWithChemistry,
+    gm: gmWithCoaches,
   })
   messages.push(...historyResult.messages)
 
@@ -453,7 +498,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     careerInjury: injury,
     seasonSummary: seasonResult.summary,
     gmSummary: gmResult.summary,
-    gmState: gmWithChemistry,
+    gmState: gmWithCoaches,
     previousSeason: { objectives: state.gm?.objectives ?? {} },
     newsFeed: state.newsFeed ?? [],
   })
@@ -464,17 +509,37 @@ export function runCareerWeek(state, activityId, opts = {}) {
     if (!v) continue
     deltas[k] = (deltas[k] ?? 0) + v
   }
-  const newsRel = applyEventToRelationships(
+  let newsRel = applyEventToRelationships(
     relResult.relationships,
     newsResult.deltas ?? {},
     { reason: 'news' },
   )
+  // Coach → relação com atletas
+  if (coachResult.effects?.relationDelta) {
+    newsRel = {
+      ...newsRel,
+      relationships: applyRelationshipDelta(
+        newsRel.relationships,
+        'coach',
+        coachResult.effects.relationDelta,
+        { reason: 'coach_engine' },
+      ).relationships,
+    }
+  }
   let statusWithNews = applyStatusDeltas(status, newsResult.deltas)
   statusWithNews = syncStatusFromRelationships(
     statusWithNews,
     newsRel.relationships,
   )
-  const relationshipEffects = calculateRelationshipEffects(newsRel.relationships)
+  if (coachResult.effects?.motivationAura) {
+    statusWithNews = applyStatusDeltas(statusWithNews, {
+      motivacao: coachResult.effects.motivationAura,
+    })
+  }
+  const relationshipEffects = mergeCoachIntoRelationshipEffects(
+    calculateRelationshipEffects(newsRel.relationships),
+    coachResult.effects,
+  )
   const careerVariablesWithNews = syncLegacyCareerVariables(statusWithNews)
 
   let nextState = {
@@ -497,7 +562,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     injuryEngine,
     progression: progResult.nextProgression,
     season: seasonResult.season,
-    gm: gmWithChemistry,
+    gm: gmWithCoaches,
     leagueHistory: historyResult.leagueHistory,
     weekNews: newsResult.weekNews,
     newsFeed: newsResult.newsFeed,
@@ -552,6 +617,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     balance: balanceResult.summary,
     relationships: relResult.summary,
     chemistry: chemResult.summary,
+    coaches: coachResult.summary,
     historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,

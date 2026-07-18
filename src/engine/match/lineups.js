@@ -5,6 +5,8 @@ import {
   buildLineupChemistryEffects,
   createChemistryState,
 } from '../chemistry'
+import { decideTeamStyle } from '../coaches/decide.js'
+import { getTeamCoach } from '../coaches/state.js'
 import { calcRosterChemistry } from '../personality/chemistry'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
@@ -85,9 +87,12 @@ export function buildLineupFromDb(
     chemistryEffects.teamChemistry ??
     calcRosterChemistry(lineup, chemistryBonus)
 
+  const coach = getTeamCoach(gm?.coaches, teamId)
   const ai = styleId
-    ? { styleId, auto: false }
-    : chooseBestStyle(lineup)
+    ? { styleId, auto: false, setBias: coach?.setBias ?? {} }
+    : coach
+      ? decideTeamStyle(coach, lineup)
+      : chooseBestStyle(lineup)
 
   return {
     teamId: team.id,
@@ -99,6 +104,8 @@ export function buildLineupFromDb(
     chemistryBonus,
     chemistryState: chemistryEffects.state,
     chemistryEffects,
+    coach,
+    coachSetBias: coach?.setBias ?? ai.setBias ?? {},
     fatigue: 0,
     styleId: ai.styleId,
   }
