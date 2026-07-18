@@ -1,4 +1,5 @@
 import { analyzeGameBox } from '../analytics'
+import { resolveSideGameFatigue } from '../fatigue'
 import { careerInjurySimFatigue } from '../injuries'
 import { buildLineupFromDb } from '../match/lineups'
 import { extractPerformances } from '../news/extract'
@@ -28,12 +29,12 @@ export function simulateGames(games, seasonState, opts = {}) {
   const messages = []
 
   for (const game of games) {
-    const homeFatigue =
+    const homeInjuryFatigue =
       injuryFatigueForTeam(seasonState.injuries, game.homeId) +
       (playerInjured && game.homeId === playerTeamId
         ? careerInjuryFatigue || 10
         : 0)
-    const awayFatigue =
+    const awayInjuryFatigue =
       injuryFatigueForTeam(seasonState.injuries, game.awayId) +
       (playerInjured && game.awayId === playerTeamId
         ? careerInjuryFatigue || 10
@@ -53,8 +54,22 @@ export function simulateGames(games, seasonState, opts = {}) {
       gm,
       chemistryBonus: awayBonus,
     })
-    home.fatigue = homeFatigue
-    away.fatigue = awayFatigue
+    home.fatigue = resolveSideGameFatigue({
+      season: seasonState,
+      teamId: game.homeId,
+      week: game.week,
+      injuryFatigue: homeInjuryFatigue,
+      careerFatigue: opts.careerFatigue,
+      isCareerTeam: game.homeId === playerTeamId,
+    })
+    away.fatigue = resolveSideGameFatigue({
+      season: seasonState,
+      teamId: game.awayId,
+      week: game.week,
+      injuryFatigue: awayInjuryFatigue,
+      careerFatigue: opts.careerFatigue,
+      isCareerTeam: game.awayId === playerTeamId,
+    })
 
     const match = simulateGame({ home, away }, { rng })
     const performances = extractPerformances(match, {

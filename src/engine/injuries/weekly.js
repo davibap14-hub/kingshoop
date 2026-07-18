@@ -24,6 +24,9 @@ export function processWeeklyInjuries({
   medicalStaff = DEFAULT_MEDICAL_STAFF,
   week = null,
   seasonNumber = null,
+  /** Fatigue Engine — score composto / bônus de risco */
+  fatigueComposite = null,
+  fatigueInjuryBonus = 0,
   rng = Math.random,
 } = {}) {
   const messages = []
@@ -36,6 +39,11 @@ export function processWeeklyInjuries({
       ...state.profile,
       medicalStaff: medicalStaff ?? state.profile.medicalStaff,
       minutesPerGame: playingTimeShare ?? state.profile.minutesPerGame,
+      // Sincroniza fadiga da Fatigue Engine quando disponível
+      fatigue:
+        fatigueComposite != null
+          ? fatigueComposite
+          : state.profile.fatigue,
     },
   }
 
@@ -47,6 +55,8 @@ export function processWeeklyInjuries({
     resistencia: player?.fisico?.resistencia ?? 60,
     activityType: activity?.type ?? null,
     injured: hadInjuryAtStart,
+    fatigueOverride: fatigueComposite,
+    fatigueInjuryBonus,
   })
   state = { ...state, profile }
 

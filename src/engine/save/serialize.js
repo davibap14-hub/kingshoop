@@ -12,6 +12,7 @@ import {
   createRelationshipsState,
   hydrateRelationshipsFromStatus,
 } from '../relationships'
+import { hydrateFatigueState } from '../fatigue'
 import {
   createInjuryEngineState,
   hydrateInjuryEngine,
@@ -47,6 +48,7 @@ export function buildSaveSnapshot(state) {
     injuryEngine: structuredCloneSafe(
       state.injuryEngine ?? createInjuryEngineState(),
     ),
+    fatigue: structuredCloneSafe(hydrateFatigueState(state.fatigue)),
     pendingEvent: structuredCloneSafe(state.pendingEvent),
     lastEventResult: structuredCloneSafe(state.lastEventResult),
     lastWeekResult: structuredCloneSafe(state.lastWeekResult),
@@ -144,6 +146,7 @@ export function hydrateSaveToOverrides(payload) {
       snap.injuryEngine ?? createInjuryEngineState(),
       snap.injury,
     ),
+    fatigue: hydrateFatigueState(snap.fatigue),
     pendingEvent: snap.pendingEvent,
     lastEventResult: snap.lastEventResult,
     lastWeekResult: snap.lastWeekResult,

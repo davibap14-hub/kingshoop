@@ -41,6 +41,7 @@ import { processWeeklyAchievements } from '../achievements'
 import { processWeeklyAnalytics } from '../analytics'
 import { processWeeklyDna } from '../dna'
 import { processWeeklyDefense } from '../defense'
+import { processWeeklyFatigue } from '../fatigue'
 import { processWeeklyPlaybooks } from '../playbook'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
@@ -262,6 +263,25 @@ export function runCareerWeek(state, activityId, opts = {}) {
       100,
     ),
   }
+
+  // Fatigue Engine — carga (viagem, B2B, minutos, overload) + recuperação
+  const fatigueResult = processWeeklyFatigue({
+    fatigue: state.fatigue,
+    player,
+    status: projectedStatus,
+    activity,
+    season: state.season,
+    currentTeamId: state.currentTeamId,
+    week: state.currentWeek,
+    seasonNumber: state.currentSeason,
+    playingTimeShare:
+      state.playingTimeShare ?? priorRelEffects.playingTimeShare ?? 24,
+    medicalStaff,
+    seasonRolled: false,
+  })
+  let fatigue = fatigueResult.fatigue
+  messages.push(...fatigueResult.messages)
+
   const injuryResult = processWeeklyInjuries({
     injuryEngine,
     injury,
@@ -273,6 +293,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
     medicalStaff,
     week: state.currentWeek,
     seasonNumber: state.currentSeason,
+    fatigueComposite: fatigue.composite,
+    fatigueInjuryBonus: fatigue.effects?.injuryChanceBonus ?? 0,
     rng,
   })
   injuryEngine = injuryResult.injuryEngine
@@ -346,6 +368,22 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   if (calendar.seasonRolled) {
     messages.push(`Nova temporada! Temporada ${calendar.currentSeason} começa.`)
+    const seasonReset = processWeeklyFatigue({
+      fatigue: fatigue,
+      player,
+      status,
+      activity: { type: 'rest' },
+      season: state.season,
+      currentTeamId: state.currentTeamId,
+      week: calendar.currentWeek,
+      seasonNumber: calendar.currentSeason,
+      playingTimeShare:
+        state.playingTimeShare ?? priorRelEffects.playingTimeShare ?? 24,
+      medicalStaff,
+      seasonRolled: true,
+    })
+    fatigue = seasonReset.fatigue
+    messages.push(...seasonReset.messages)
   }
 
   // Balance Engine — idade, rookies e decadência no roll de temporada
@@ -372,6 +410,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       ...state,
       status,
       injury,
+      fatigue,
       player,
       relationshipEffects: progRelEffects,
     },
@@ -388,6 +427,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       ...state,
       status,
       injury,
+      fatigue,
       gm: gmAfterBalance,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
@@ -472,6 +512,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     activityType: activity.type,
     trainingSuccess,
     injured: Boolean(injury),
+    highFatigue: Boolean(fatigue?.effects?.highFatigue),
     weekResults: seasonResult.weekResults ?? [],
     week: calendar.currentWeek,
     seasonNumber: calendar.currentSeason,
@@ -607,6 +648,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     finance: finance.finance,
     injury,
     injuryEngine,
+    fatigue,
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmWithDna,
@@ -675,6 +717,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     dna: dnaResult.summary,
     playbook: playbookResult.summary,
     defense: defenseResult.summary,
+    fatigue: fatigueResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

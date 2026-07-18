@@ -43,6 +43,7 @@ src/
  │    ├── dna/
  │    ├── playbook/
  │    ├── defense/
+ │    ├── fatigue/
  │    ├── career/
  │    ├── match/
  │    ├── progression/
@@ -63,6 +64,7 @@ src/
  │    ├── dna/
  │    ├── playbook/
  │    ├── defense/
+ │    ├── fatigue/
  │    ├── teams/
  │    ├── events/
  │    ├── coaches/
@@ -469,6 +471,26 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Fatigue Engine
+
+`src/engine/fatigue/` + `src/data/fatigue/` — fadiga avançada.
+
+Controla: **partida · semana · temporada · minutos consecutivos · viagens · back-to-back · overload**.
+
+Altera: velocidade, precisão, defesa, tomada de decisão, chance de lesão, recuperação e treinos.
+
+Recuperação depende de **descanso × equipe médica × idade**.
+
+```js
+processWeeklyFatigue({ fatigue, player, activity, season, medicalStaff, … })
+buildFatigueEffects(state)
+applyFatigueToPlayer(player, effects)
+resolveSideGameFatigue({ season, teamId, careerFatigue })
+getFatigueView(state)
+```
+
+Persistido em `state.fatigue` (**Save v18**). UI: `FatiguePanel`.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.
@@ -487,7 +509,7 @@ resolveShot({ …, defenseEffects })
 getDefenseView(state)
 ```
 
-Preferências no coach (`defenseBias`) · Save **v17** · UI: `DefensePanel`.
+Preferências no coach (`defenseBias`) · Save **v18** · UI: `DefensePanel`.
 
 ## Playbook Engine
 
@@ -508,7 +530,7 @@ processWeeklyPlaybooks({ playbooks, gm, seasonRolled })
 getPlaybookView(state)
 ```
 
-Persistido em `gm.playbooks` (**Save v17**). UI: `PlaybookPanel`.
+Persistido em `gm.playbooks` (**Save v18**). UI: `PlaybookPanel`.
 
 ## Player DNA Engine
 
@@ -531,7 +553,7 @@ dnaSetBias(handler, setId)
 getDnaView(state)
 ```
 
-Persistido no Save (**v17**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
+Persistido no Save (**v18**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
 
 ## Decision Engine
 
@@ -567,7 +589,7 @@ evaluateAchievements(achievements, state)
 getAchievementsView(state)
 ```
 
-Persistido em `state.achievements` via Save Engine (**v17**). UI: `AchievementsPanel`.
+Persistido em `state.achievements` via Save Engine (**v18**). UI: `AchievementsPanel`.
 
 ## Story Engine
 

@@ -142,8 +142,10 @@ export function simulateGame(input = {}, opts = {}) {
         stylePace: offense.style?.match?.pace ?? 1,
         styleMotion: offense.styleId === 'fast_pace' ? 0.8 : 0.5,
         clockLabel: typeof quarter === 'number' ? `Q${quarter}` : String(quarter),
-        // Decision Engine — fatores situacionais
+        // Fatigue Engine — carga de lado + in-game
         fatigue,
+        offenseSideFatigue: offense.fatigue,
+        defenseSideFatigue: defense.fatigue,
         offensePlan,
         momentKey,
         scoreDiff,

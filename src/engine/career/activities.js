@@ -2,6 +2,7 @@ import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { ARCHETYPES } from '../../data/constants/archetypes'
 import { MIN_ENERGY_TO_TRAIN } from '../../data/constants/career'
 import { applyBalancedTrainingGain } from '../balance'
+import { getTrainingFatigueMultiplier } from '../fatigue'
 import { calcTrainingPersonalityMultiplier } from '../personality/development'
 import { recomputePlayerOverall } from './state'
 
@@ -39,6 +40,8 @@ export function applyTraining(state, activity, rng = Math.random) {
   if (state.relationshipEffects?.trainingMultiplier) {
     efficiency *= state.relationshipEffects.trainingMultiplier
   }
+  // Fatigue Engine — overload reduz ganho de treino
+  efficiency *= getTrainingFatigueMultiplier(state.fatigue)
 
   const keys = pickTrainKeys(groupKey, rng)
   const attributeDeltas = {}

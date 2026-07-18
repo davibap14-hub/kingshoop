@@ -44,6 +44,12 @@ export function calcWeeklyXp(state, activity, rng = Math.random) {
   if (motivation < 30) xp = Math.round(xp * 0.8)
   if (state.injury) xp = Math.round(xp * 0.55)
 
+  // Fatigue Engine — overload reduz XP de treino / evolução
+  const trainFatigue = state.fatigue?.effects?.training
+  if (typeof trainFatigue === 'number' && trainFatigue < 1) {
+    xp = Math.round(xp * (0.55 + trainFatigue * 0.45))
+  }
+
   // Treino no grupo favorece um pouco mais de XP
   if (activity?.type === 'train') {
     xp += 2

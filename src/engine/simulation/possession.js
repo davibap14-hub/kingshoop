@@ -6,6 +6,10 @@ import {
   decideDefensiveScheme,
 } from '../defense'
 import {
+  buildInGameFatigueEffects,
+  withFatigueLineup,
+} from '../fatigue'
+import {
   buildPossessionDecisionContext,
   decideBallHandler,
   decideCutter,
@@ -33,8 +37,8 @@ const CHEMISTRY_PASS_W = CHEMISTRY_SIM_WEIGHTS.pass
  * Retorna resultado estatístico + eventos de Play-by-Play.
  */
 export function simulatePossessionDetailed({
-  offensePlayers,
-  defensePlayers,
+  offensePlayers: offensePlayersIn,
+  defensePlayers: defensePlayersIn,
   offenseTeam,
   defenseTeam,
   quarter,
@@ -61,6 +65,23 @@ export function simulatePossessionDetailed({
     )
   }
 
+  // Fatigue Engine — efeitos in-game (velocidade, precisão, defesa, decisão)
+  const offenseFatigueFx = buildInGameFatigueEffects(
+    context.offenseSideFatigue ?? context.fatigue ?? 0,
+    quarter,
+    context.timeRemainingHint ??
+      1 -
+        (context.possessionIndex ?? 0) /
+          Math.max(1, context.possessionsThisQuarter ?? 24),
+  )
+  const defenseFatigueFx = buildInGameFatigueEffects(
+    context.defenseSideFatigue ?? 0,
+    quarter,
+    context.timeRemainingHint ?? 0.5,
+  )
+  const offensePlayers = withFatigueLineup(offensePlayersIn, offenseFatigueFx)
+  const defensePlayers = withFatigueLineup(defensePlayersIn, defenseFatigueFx)
+
   // —— Decision Engine: contexto ponderado da posse ——
   const decisionCtx = buildPossessionDecisionContext({
     offensePlayers,
@@ -71,7 +92,12 @@ export function simulatePossessionDetailed({
     homeScore,
     awayScore,
     offenseIsHome,
-    context,
+    context: {
+      ...context,
+      fatigue: offenseFatigueFx.simFatigue ?? context.fatigue,
+      fatigueEffects: offenseFatigueFx,
+      defenseFatigueEffects: defenseFatigueFx,
+    },
     possessionIndex: context.possessionIndex ?? 0,
     possessionsThisQuarter: context.possessionsThisQuarter ?? 24,
   })

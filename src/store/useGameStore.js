@@ -17,6 +17,7 @@ function pickCareerFields(state) {
     sponsorships: state.sponsorships,
     injury: state.injury,
     injuryEngine: state.injuryEngine,
+    fatigue: state.fatigue,
     pendingEvent: state.pendingEvent,
     lastEventResult: state.lastEventResult,
     lastWeekResult: state.lastWeekResult,

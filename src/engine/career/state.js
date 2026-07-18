@@ -9,6 +9,7 @@ import { DEFAULT_TEAM_ID } from '../../data/teams'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcOverall, normalizePlayer } from '../../data/players/utils'
 import { ensurePlayerDna } from '../dna'
+import { hydrateFatigueState } from '../fatigue'
 import { calcPatrimonio, createFinanceState } from '../finance/state'
 import {
   createEmptyCareerStats,
@@ -175,6 +176,8 @@ export function createCareerState(overrides = {}) {
       overrides.injuryEngine ?? createInjuryEngineState(),
       overrides.injury ?? null,
     ),
+    /** Fatigue Engine — carga partida/semana/temporada */
+    fatigue: hydrateFatigueState(overrides.fatigue),
     pendingEvent: overrides.pendingEvent ?? null,
     lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,

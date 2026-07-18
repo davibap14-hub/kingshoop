@@ -36,6 +36,7 @@ export * from './personality'
 export * from './dna'
 export * from './playbook'
 export * from './defense'
+export * from './fatigue'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

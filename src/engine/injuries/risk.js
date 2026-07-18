@@ -15,12 +15,20 @@ export function recalcInjuryProfile(profile, context = {}) {
   const activityType = context.activityType ?? null
   const injured = Boolean(context.injured)
 
-  let fatigue = base.fatigue
+  let fatigue =
+    context.fatigueOverride != null
+      ? Number(context.fatigueOverride)
+      : base.fatigue
   let condition = base.condition
 
   // Minutos altos elevam fadiga; resistência mitiga
-  fatigue += Math.round((minutes - 24) * 0.45)
-  fatigue -= Math.round((resistencia - 50) * 0.12)
+  // (se Fatigue Engine já mandou override, só aplica micro-ajuste)
+  if (context.fatigueOverride == null) {
+    fatigue += Math.round((minutes - 24) * 0.45)
+    fatigue -= Math.round((resistencia - 50) * 0.12)
+  } else {
+    fatigue += Math.round((minutes - 28) * 0.12)
+  }
 
   if (activityType === 'train') {
     fatigue += 10
@@ -62,17 +70,20 @@ export function recalcInjuryProfile(profile, context = {}) {
     RISK_WEIGHTS.minutes * clamp((minutes / 40) * 100, 0, 100) +
     RISK_WEIGHTS.age * clamp((age - 22) * 6, 0, 100) +
     RISK_WEIGHTS.energy * (100 - energy) +
-    RISK_WEIGHTS.history * clamp(historyCount * 4 + recentSevere * 10, 0, 100)
+    RISK_WEIGHTS.history * clamp(historyCount * 4 + recentSevere * 10, 0, 100) +
+    Number(context.fatigueInjuryBonus ?? 0) * 0.85
 
-  const injuryRisk = clampRisk(riskScore / (
-    RISK_WEIGHTS.baseRisk +
-    RISK_WEIGHTS.fatigue +
-    RISK_WEIGHTS.condition +
-    RISK_WEIGHTS.minutes +
-    RISK_WEIGHTS.age +
-    RISK_WEIGHTS.energy +
-    RISK_WEIGHTS.history
-  ))
+  const injuryRisk = clampRisk(
+    riskScore /
+      (RISK_WEIGHTS.baseRisk +
+        RISK_WEIGHTS.fatigue +
+        RISK_WEIGHTS.condition +
+        RISK_WEIGHTS.minutes +
+        RISK_WEIGHTS.age +
+        RISK_WEIGHTS.energy +
+        RISK_WEIGHTS.history) +
+      Number(context.fatigueInjuryBonus ?? 0) * 0.15,
+  )
 
   return {
     ...base,
