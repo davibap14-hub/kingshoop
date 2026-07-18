@@ -78,12 +78,13 @@ export function extractPerformances(match, meta = {}) {
     })),
   ]
 
+  // Escala da Simulation Engine (placares ~40–60): limiares relativos
   const out = []
   for (const p of rows) {
-    const triple =
-      (p.points ?? 0) >= 10 &&
-      (p.rebounds ?? 0) >= 10 &&
-      (p.assists ?? 0) >= 10
+    const pts = p.points ?? 0
+    const reb = p.rebounds ?? 0
+    const ast = p.assists ?? 0
+    const triple = pts >= 8 && reb >= 8 && ast >= 8
 
     if (triple) {
       out.push({
@@ -92,21 +93,21 @@ export function extractPerformances(match, meta = {}) {
         playerName: p.nome,
         teamId: p.teamId,
         teamShort: p.teamShort,
-        points: p.points,
-        rebounds: p.rebounds,
-        assists: p.assists,
+        points: pts,
+        rebounds: reb,
+        assists: ast,
         ...meta,
       })
     }
 
-    if ((p.points ?? 0) >= 35) {
+    if (pts >= 22) {
       out.push({
         type: 'scoring_burst',
         playerId: p.id,
         playerName: p.nome,
         teamId: p.teamId,
         teamShort: p.teamShort,
-        points: p.points,
+        points: pts,
         ...meta,
       })
     }
@@ -127,7 +128,7 @@ export function extractPerformances(match, meta = {}) {
   }
 
   const margin = Math.abs((match.homeScore ?? 0) - (match.awayScore ?? 0))
-  if (margin >= 25) {
+  if (margin >= 18) {
     out.push({
       type: 'blowout',
       margin,
