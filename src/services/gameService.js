@@ -24,6 +24,7 @@ import {
   getHallOfFameView,
   getAnalyticsView,
   getStoryView,
+  getAchievementsView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -188,6 +189,11 @@ export const gameService = {
   /** Story Engine — Interface só lê */
   getStoryView(state) {
     return getStoryView(state)
+  },
+
+  /** Achievement Engine — Interface só lê */
+  getAchievementsView(state) {
+    return getAchievementsView(state)
   },
 
   /** Balance Engine — Interface só lê */

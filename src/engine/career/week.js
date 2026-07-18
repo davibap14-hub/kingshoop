@@ -37,6 +37,7 @@ import {
 } from '../save'
 import { processWeeklyGm } from '../gm'
 import { resolvePlayer } from '../gm/situation'
+import { processWeeklyAchievements } from '../achievements'
 import { processWeeklyAnalytics } from '../analytics'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
@@ -652,6 +653,18 @@ export function runCareerWeek(state, activityId, opts = {}) {
     nextState,
     effects,
   )
+
+  // Achievement Engine — progresso + desbloqueios (após careerStats)
+  const achResult = processWeeklyAchievements({
+    achievements: nextState.achievements ?? state.achievements,
+    state: nextState,
+    effects,
+  })
+  nextState = achResult.state
+  messages.push(...achResult.messages)
+  effects.messages = messages
+  effects.achievements = achResult.summary
+  nextState.lastWeekResult = effects
 
   return {
     ok: true,

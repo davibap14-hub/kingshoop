@@ -12,6 +12,7 @@ import {
   calculateRelationshipEffects,
   syncStatusFromRelationships,
 } from '../relationships'
+import { processAchievementCheck } from '../achievements/weekly.js'
 import {
   appendHistory,
   buildEventHistoryEntry,
@@ -183,6 +184,14 @@ export function resolveStoryChoice(state, storyId, choiceId) {
     buildEventHistoryEntry(nextState, effects),
   )
   nextState.careerStats = updateCareerStatsAfterEvent(state.careerStats)
+
+  // Achievement Engine — histórias / flags podem desbloquear colecionáveis
+  const ach = processAchievementCheck(nextState)
+  nextState = ach.state
+  if (ach.messages.length) {
+    effects.messages = [...effects.messages, ...ach.messages]
+    effects.achievements = ach.summary
+  }
 
   return {
     ok: true,

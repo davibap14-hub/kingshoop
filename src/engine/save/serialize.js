@@ -1,4 +1,5 @@
 import { SAVE_VERSION } from '../../data/save/constants'
+import { createAchievementsState } from '../achievements/state.js'
 import { createAnalyticsState } from '../analytics/state.js'
 import { createLeagueHistory } from '../history/state'
 import { createStoryState } from '../story/state.js'
@@ -64,6 +65,9 @@ export function buildSaveSnapshot(state) {
       state.analytics ?? createAnalyticsState(),
     ),
     story: structuredCloneSafe(state.story ?? createStoryState()),
+    achievements: structuredCloneSafe(
+      state.achievements ?? createAchievementsState(),
+    ),
     relationships: structuredCloneSafe(
       state.relationships ?? createRelationshipsState(),
     ),
@@ -152,6 +156,7 @@ export function hydrateSaveToOverrides(payload) {
     leagueHistory: createLeagueHistory(snap.leagueHistory),
     analytics: createAnalyticsState(snap.analytics),
     story: createStoryState(snap.story),
+    achievements: createAchievementsState(snap.achievements),
     relationships: snap.relationships
       ? createRelationshipsState(snap.relationships)
       : hydrateRelationshipsFromStatus(snap.status ?? {}),

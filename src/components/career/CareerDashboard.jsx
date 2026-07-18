@@ -16,6 +16,7 @@ import GmPanel from './GmPanel'
 import BalancePanel from './BalancePanel'
 import ContractOfferPanel from './ContractOfferPanel'
 import ContractPanel from './ContractPanel'
+import AchievementsPanel from './AchievementsPanel'
 import AnalyticsPanel from './AnalyticsPanel'
 import HallOfFamePanel from './HallOfFamePanel'
 import HistoryPanel from './HistoryPanel'
@@ -142,6 +143,7 @@ export default function CareerDashboard() {
           <CoachPanel />
           <ScoutingPanel />
           <AnalyticsPanel />
+          <AchievementsPanel />
           <HallOfFamePanel />
           <HistoryPanel />
           <SeasonPanel />

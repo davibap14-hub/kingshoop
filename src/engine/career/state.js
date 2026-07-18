@@ -18,6 +18,7 @@ import {
   createContractEngineState,
   createPlayerContract,
 } from '../contracts'
+import { createAchievementsState } from '../achievements/state.js'
 import { createAnalyticsState } from '../analytics/state.js'
 import { createLeagueHistory } from '../history/state'
 import { createStoryState } from '../story/state.js'
@@ -185,6 +186,7 @@ export function createCareerState(overrides = {}) {
     leagueHistory: createLeagueHistory(overrides.leagueHistory),
     analytics: createAnalyticsState(overrides.analytics),
     story: createStoryState(overrides.story),
+    achievements: createAchievementsState(overrides.achievements),
     relationships,
     relationshipEffects,
     playingTimeShare:

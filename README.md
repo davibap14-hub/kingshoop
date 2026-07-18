@@ -463,6 +463,22 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Achievement Engine
+
+`src/engine/achievements/` + `src/data/achievements/` — **284 conquistas** com progresso.
+
+Categorias: Carreira · Temporada · Partida · Financeiro · Relacionamentos · Títulos · Estatísticas · Colecionáveis.
+
+Cada conquista: **ID · Nome · Descrição · Categoria · Recompensa · Status · Progresso**.
+
+```js
+processWeeklyAchievements({ achievements, state, effects })
+evaluateAchievements(achievements, state)
+getAchievementsView(state)
+```
+
+Persistido em `state.achievements` via Save Engine (**v14**). UI: `AchievementsPanel`.
+
 ## Story Engine
 
 `src/engine/story/` + `src/data/story/` — narrativas procedurais em **cadeias** (substitui eventos fixos).
