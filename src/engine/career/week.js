@@ -7,6 +7,7 @@ import {
   sortActivitiesByPersonality,
   suggestWeeklyActivity,
 } from '../personality'
+import { processSeasonalBalance } from '../balance'
 import { processWeeklyNews } from '../news'
 import { applyTraining, rangeRoll } from './activities'
 import { processWeeklyFinance, trySignSponsorship } from '../finance'
@@ -16,6 +17,7 @@ import {
   updateCareerStatsAfterWeek,
 } from '../save'
 import { processWeeklyGm } from '../gm'
+import { resolvePlayer } from '../gm/situation'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import { rollInjury, tickInjury } from './injuries'
@@ -258,9 +260,21 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
+  // Balance Engine — idade, rookies e decadência no roll de temporada
+  const balanceResult = processSeasonalBalance({
+    player,
+    gm: state.gm,
+    seasonRolled: calendar.seasonRolled,
+    resolvePlayer,
+    rng,
+  })
+  player = balanceResult.player
+  const gmAfterBalance = balanceResult.gm ?? state.gm
+  messages.push(...balanceResult.messages)
+
   const playerStats = syncPlayerStatsFromDetailed(player)
 
-  // Progression Engine — XP semanal + level-up gradual
+  // Progression Engine — XP semanal + level-up gradual (já amortecido pelo Balance)
   const progResult = processWeeklyProgression(
     { ...state, status, injury, player },
     activity,
@@ -276,7 +290,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       ...state,
       status,
       injury,
-      gm: state.gm,
+      gm: gmAfterBalance,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
       season: calendar.seasonRolled
@@ -300,7 +314,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       season: seasonResult.season,
       currentWeek: calendar.currentWeek,
       currentSeason: calendar.currentSeason,
-      gm: state.gm,
+      gm: gmAfterBalance,
     },
     {
       week: calendar.currentWeek,
@@ -404,6 +418,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     },
     season: seasonResult.summary,
     gm: gmResult.summary,
+    balance: balanceResult.summary,
     historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,

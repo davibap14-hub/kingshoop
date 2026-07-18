@@ -5,12 +5,25 @@ import { ROSTER_SIZE_TARGET } from '../../data/gm/constants'
 import { capPressure } from './cap'
 
 export function resolvePlayer(gm, playerId) {
-  return (
+  const base =
     playerDb.getById(playerId) ??
     (gm.extraPlayers ?? []).find((p) => p.id === playerId) ??
     (gm.draftClass ?? []).find((p) => p.id === playerId) ??
     null
-  )
+
+  if (!base) return null
+
+  const ov = gm.playerOverrides?.[playerId]
+  if (!ov) return base
+
+  return {
+    ...base,
+    ...ov,
+    fisico: { ...(base.fisico ?? {}), ...(ov.fisico ?? {}) },
+    arremesso: { ...(base.arremesso ?? {}), ...(ov.arremesso ?? {}) },
+    defesa: { ...(base.defesa ?? {}), ...(ov.defesa ?? {}) },
+    qi: { ...(base.qi ?? {}), ...(ov.qi ?? {}) },
+  }
 }
 
 /**

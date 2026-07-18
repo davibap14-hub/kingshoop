@@ -1,6 +1,11 @@
 import { MAX_DECISIONS_PER_TEAM_WEEK, SALARY_CAP } from '../../data/gm/constants'
 import { TEAMS } from '../../data/teams'
 import {
+  balanceDemandFactor,
+  calcBalancedRenewBump,
+  calcBalancedSalary,
+} from '../balance'
+import {
   calcRenewWillingness,
   calcSalaryDemandFactor,
   calcTradeWillingness,
@@ -155,9 +160,10 @@ function buildActionCandidates(gm, sit, seasonState) {
     const faRanked = rankFreeAgents(gm, sit)
     const pick = faRanked[0]
     if (pick) {
-      const demandSalary = Math.round(
-        (pick.salario ?? 2_000_000) * calcSalaryDemandFactor(pick),
-      )
+      const demandSalary = calcBalancedSalary(pick, {
+        seasonNumber: seasonState.seasonNumber ?? 1,
+        demandFactor: balanceDemandFactor(calcSalaryDemandFactor(pick)),
+      })
       const fit = scoreFa(sit, pick)
       const score =
         fit * 0.08 +
@@ -177,6 +183,7 @@ function buildActionCandidates(gm, sit, seasonState) {
           }
           return signFreeAgent(state, teamId, pick.id, {
             yearlySalary: demandSalary,
+            seasonNumber: seasonState.seasonNumber ?? 1,
             reason: `${sit.objective.label}: ${explainSign(sit, pick)}`,
           })
         },
@@ -213,7 +220,10 @@ function buildActionCandidates(gm, sit, seasonState) {
       execute: (state) =>
         renewContract(state, teamId, target.p.id, {
           cap: SALARY_CAP,
-          salaryBump: 1.05 * calcSalaryDemandFactor(target.p),
+          salaryBump: calcBalancedRenewBump(
+            target.p,
+            calcSalaryDemandFactor(target.p),
+          ),
           reason: `${sit.objective.label}: renovar peça-chave`,
         }),
     })

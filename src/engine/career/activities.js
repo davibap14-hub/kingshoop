@@ -1,8 +1,8 @@
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { ARCHETYPES } from '../../data/constants/archetypes'
 import { MIN_ENERGY_TO_TRAIN } from '../../data/constants/career'
+import { applyBalancedTrainingGain } from '../balance'
 import { calcTrainingPersonalityMultiplier } from '../personality/development'
-import { clamp } from '../utils/math'
 import { recomputePlayerOverall } from './state'
 
 function pickTrainKeys(groupKey, rng) {
@@ -43,14 +43,21 @@ export function applyTraining(state, activity, rng = Math.random) {
 
   for (const key of keys) {
     const gainRaw = (0.6 + rng() * 1.4) * bias * efficiency
-    const gain = Math.max(1, Math.round(gainRaw))
     const prev = nextGroup[key] ?? 50
-    const next = clamp(prev + gain, 0, 99)
-    nextGroup[key] = next
-    attributeDeltas[`${groupKey}.${key}`] = next - prev
-    if (next > prev) {
+    const balanced = applyBalancedTrainingGain(prev, gainRaw, {
+      player: { ...state.player, [groupKey]: nextGroup },
+      archetypeId: state.archetypeId,
+      groupKey,
+    })
+    nextGroup[key] = balanced.next
+    attributeDeltas[`${groupKey}.${key}`] = balanced.gain
+    if (balanced.gain > 0) {
       messages.push(
-        `${ATTRIBUTE_GROUPS[groupKey].labels[key]}: ${prev} → ${next} (+${next - prev}).`,
+        `${ATTRIBUTE_GROUPS[groupKey].labels[key]}: ${prev} → ${balanced.next} (+${balanced.gain}).`,
+      )
+    } else if (balanced.blocked) {
+      messages.push(
+        `${ATTRIBUTE_GROUPS[groupKey].labels[key]}: teto de balance (${prev}).`,
       )
     }
   }

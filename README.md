@@ -32,6 +32,7 @@ src/
  │    ├── franchise/
  │    ├── news/
  │    ├── history/
+ │    ├── balance/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -44,6 +45,7 @@ src/
  │    ├── franchise/
  │    ├── news/
  │    ├── history/
+ │    ├── balance/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -54,6 +56,27 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Balance Engine
+
+`src/engine/balance/` + `src/data/balance/` — equilíbrio configurável do jogo.
+
+Objetivos (todos via constantes em `data/balance/constants.js`):
+
+- Evitar evolução exagerada (freio de XP por overall/nível/idade)
+- Controlar inflação de atributos (diminishing returns + tetos efetivos)
+- Controlar contratos (salário por OVR/potencial/idade + inflação da liga)
+- Controlar crescimento de rookies (treino/XP e crescimento sazonal)
+- Controlar decadência de veteranos (perda anual de atributos)
+
+```js
+applyBalancedTrainingGain(prev, rawGain, { player, archetypeId, groupKey })
+balanceXpGain(xp, { player, progression })
+calcBalancedSalary(player, { seasonNumber, demandFactor })
+processSeasonalBalance({ player, gm, seasonRolled, resolvePlayer })
+```
+
+UI: `BalancePanel` (tetos ativos). Overrides da liga em `gm.playerOverrides`.
 
 ## History Engine
 

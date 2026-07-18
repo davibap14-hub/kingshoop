@@ -1,8 +1,10 @@
+import { balanceDemandFactor } from '../balance'
 import { trait } from './traits'
 
 /**
  * Fator de demanda salarial (1.0 = neutro).
  * Ego e ambição elevam; lealdade reduz.
+ * Clamp final vem do Balance Engine.
  */
 export function calcSalaryDemandFactor(player) {
   if (!player) return 1
@@ -19,7 +21,7 @@ export function calcSalaryDemandFactor(player) {
     (confianca - 50) * 0.0015 -
     (lealdade - 50) * 0.0025
 
-  return Math.max(0.85, Math.min(1.35, factor))
+  return balanceDemandFactor(factor)
 }
 
 /**

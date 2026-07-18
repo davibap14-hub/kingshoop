@@ -1,18 +1,18 @@
-import { getArchetypeCaps } from '../../data/constants/archetypes'
 import { ATTRIBUTE_GROUPS } from '../../data/players/schema'
 import { calcGroupRating, calcOverall } from '../../data/players/utils'
 import {
   EVOLUTION_GROUPS,
   POINT_STAT_GAIN,
 } from '../../data/progression/constants'
+import { getEffectiveAttrCap } from '../balance'
 import { clamp } from '../utils/math'
 
 /**
- * Teto do grupo para o arquétipo (nunca ultrapassar).
+ * Teto do grupo — Balance Engine (arquétipo ∩ potencial ∩ hard).
  */
-export function getGroupCap(archetypeId, groupKey) {
-  const caps = getArchetypeCaps(archetypeId)
-  return caps[groupKey] ?? 90
+export function getGroupCap(archetypeId, groupKey, player = null) {
+  if (player) return getEffectiveAttrCap(player, archetypeId, groupKey)
+  return getEffectiveAttrCap({ potencial: 90 }, archetypeId, groupKey)
 }
 
 /**
@@ -28,7 +28,7 @@ export function getGroupAverage(player, groupKey) {
  */
 export function canEvolveGroup(player, archetypeId, groupKey) {
   if (!EVOLUTION_GROUPS.includes(groupKey)) return false
-  const cap = getGroupCap(archetypeId, groupKey)
+  const cap = getGroupCap(archetypeId, groupKey, player)
   const avg = getGroupAverage(player, groupKey)
   // Gradual: bloqueia quando média já está no teto
   if (avg >= cap) return false
@@ -44,7 +44,7 @@ export function canEvolveGroup(player, archetypeId, groupKey) {
  */
 export function listEvolvableGroups(player, archetypeId) {
   return EVOLUTION_GROUPS.map((groupKey) => {
-    const cap = getGroupCap(archetypeId, groupKey)
+    const cap = getGroupCap(archetypeId, groupKey, player)
     const average = getGroupAverage(player, groupKey)
     const available = canEvolveGroup(player, archetypeId, groupKey)
     return {
@@ -72,7 +72,7 @@ export function applyEvolutionPoint(player, archetypeId, groupKey, rng = Math.ra
     }
   }
 
-  const cap = getGroupCap(archetypeId, groupKey)
+  const cap = getGroupCap(archetypeId, groupKey, player)
   const attrKey = groupKey === 'qi' ? 'qi' : groupKey
   const keys = ATTRIBUTE_GROUPS[groupKey].keys
   const group = { ...player[attrKey] }

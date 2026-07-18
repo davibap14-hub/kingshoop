@@ -17,6 +17,7 @@ import {
   capPressure,
   getConferenceTables,
   getGmView,
+  getBalanceView,
   getHistoryView,
   getSeasonView,
   GM_PERSONALITIES,
@@ -160,6 +161,11 @@ export const gameService = {
   /** History Engine — Interface só lê */
   getHistoryView(state) {
     return getHistoryView(state.leagueHistory)
+  },
+
+  /** Balance Engine — Interface só lê */
+  getBalanceView(state) {
+    return getBalanceView(state)
   },
 
   analyzeFranchise(state, teamId) {

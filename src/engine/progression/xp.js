@@ -5,6 +5,7 @@ import {
   WEEKLY_XP_BY_ACTIVITY,
   XP_GROWTH_RATE,
 } from '../../data/progression/constants'
+import { balanceXpGain } from '../balance'
 import { applyPersonalityToXp } from '../personality/development'
 import { clamp } from '../utils/math'
 
@@ -49,7 +50,10 @@ export function calcWeeklyXp(state, activity, rng = Math.random) {
   }
 
   xp = applyPersonalityToXp(xp, state.player)
-  return Math.max(4, Math.round(xp))
+  return balanceXpGain(xp, {
+    player: state.player,
+    progression: state.progression,
+  })
 }
 
 /**

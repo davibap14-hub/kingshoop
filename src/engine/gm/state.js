@@ -106,6 +106,8 @@ export function createGmState(overrides = {}) {
     draftComplete: overrides.draftComplete ?? false,
     lastDraft: overrides.lastDraft ?? null,
     extraPlayers: overrides.extraPlayers ?? [],
+    /** Overrides de idade/attrs da Balance Engine (jogadores do DB) */
+    playerOverrides: overrides.playerOverrides ?? {},
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

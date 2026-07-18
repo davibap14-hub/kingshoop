@@ -13,6 +13,7 @@ import {
   createEmptyCareerStats,
   createEmptyHistory,
 } from '../save/history'
+import { calcBalancedSalary } from '../balance'
 import { createLeagueHistory } from '../history/state'
 import { createGmState } from '../gm/state'
 import { createSeasonState } from '../season/state'
@@ -127,7 +128,14 @@ export function createCareerState(overrides = {}) {
           calcPatrimonio(cash, finance.investments),
       }
     })(),
-    contract: overrides.contract ?? createDefaultContract(overrides.currentTeamId),
+    contract:
+      overrides.contract ??
+      createDefaultContract(
+        overrides.currentTeamId,
+        calcBalancedSalary(player, {
+          seasonNumber: overrides.currentSeason ?? 1,
+        }),
+      ),
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,
     pendingEvent: overrides.pendingEvent ?? null,

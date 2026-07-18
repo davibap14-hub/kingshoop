@@ -4,6 +4,11 @@ import {
   DEFAULT_ARCHETYPE_ID,
 } from '../../data/constants/archetypes'
 import {
+  DRAFT_ATTR_MAX,
+  DRAFT_ATTR_MIN,
+  DRAFT_POTENTIAL_MAX,
+} from '../../data/balance'
+import {
   DRAFT_CLASS_SIZE,
   DRAFT_FIRST_NAMES,
   DRAFT_LAST_NAMES,
@@ -13,6 +18,7 @@ import {
 } from '../../data/draft/constants'
 import { POSITIONS } from '../../data/players/schema'
 import { normalizePlayer } from '../../data/players/utils'
+import { calcBalancedSalary, clampAttribute } from '../balance'
 import { buildMockDraft } from './mock'
 
 function randInt(rng, min, max) {
@@ -24,7 +30,15 @@ function pick(list, rng) {
 }
 
 function jitter(base, rng, spread = 8) {
-  return Math.max(25, Math.min(96, Math.round(base + (rng() - 0.5) * spread * 2)))
+  return clampAttribute(
+    Math.max(
+      DRAFT_ATTR_MIN,
+      Math.min(
+        DRAFT_ATTR_MAX,
+        Math.round(base + (rng() - 0.5) * spread * 2),
+      ),
+    ),
+  )
 }
 
 /**
@@ -94,11 +108,21 @@ export function createProspect({ seasonNumber, index, rng = Math.random }) {
   const [oMin, oMax] = DRAFT_OVERALL_RANGE
   const overall = randInt(rng, oMin, oMax)
   const [bMin, bMax] = DRAFT_POTENTIAL_BONUS
-  const potencial = Math.min(97, overall + randInt(rng, bMin, bMax))
+  const potencial = Math.min(
+    DRAFT_POTENTIAL_MAX,
+    overall + randInt(rng, bMin, bMax),
+  )
   const idade = randInt(rng, 18, 22)
   const universidade = pick(DRAFT_UNIVERSITIES, rng)
   const attrs = buildAttributes(arquetipo, overall, posicao, rng)
-  const salario = 1_100_000 + Math.floor(rng() * 2_800_000) + (overall - 64) * 40_000
+  const prospectSeed = {
+    idade,
+    overall,
+    potencial,
+    isProspect: true,
+    ...attrs,
+  }
+  const salario = calcBalancedSalary(prospectSeed, { seasonNumber })
 
   return normalizePlayer({
     id: `draft_s${seasonNumber}_${index + 1}`,

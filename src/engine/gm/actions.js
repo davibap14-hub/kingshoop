@@ -1,4 +1,5 @@
 import { DEFAULT_CONTRACT_YEARS, ROSTER_SIZE_MAX } from '../../data/gm/constants'
+import { calcBalancedSalary, calcBalancedRenewBump } from '../balance'
 import { canAfford } from './cap'
 import { resolvePlayer } from './situation'
 
@@ -13,6 +14,7 @@ function cloneGm(gm) {
     draftClass: [...(gm.draftClass ?? [])],
     draftOrder: [...(gm.draftOrder ?? [])],
     extraPlayers: [...(gm.extraPlayers ?? [])],
+    playerOverrides: { ...(gm.playerOverrides ?? {}) },
     log: [...(gm.log ?? [])],
   }
 }
@@ -54,7 +56,12 @@ export function signFreeAgent(gm, teamId, playerId, opts = {}) {
     return { ok: false, gm, decision: null }
   }
 
-  const salary = opts.yearlySalary ?? player.salario ?? 2_000_000
+  const salary =
+    opts.yearlySalary ??
+    calcBalancedSalary(player, {
+      seasonNumber: opts.seasonNumber ?? 1,
+      demandFactor: opts.demandFactor ?? 1,
+    })
   if (!canAfford(next.contracts, teamId, salary)) {
     return { ok: false, gm, decision: null }
   }
@@ -89,7 +96,9 @@ export function renewContract(gm, teamId, playerId, opts = {}) {
     return { ok: false, gm, decision: null }
   }
 
-  const bump = opts.salaryBump ?? 1.08
+  const bump =
+    opts.salaryBump ??
+    calcBalancedRenewBump(player, opts.demandFactor ?? 1)
   const newSalary = Math.round(contract.yearlySalary * bump)
   const delta = newSalary - contract.yearlySalary
   // checa se o aumento cabe no teto
