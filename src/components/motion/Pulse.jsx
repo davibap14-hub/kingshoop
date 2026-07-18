@@ -12,7 +12,7 @@ export default function Pulse({
   const reduce = useReducedMotion()
 
   return (
-    <span className={`relative inline-flex ${className}`}>
+    <span className={['relative inline-flex', className].filter(Boolean).join(' ')}>
       {active && !reduce ? (
         <motion.span
           className="pointer-events-none absolute -inset-1 rounded-[inherit] opacity-60"
