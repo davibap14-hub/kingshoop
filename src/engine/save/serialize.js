@@ -9,6 +9,10 @@ import {
   createRelationshipsState,
   hydrateRelationshipsFromStatus,
 } from '../relationships'
+import {
+  createInjuryEngineState,
+  hydrateInjuryEngine,
+} from '../injuries/state.js'
 import { createEmptyCareerStats, createEmptyHistory } from './history'
 
 /**
@@ -37,6 +41,9 @@ export function buildSaveSnapshot(state) {
     pendingContractOffer: structuredCloneSafe(state.pendingContractOffer),
     sponsorships: structuredCloneSafe(state.sponsorships ?? []),
     injury: structuredCloneSafe(state.injury),
+    injuryEngine: structuredCloneSafe(
+      state.injuryEngine ?? createInjuryEngineState(),
+    ),
     pendingEvent: structuredCloneSafe(state.pendingEvent),
     lastEventResult: structuredCloneSafe(state.lastEventResult),
     lastWeekResult: structuredCloneSafe(state.lastWeekResult),
@@ -123,6 +130,10 @@ export function hydrateSaveToOverrides(payload) {
     pendingContractOffer: snap.pendingContractOffer ?? null,
     sponsorships: snap.sponsorships,
     injury: snap.injury,
+    injuryEngine: hydrateInjuryEngine(
+      snap.injuryEngine ?? createInjuryEngineState(),
+      snap.injury,
+    ),
     pendingEvent: snap.pendingEvent,
     lastEventResult: snap.lastEventResult,
     lastWeekResult: snap.lastWeekResult,

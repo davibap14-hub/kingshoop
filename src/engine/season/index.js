@@ -39,7 +39,8 @@ export {
 } from './standings'
 
 export { simulateGames } from './simulate'
-export { processLeagueInjuries, injuryFatigueForTeam } from './injuries'
+/** Lesões da liga: ver Injury Engine (`processLeagueInjuries`). */
+export { processLeagueInjuries, injuryFatigueForTeam } from '../injuries'
 export {
   buildPlayInGames,
   resolvePlayInBrackets,

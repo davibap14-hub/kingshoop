@@ -36,6 +36,7 @@ src/
  │    ├── relationships/
  │    ├── contracts/
  │    ├── chemistry/
+ │    ├── injuries/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -52,6 +53,7 @@ src/
  │    ├── relationships/
  │    ├── contracts/
  │    ├── chemistry/
+ │    ├── injuries/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -62,6 +64,25 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Injury Engine
+
+`src/engine/injuries/` + `src/data/injuries/` — saúde e lesões do jogador (e da liga).
+
+Cada jogador possui: **risco · histórico · condição física · minutos/jogo · fadiga**.
+
+Tipos: **Leve · Moderada · Grave** — com tempo estimado, chance de recaída, redução temporária de atributos e tratamento.
+
+Recuperação ponderada por: equipe médica, descanso, idade e condição física (sem coin-flip puro).
+
+```js
+processWeeklyInjuries({ injuryEngine, player, status, activity, … })
+rollInjuryEvent({ profile, activity, … })
+tickInjuryRecovery({ injuryEngine, rested, accelerated, age })
+getInjuryView(state)
+```
+
+Persistido em `injuryEngine` (+ espelho `injury` para compat). Save **v8**. UI: `InjuryPanel`.
 
 ## Chemistry Engine
 

@@ -20,6 +20,7 @@ import HistoryPanel from './HistoryPanel'
 import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
 import ChemistryPanel from './ChemistryPanel'
+import InjuryPanel from './InjuryPanel'
 import RelationshipPanel from './RelationshipPanel'
 import SavePanel from './SavePanel'
 import SeasonPanel from './SeasonPanel'
@@ -133,6 +134,7 @@ export default function CareerDashboard() {
           <ContractPanel />
           <RelationshipPanel />
           <ChemistryPanel />
+          <InjuryPanel />
           <HistoryPanel />
           <SeasonPanel />
           <GmPanel />

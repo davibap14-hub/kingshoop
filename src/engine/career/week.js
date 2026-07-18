@@ -10,7 +10,9 @@ import {
 import { processSeasonalBalance } from '../balance'
 import { processWeeklyChemistry } from '../chemistry'
 import { processWeeklyContracts } from '../contracts'
+import { processWeeklyInjuries } from '../injuries'
 import { processWeeklyNews } from '../news'
+import { clamp } from '../utils/math'
 import {
   applyEventToRelationships,
   calculateRelationshipEffects,
@@ -28,7 +30,6 @@ import { processWeeklyGm } from '../gm'
 import { resolvePlayer } from '../gm/situation'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
-import { rollInjury, tickInjury } from './injuries'
 import {
   applyStatusDeltas,
   createCareerState,
@@ -148,6 +149,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
   const attributeDeltas = {}
   let player = state.player
   let injury = state.injury
+  let injuryEngine = state.injuryEngine
   let sponsorships = [...(state.sponsorships ?? [])]
   let activityCashBonus = 0
   let popularityGain = 0
@@ -171,29 +173,14 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
     deltas.energia += -Math.abs(activity.energyCost)
     deltas.motivacao += rng() < 0.5 ? 2 : 1
-
-    const maybeInjury = rollInjury(state, activity, rng)
-    if (maybeInjury) {
-      injury = maybeInjury
-      deltas.motivacao -= 8
-      deltas.energia -= 10
-      messages.push(`LESÃO: ${maybeInjury.label} (${maybeInjury.weeksRemaining} sem.).`)
-    }
   } else if (activity.type === 'rest') {
     deltas.energia += Math.abs(activity.energyCost)
     deltas.motivacao += 4
     messages.push('Descanso completo — corpo e mente recuperados.')
-
-    const tick = tickInjury(injury, { accelerated: false })
-    injury = tick.injury
-    messages.push(...tick.messages)
   } else if (activity.type === 'recovery') {
     deltas.energia += 15
     deltas.motivacao += 3
-    const tick = tickInjury(injury, { accelerated: true })
-    injury = tick.injury
     messages.push('Sessão de fisioterapia intensiva.')
-    messages.push(...tick.messages)
   } else if (activity.type === 'media') {
     deltas.energia += -Math.abs(activity.energyCost)
     popularityGain = rangeRoll(activity.popularityGain ?? [2, 5], rng)
@@ -230,6 +217,46 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
+  // Injury Engine — risco, fadiga, condição, recuperação / nova lesão
+  const medicalStaff = clamp(
+    Math.round(
+      42 +
+        (state.relationships?.coach ?? 50) * 0.28 +
+        (priorRelEffects?.chemistryBonus ?? 0),
+    ),
+    28,
+    92,
+  )
+  const projectedStatus = {
+    ...state.status,
+    energia: clamp(
+      (state.status.energia ?? 70) + (deltas.energia ?? 0),
+      0,
+      100,
+    ),
+  }
+  const injuryResult = processWeeklyInjuries({
+    injuryEngine,
+    injury,
+    player,
+    status: projectedStatus,
+    activity,
+    playingTimeShare:
+      state.playingTimeShare ?? priorRelEffects.playingTimeShare ?? 24,
+    medicalStaff,
+    week: state.currentWeek,
+    seasonNumber: state.currentSeason,
+    rng,
+  })
+  injuryEngine = injuryResult.injuryEngine
+  injury = injuryResult.injury
+  messages.push(...injuryResult.messages)
+
+  if (!state.injury && injury) {
+    deltas.motivacao -= 8
+    deltas.energia -= 10
+  }
+
   // Personality Engine — química alimenta a Relationship Engine (companheiros)
   const chemDelta = calcTeammateChemistryDelta(player, activity.type)
   if (chemDelta) {
@@ -238,16 +265,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
         ? `Personalidade: química do elenco +${chemDelta}.`
         : `Personalidade: tensão no vestiário ${chemDelta}.`,
     )
-  }
-
-  if (
-    state.injury &&
-    activity.type !== 'rest' &&
-    activity.type !== 'recovery'
-  ) {
-    const tick = tickInjury(injury, { accelerated: false })
-    injury = tick.injury
-    messages.push(...tick.messages)
   }
 
   // Finance Engine — salário, patrocínios, investimentos, gastos, luxo, impostos, patrimônio
@@ -477,6 +494,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     sponsorships,
     finance: finance.finance,
     injury,
+    injuryEngine,
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmWithChemistry,
@@ -516,6 +534,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     attributeDeltas,
     messages,
     injury,
+    injuryEngine: injuryResult.summary,
     injuryHealed: Boolean(state.injury) && !injury,
     finance: finance.summary,
     sponsorships,

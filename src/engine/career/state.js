@@ -25,6 +25,10 @@ import {
   hydrateRelationshipsFromStatus,
 } from '../relationships'
 import { createGmState } from '../gm/state'
+import {
+  createInjuryEngineState,
+  hydrateInjuryEngine,
+} from '../injuries/state.js'
 import { createSeasonState } from '../season/state'
 import { createProgressionState } from '../progression/xp'
 import { clamp } from '../utils/math'
@@ -161,6 +165,10 @@ export function createCareerState(overrides = {}) {
     pendingContractOffer: overrides.pendingContractOffer ?? null,
     sponsorships: overrides.sponsorships ?? [],
     injury: overrides.injury ?? null,
+    injuryEngine: hydrateInjuryEngine(
+      overrides.injuryEngine ?? createInjuryEngineState(),
+      overrides.injury ?? null,
+    ),
     pendingEvent: overrides.pendingEvent ?? null,
     lastEventResult: overrides.lastEventResult ?? null,
     currentWeek: overrides.currentWeek ?? 1,

@@ -1,3 +1,4 @@
+import { careerInjurySimFatigue } from '../injuries'
 import { buildLineupFromDb } from '../match/lineups'
 import { extractPerformances } from '../news/extract'
 import { simulateGame } from '../simulation/game'
@@ -13,6 +14,12 @@ export function simulateGames(games, seasonState, opts = {}) {
   const playerInjured = Boolean(opts.playerInjured)
   const gm = opts.gm ?? null
   const chemistryBonus = Number(opts.chemistryBonus) || 0
+  const careerInjuryFatigue = playerInjured
+    ? careerInjurySimFatigue(
+        opts.injuryEngine?.active ?? opts.injury,
+        opts.injuryEngine?.profile,
+      )
+    : 0
 
   let standings = { ...seasonState.standings }
   const results = [...(seasonState.results ?? [])]
@@ -22,10 +29,14 @@ export function simulateGames(games, seasonState, opts = {}) {
   for (const game of games) {
     const homeFatigue =
       injuryFatigueForTeam(seasonState.injuries, game.homeId) +
-      (playerInjured && game.homeId === playerTeamId ? 10 : 0)
+      (playerInjured && game.homeId === playerTeamId
+        ? careerInjuryFatigue || 10
+        : 0)
     const awayFatigue =
       injuryFatigueForTeam(seasonState.injuries, game.awayId) +
-      (playerInjured && game.awayId === playerTeamId ? 10 : 0)
+      (playerInjured && game.awayId === playerTeamId
+        ? careerInjuryFatigue || 10
+        : 0)
 
     const homeBonus =
       game.homeId === playerTeamId ? chemistryBonus : 0

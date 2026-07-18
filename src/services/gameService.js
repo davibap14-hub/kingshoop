@@ -23,6 +23,7 @@ import {
   getHistoryView,
   getRelationshipView,
   getChemistryView,
+  getInjuryView,
   getSeasonView,
   GM_PERSONALITIES,
   resolveContractDecision,
@@ -186,6 +187,11 @@ export const gameService = {
   /** Chemistry Engine — Interface só lê */
   getChemistryView(state) {
     return getChemistryView(state)
+  },
+
+  /** Injury Engine — Interface só lê */
+  getInjuryView(state) {
+    return getInjuryView(state)
   },
 
   /** Contract Engine */

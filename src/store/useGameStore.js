@@ -16,6 +16,7 @@ function pickCareerFields(state) {
     contract: state.contract,
     sponsorships: state.sponsorships,
     injury: state.injury,
+    injuryEngine: state.injuryEngine,
     pendingEvent: state.pendingEvent,
     lastEventResult: state.lastEventResult,
     lastWeekResult: state.lastWeekResult,

@@ -54,6 +54,8 @@ export function processWeeklySeason(state, opts = {}) {
     playerInjured: Boolean(state.injury),
     gm: state.gm ?? null,
     chemistryBonus: state.relationshipEffects?.chemistryBonus ?? 0,
+    injury: state.injury,
+    injuryEngine: state.injuryEngine,
   }
 
   let weekResults = []
