@@ -53,6 +53,7 @@ import {
   acceptFaOffer,
   withdrawFaOffer,
   getNbaTvView,
+  getFranchiseHubView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -229,6 +230,11 @@ export const gameService = {
   /** NBA TV Engine — portal (só agrega News · History · Analytics) */
   getNbaTvView(state, filters) {
     return getNbaTvView(state, filters)
+  },
+
+  /** Franchise Hub — tela completa da franquia (engines existentes) */
+  getFranchiseHubView(state) {
+    return getFranchiseHubView(state)
   },
 
   /**

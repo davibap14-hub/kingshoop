@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 const NAV = [
   { to: '/', label: 'Jogo', end: true },
+  { to: '/franchise', label: 'Franquia', end: false },
   { to: '/match-center', label: 'Match Center', end: false },
   { to: '/live-match', label: 'Ao vivo', end: false },
   { to: '/draft-night', label: 'Draft Night', end: false },

@@ -3,6 +3,7 @@ import { AppLayout } from './layouts'
 import {
   CareerPage,
   DraftNightPage,
+  FranchisePage,
   FreeAgencyPage,
   LiveMatchPage,
   MatchCenterPage,
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/draft-night" element={<DraftNightPage />} />
           <Route path="/free-agency" element={<FreeAgencyPage />} />
           <Route path="/nba-tv" element={<NbaTvPage />} />
+          <Route path="/franchise" element={<FranchisePage />} />
           <Route path="/match" element={<MatchPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

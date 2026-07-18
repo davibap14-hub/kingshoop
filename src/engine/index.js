@@ -49,6 +49,7 @@ export * from './liveMatch'
 export * from './draftNight'
 export * from './freeAgency'
 export * from './nbaTv'
+export * from './franchiseHub'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

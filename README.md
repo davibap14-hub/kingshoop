@@ -380,6 +380,19 @@ getNbaTvView(state, { category })
 // UI: /nba-tv
 ```
 
+## Franchise Hub Engine
+
+`src/engine/franchiseHub/` + `src/data/franchiseHub/` — tela completa da **franquia**.
+
+Agrega Engines existentes (sem lógica nova de jogo): GM · Franchise AI · Cap · Chemistry · Coach · Playbook · Trade · Finance · History · Dynasty · Season · Lineups.
+
+Seções: elenco · contratos · salary cap · química · rotação · coach · GM · objetivos · escolhas de draft · patrimônio · histórico.
+
+```js
+getFranchiseHubView(state)
+// UI: /franchise
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:

@@ -28,6 +28,10 @@ const PAGE_META = {
     title: 'NBA TV',
     subtitle: 'Portal · News · History · Analytics',
   },
+  '/franchise': {
+    title: 'Franquia',
+    subtitle: 'Elenco · Cap · GM · Objetivos · Histórico',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',

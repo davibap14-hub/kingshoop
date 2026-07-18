@@ -266,6 +266,31 @@ export default function GameHub({
         </div>
       </HubSection>
 
+      {/* Franquia */}
+      <HubSection
+        index="01a"
+        eyebrow="Franquia"
+        title={team?.name ?? 'Sua franquia'}
+      >
+        <Card padding="lg" className="border-navy/10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <Badge tone="blue">Franchise Hub</Badge>
+              <p className="mt-2 text-sm text-slate-600">
+                Elenco, contratos, cap, química, rotação, coach, GM, objetivos,
+                picks e histórico — tudo pelas Engines.
+              </p>
+            </div>
+            <Link
+              to="/franchise"
+              className="inline-flex items-center justify-center rounded-xl bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white no-underline transition hover:bg-navy-hover"
+            >
+              Abrir Franquia
+            </Link>
+          </div>
+        </Card>
+      </HubSection>
+
       {/* NBA TV */}
       <HubSection index="01b" eyebrow="NBA TV" title="Portal de notícias da liga">
         <Card
