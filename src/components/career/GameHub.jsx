@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import { getTeamById } from '../../data/teams'
 import { gameService } from '../../services/gameService'
 import { useGameStore } from '../../store/useGameStore'
-import { Badge, Button, Card, ProgressBar } from '../ui'
+import { Badge, Button, Card, PageHero, ProgressBar } from '../ui'
 import ContractOfferPanel from './ContractOfferPanel'
 import EventChoicePanel from './EventChoicePanel'
 
@@ -93,68 +93,43 @@ export default function GameHub({
   const selected = availableActivities.find((a) => a.id === selectedActivityId)
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Faixa de contexto + CTA principal */}
-      <section className="relative overflow-hidden rounded-2xl border border-navy/10 bg-gradient-to-br from-navy via-[#163556] to-[#1e3a5f] p-5 text-white shadow-lg sm:p-6">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 20%, rgba(37,99,235,0.45), transparent 45%), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.12), transparent 40%)',
-          }}
-        />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
-              Semana {currentWeek} · Temporada {currentSeason}
-            </p>
-            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-              {playerName}
-            </h1>
-            <p className="mt-1 text-sm text-blue-100/90">
-              {team?.name ?? 'Free Agent'} · OVR {overall}
-              {player?.posicao ? ` · ${player.posicao}` : ''}
-              {injury ? ` · ${injury.label}` : ''}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <StatusChip
-                label="Energia"
-                value={status?.energia}
-              />
-              <StatusChip
-                label="Motivação"
-                value={status?.motivacao}
-              />
-              <StatusChip
-                label="Fama"
-                value={status?.popularidade}
-              />
-              {seasonView?.teamRecord ? (
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold tabular-nums">
-                  {seasonView.teamRecord.wins}-{seasonView.teamRecord.losses}
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:max-w-xs">
+    <div className="flex flex-col gap-6">
+      <PageHero
+        eyebrow={`Semana ${currentWeek} · Temporada ${currentSeason}`}
+        title={playerName}
+        description={`${team?.name ?? 'Free Agent'} · OVR ${overall}${player?.posicao ? ` · ${player.posicao}` : ''}${injury ? ` · ${injury.label}` : ''}`}
+        meta={
+          <>
+            <StatusChip label="Energia" value={status?.energia} />
+            <StatusChip label="Motivação" value={status?.motivacao} />
+            <StatusChip label="Fama" value={status?.popularidade} />
+            {seasonView?.teamRecord ? (
+              <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold tabular-nums ring-1 ring-white/15">
+                {seasonView.teamRecord.wins}-{seasonView.teamRecord.losses}
+              </span>
+            ) : null}
+          </>
+        }
+        actions={
+          <div className="flex w-full min-w-[14rem] flex-col gap-2 sm:max-w-xs">
             {!blocked && selected ? (
-              <p className="text-right text-[11px] text-blue-100/80">
-                Atividade: <span className="font-semibold text-white">{selected.label}</span>
+              <p className="text-right text-[11px] text-white/70">
+                Atividade:{' '}
+                <span className="font-semibold text-white">{selected.label}</span>
               </p>
             ) : null}
             <Button
               variant="accent"
               size="lg"
-              className="w-full !rounded-xl !py-4 !text-sm shadow-lg shadow-blue-900/40"
+              className="w-full"
               onClick={() => runWeek(selectedActivityId)}
               disabled={blocked}
             >
               {ctaLabel}
             </Button>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       {/* 1. História atual */}
       <HubSection
@@ -636,26 +611,25 @@ export default function GameHub({
   )
 }
 
-function HubSection({ index, eyebrow, title, children, accent = false, compact = false }) {
+function HubSection({ index, eyebrow, title, children, accent = false }) {
   return (
     <section
       className={[
-        'rounded-2xl border p-4 sm:p-5',
+        'rounded-2xl border p-4 shadow-lift backdrop-blur-xl transition-all duration-300 sm:p-6',
         accent
-          ? 'border-court/30 bg-gradient-to-b from-court/5 to-white shadow-md shadow-court/5'
-          : 'border-slate-200/90 bg-white/80 shadow-sm',
-        compact ? '' : '',
+          ? 'border-[color-mix(in_srgb,var(--ds-accent)_28%,transparent)] bg-white/80'
+          : 'border-white/50 bg-white/70',
       ].join(' ')}
     >
-      <header className="mb-3 flex items-baseline gap-3">
-        <span className="font-display text-2xl font-black tabular-nums text-slate-300">
+      <header className="mb-4 flex items-baseline gap-3">
+        <span className="font-display text-2xl font-black tabular-nums text-slate-200">
           {index}
         </span>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ds-muted)]">
             {eyebrow}
           </p>
-          <h2 className="font-display text-xl font-extrabold tracking-tight text-navy sm:text-2xl">
+          <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-navy sm:text-2xl">
             {title}
           </h2>
         </div>
@@ -667,7 +641,7 @@ function HubSection({ index, eyebrow, title, children, accent = false, compact =
 
 function StatusChip({ label, value }) {
   return (
-    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold">
+    <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-semibold ring-1 ring-white/15">
       {label}{' '}
       <span className="tabular-nums text-white">{value ?? 0}</span>
     </span>

@@ -65,7 +65,7 @@ export default function MatchCenterPanel() {
   return (
     <div className="flex flex-col gap-6 pb-10">
       {/* Header / logos */}
-      <section className="overflow-hidden rounded-2xl border border-navy/10 bg-gradient-to-br from-navy via-[#142f4f] to-[#1a3d66] p-6 text-white shadow-lg">
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[var(--ds-hero-from)] via-[var(--ds-hero-via)] to-[var(--ds-hero-to)] p-6 text-white shadow-hero animate-rise">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
           Match Center · Semana {view.week} · T{view.seasonNumber}
         </p>

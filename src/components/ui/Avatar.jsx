@@ -1,5 +1,5 @@
 /**
- * Avatar com iniciais — reutilizável.
+ * Avatar com iniciais — placeholder premium.
  */
 export default function Avatar({
   name = '?',
@@ -23,7 +23,7 @@ export default function Avatar({
   return (
     <div
       className={[
-        'flex shrink-0 items-center justify-center rounded-full bg-navy font-display font-bold text-white',
+        'flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-navy via-navy-soft to-[#1a4570] font-display font-bold text-white shadow-soft ring-2 ring-white/70',
         sizes[size] ?? sizes.md,
         className,
       ].join(' ')}

@@ -114,12 +114,12 @@ export default function PlayerProfilePanel() {
   return (
     <div className="flex flex-col gap-4 pb-10">
       {/* Header 2K */}
-      <section className="relative overflow-hidden rounded-2xl border border-navy/15 bg-gradient-to-br from-[#0b1524] via-[#132c4a] to-[#1a4068] p-5 text-white shadow-xl sm:p-7">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[var(--ds-hero-from)] via-[var(--ds-hero-via)] to-[var(--ds-hero-to)] p-5 text-white shadow-hero sm:p-7 animate-rise">
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-0 opacity-45"
           style={{
             backgroundImage:
-              'radial-gradient(ellipse at 70% 0%, rgba(250,204,21,0.2), transparent 45%), radial-gradient(ellipse at 10% 100%, rgba(56,189,248,0.12), transparent 50%)',
+              'radial-gradient(ellipse at 70% 0%, color-mix(in srgb, var(--ds-accent) 45%, transparent), transparent 50%), radial-gradient(ellipse at 10% 100%, rgba(255,255,255,0.08), transparent 50%)',
           }}
         />
         <div className="relative grid gap-6 lg:grid-cols-[auto_1fr_auto] lg:items-center">
@@ -503,16 +503,16 @@ export default function PlayerProfilePanel() {
 
 function Panel({ title, eyebrow, children }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
-      <header className="border-b border-slate-100 bg-slate-50/80 px-4 py-2.5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+    <section className="overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-lift backdrop-blur-xl transition-all duration-300 hover:shadow-lift-lg">
+      <header className="border-b border-[var(--ds-line)] bg-white/50 px-4 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ds-muted)]">
           {eyebrow}
         </p>
         <h2 className="font-display text-sm font-bold uppercase tracking-wide text-navy">
           {title}
         </h2>
       </header>
-      <div className="p-4">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   )
 }

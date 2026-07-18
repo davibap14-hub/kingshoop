@@ -1,6 +1,7 @@
 /**
- * Card genérico do dashboard — container reutilizável.
+ * Card — compatível com o Design System (Surface sólido).
  */
+
 export default function Card({
   children,
   className = '',
@@ -11,16 +12,18 @@ export default function Card({
 }) {
   const paddings = {
     none: '',
-    sm: 'p-3',
+    sm: 'p-3 sm:p-4',
     md: 'p-4 sm:p-5',
-    lg: 'p-5 sm:p-6',
+    lg: 'p-5 sm:p-7',
   }
 
   return (
     <Tag
       className={[
-        'rounded-xl border border-slate-200/90 bg-white shadow-panel',
-        hover ? 'transition hover:border-accent/30 hover:shadow-md' : '',
+        'relative overflow-hidden rounded-2xl border border-[var(--ds-line)] bg-[var(--ds-surface)] shadow-lift transition-all duration-300 ease-sport',
+        hover
+          ? 'hover:-translate-y-0.5 hover:shadow-lift-lg hover:border-[color-mix(in_srgb,var(--ds-accent)_30%,var(--ds-line))]'
+          : '',
         paddings[padding] ?? paddings.md,
         className,
       ]
@@ -40,12 +43,12 @@ export function CardHeader({ title, subtitle, action, className = '' }) {
     >
       <div>
         {subtitle && (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ds-muted)]">
             {subtitle}
           </p>
         )}
         {title && (
-          <h3 className="font-display text-lg font-bold tracking-tight text-navy sm:text-xl">
+          <h3 className="font-display text-lg font-bold uppercase tracking-wide text-[var(--ds-ink)] sm:text-xl">
             {title}
           </h3>
         )}

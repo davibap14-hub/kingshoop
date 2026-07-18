@@ -96,7 +96,7 @@ export default function LiveMatchPanel() {
 
   return (
     <div className="flex flex-col gap-4 pb-10">
-      <section className="overflow-hidden rounded-2xl border border-navy/15 bg-gradient-to-br from-navy via-[#132c4a] to-[#1a4068] p-5 text-white shadow-xl">
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[var(--ds-hero-from)] via-[var(--ds-hero-via)] to-[var(--ds-hero-to)] p-5 text-white shadow-hero animate-rise">
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200/90">
           <span>Ao vivo · Simulation PBP</span>
           <span>

@@ -72,7 +72,7 @@ export default function NbaTvPanel() {
   return (
     <div className="flex flex-col gap-4 pb-10">
       {/* On-air header */}
-      <section className="relative overflow-hidden rounded-2xl border border-red-500/25 bg-gradient-to-br from-[#0a1220] via-[#121f35] to-[#1a3352] p-5 text-white shadow-xl sm:p-6">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[var(--ds-hero-from)] via-[var(--ds-hero-via)] to-[var(--ds-hero-to)] p-5 text-white shadow-hero sm:p-6 animate-rise">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
@@ -367,16 +367,16 @@ function AwardCard({ eyebrow, award, empty }) {
 
 function Panel({ title, eyebrow, children }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
-      <header className="border-b border-slate-100 bg-slate-50/80 px-4 py-2.5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+    <section className="overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-lift backdrop-blur-xl transition-all duration-300 hover:shadow-lift-lg">
+      <header className="border-b border-[var(--ds-line)] bg-white/50 px-4 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ds-muted)]">
           {eyebrow}
         </p>
         <h2 className="font-display text-sm font-bold uppercase tracking-wide text-navy">
           {title}
         </h2>
       </header>
-      <div className="p-4">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   )
 }

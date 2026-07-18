@@ -2,6 +2,18 @@
 
 Jogo de carreira estilo *The Fenômeno* ambientado na NBA.
 
+## Design System (Interface)
+
+`src/design-system/` + primitives em `src/components/ui/` — visual AAA (2K · EA FC · FM · Apple Sports · The Fenômeno).
+
+- Tokens e temas por tela (`SCREEN_THEMES`) — ambient, accent, hero
+- Tipografia: **Barlow Condensed** (display) + **Plus Jakarta Sans** (body)
+- Surfaces glass/sólidas, `PageHero`, ícones SVG consistentes
+- Microanimações (`rise`, `fade-up`, hover lift) + `prefers-reduced-motion`
+- Tailwind CSS — **nunca altera Engines**
+
+Temas de rota aplicados no `AppLayout` via CSS variables (`--ds-accent`, `--ds-hero-*`, `--ds-ambient`).
+
 ## Arquitetura
 
 Separação rígida em três camadas:

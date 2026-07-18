@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { getScreenTheme } from '../design-system'
 import { Header, Sidebar } from '../components/dashboard'
 import { useCareerSnapshot } from '../hooks/useCareer'
 
@@ -18,7 +19,7 @@ const PAGE_META = {
   },
   '/draft-night': {
     title: 'Draft Night',
-    subtitle: 'Transmissão ESPN · painel ao vivo por pick',
+    subtitle: 'Transmissão · painel ao vivo por pick',
   },
   '/free-agency': {
     title: 'Free Agency',
@@ -43,7 +44,7 @@ const PAGE_META = {
 }
 
 /**
- * Shell: Sidebar + Header + área principal.
+ * Shell AAA: Sidebar glass + Header + canvas temático por rota.
  */
 export default function AppLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -56,23 +57,48 @@ export default function AppLayout({ children }) {
     subtitle: 'NBA Career Mode',
   }
 
+  const theme = useMemo(
+    () => getScreenTheme(location.pathname),
+    [location.pathname],
+  )
+
+  const themeStyle = {
+    '--ds-accent': theme.accent,
+    '--ds-accent-soft': theme.accentSoft,
+    '--ds-hero-from': theme.heroFrom,
+    '--ds-hero-via': theme.heroVia,
+    '--ds-hero-to': theme.heroTo,
+    '--ds-ambient': theme.ambient,
+    '--accent': theme.accent,
+  }
+
   return (
-    <div className="flex min-h-screen bg-ice text-slate-800">
-      {/* Desktop sidebar */}
-      <div className="sticky top-0 hidden h-screen shrink-0 lg:block">
+    <div
+      className="flex min-h-screen text-[var(--ds-ink)] transition-colors duration-500"
+      data-screen={theme.id}
+      style={themeStyle}
+    >
+      <div
+        className="pointer-events-none fixed inset-0 -z-10"
+        style={{
+          backgroundColor: 'var(--ds-canvas)',
+          backgroundImage: `${theme.ambient}, linear-gradient(180deg, #f5f7fb 0%, #eef2f7 50%, #f8fafc 100%)`,
+        }}
+      />
+
+      <div className="sticky top-0 z-30 hidden h-screen shrink-0 lg:block">
         <Sidebar />
       </div>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-ink/40"
+            className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
             aria-label="Fechar menu"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative z-10 h-full w-60 shadow-xl">
+          <div className="relative z-10 h-full w-64 animate-slide-in shadow-lift-lg">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
@@ -90,8 +116,13 @@ export default function AppLayout({ children }) {
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        <main className="dashboard-scroll flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          <div className="mx-auto max-w-7xl animate-fade-up">{children}</div>
+        <main className="dashboard-scroll flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+          <div
+            key={location.pathname}
+            className="mx-auto max-w-7xl animate-rise ds-stagger"
+          >
+            {children}
+          </div>
         </main>
       </div>
     </div>

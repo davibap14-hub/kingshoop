@@ -20,11 +20,11 @@ export default function MetricCard({
   }
 
   return (
-    <Card className={`animate-fade-up ${className}`} padding="sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+    <Card className={`animate-rise ${className}`} padding="sm" hover>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ds-muted)]">
         {label}
       </p>
-      <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-ink">
+      <p className="mt-1 font-display text-2xl font-extrabold uppercase tabular-nums text-ink">
         {value}
       </p>
       {hint && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
@@ -33,7 +33,7 @@ export default function MetricCard({
           value={progress}
           max={progressMax}
           className="mt-3"
-          barClassName={bars[tone] ?? bars.blue}
+          barClassName={bars[tone] ?? 'bg-[var(--ds-accent)]'}
         />
       )}
     </Card>
