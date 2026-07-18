@@ -136,6 +136,8 @@ export function createGmState(overrides = {}) {
     lastTrades: overrides.lastTrades ?? [],
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
+    /** Oferta FA pendente (Contract Engine · Free Agency) */
+    pendingFaOffer: overrides.pendingFaOffer ?? null,
   }
 }
 

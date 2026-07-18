@@ -47,6 +47,11 @@ import {
   buildDraftNightReplay,
   getDraftNightFrame,
   rescaleDraftNightSpeed,
+  getFreeAgencyView,
+  createFaOffer,
+  negotiateFaOffer,
+  acceptFaOffer,
+  withdrawFaOffer,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -197,6 +202,27 @@ export const gameService = {
 
   rescaleDraftNightSpeed(broadcast, speedId) {
     return rescaleDraftNightSpeed(broadcast, speedId)
+  },
+
+  /** Free Agency Engine — board + negociação via Contract Engine */
+  getFreeAgencyView(state, filters) {
+    return getFreeAgencyView(state, filters)
+  },
+
+  createFaOffer(state, playerId, opts) {
+    return createFaOffer(state, playerId, opts)
+  },
+
+  negotiateFaOffer(state, terms) {
+    return negotiateFaOffer(state, terms)
+  },
+
+  acceptFaOffer(state) {
+    return acceptFaOffer(state)
+  },
+
+  withdrawFaOffer(state) {
+    return withdrawFaOffer(state)
   },
 
   /**

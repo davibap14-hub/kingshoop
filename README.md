@@ -349,6 +349,24 @@ getDraftNightFrame(broadcast, index)
 // UI: /draft-night
 ```
 
+## Free Agency Engine
+
+`src/engine/freeAgency/` + `src/data/freeAgency/` — tela de **mercado de agentes livres**.
+
+Agrega GM · Franchise AI · Scouting · News · History. **Toda negociação usa a Contract Engine** (`generateFranchiseOffer`, `negotiateOffer`, `contractFromOffer`).
+
+Mostra: jogadores livres · interesse por franquia · salário pedido · popularidade · idade · potencial · comparação · histórico · rumores.
+
+Filtros: posição · idade · overall · salário.
+
+```js
+getFreeAgencyView(state, filters)
+createFaOffer(state, playerId)
+negotiateFaOffer(state, terms)
+acceptFaOffer(state)
+// UI: /free-agency · Save v26 (gm.pendingFaOffer)
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:

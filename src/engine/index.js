@@ -47,6 +47,7 @@ export * from './presentation'
 export * from './matchCenter'
 export * from './liveMatch'
 export * from './draftNight'
+export * from './freeAgency'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

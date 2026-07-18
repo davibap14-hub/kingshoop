@@ -266,6 +266,33 @@ export default function GameHub({
         </div>
       </HubSection>
 
+      {/* Free Agency */}
+      {(gm?.freeAgents?.length ?? 0) > 0 ? (
+        <HubSection
+          index="02a"
+          eyebrow="Free Agency"
+          title="Mercado de agentes livres"
+        >
+          <Card padding="lg" className="border-navy/10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <Badge tone="blue">Contract Engine</Badge>
+                <p className="mt-2 text-sm text-slate-600">
+                  {gm.freeAgents.length} FA(s) · interesse das franquias, pedido
+                  salarial, rumores e negociação.
+                </p>
+              </div>
+              <Link
+                to="/free-agency"
+                className="inline-flex items-center justify-center rounded-xl bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white no-underline transition hover:bg-navy-hover"
+              >
+                Abrir Free Agency
+              </Link>
+            </div>
+          </Card>
+        </HubSection>
+      ) : null}
+
       {/* Draft Night — quando a classe está na mesa ou há replay */}
       {(gm?.draftClass?.length > 0 && !gm?.draftComplete) ||
       gm?.lastDraft?.picks?.length > 0 ? (
@@ -614,6 +641,16 @@ function buildWeeklyObjectives({
   seasonView,
 }) {
   const list = []
+  if ((gm?.freeAgents?.length ?? 0) > 0) {
+    list.push({
+      id: 'free-agency',
+      tag: 'Mercado',
+      tone: 'blue',
+      title: 'Explorar Free Agency',
+      detail: `${gm.freeAgents.length} agente(s) livre(s) — negocie via Contract Engine.`,
+    })
+  }
+
   if (gm?.draftClass?.length > 0 && !gm?.draftComplete) {
     list.push({
       id: 'draft-night',

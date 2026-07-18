@@ -20,6 +20,10 @@ const PAGE_META = {
     title: 'Draft Night',
     subtitle: 'Transmissão ESPN · painel ao vivo por pick',
   },
+  '/free-agency': {
+    title: 'Free Agency',
+    subtitle: 'Mercado · negociação via Contract Engine',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',
