@@ -1,4 +1,5 @@
 import { buildLineupFromDb } from '../match/lineups'
+import { extractPerformances } from '../news/extract'
 import { simulateGame } from '../simulation/game'
 import { applyGameToStandings } from './standings'
 import { injuryFatigueForTeam } from './injuries'
@@ -34,6 +35,13 @@ export function simulateGames(games, seasonState, opts = {}) {
     away.fatigue = awayFatigue
 
     const match = simulateGame({ home, away }, { rng })
+    const performances = extractPerformances(match, {
+      homeId: game.homeId,
+      awayId: game.awayId,
+      homeShort: home.teamShort,
+      awayShort: away.teamShort,
+      gameId: game.id,
+    })
     const entry = {
       gameId: game.id,
       week: game.week,
@@ -48,6 +56,15 @@ export function simulateGames(games, seasonState, opts = {}) {
       winnerId:
         match.homeScore > match.awayScore ? game.homeId : game.awayId,
       mvp: match.mvp?.nome ?? match.mvp?.name ?? null,
+      mvpStats: match.mvp
+        ? {
+            id: match.mvp.id,
+            points: match.mvp.points,
+            rebounds: match.mvp.rebounds,
+            assists: match.mvp.assists,
+          }
+        : null,
+      performances,
       summary: match.summary,
     }
 

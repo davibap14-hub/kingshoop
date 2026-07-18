@@ -32,6 +32,8 @@ export function buildSaveSnapshot(state) {
     ),
     season: structuredCloneSafe(state.season),
     gm: structuredCloneSafe(state.gm),
+    weekNews: structuredCloneSafe(state.weekNews ?? []),
+    newsFeed: structuredCloneSafe(state.newsFeed ?? []),
   }
 }
 
@@ -102,6 +104,8 @@ export function hydrateSaveToOverrides(payload) {
     careerStats: snap.careerStats ?? createEmptyCareerStats(),
     season: snap.season,
     gm: snap.gm,
+    weekNews: snap.weekNews ?? [],
+    newsFeed: snap.newsFeed ?? [],
   }
 }
 

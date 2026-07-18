@@ -30,6 +30,7 @@ src/
  │    ├── simulation/
  │    ├── draft/
  │    ├── franchise/
+ │    ├── news/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -40,6 +41,7 @@ src/
  │    ├── players/
  │    ├── draft/
  │    ├── franchise/
+ │    ├── news/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -50,6 +52,21 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## News Engine
+
+`src/engine/news/` — gera notícias automaticamente toda semana.
+
+Categorias: Triple-Double · Recorde · Lesão · Troca · MVP · Críticas · Rumores · Aposentadoria · Draft · Prêmios…
+
+Cada notícia tem **título**, **resumo** e **impacto** (tom, magnitude, deltas opcionais). Usa fatos da Season + GM + Franchise AI.
+
+```js
+processWeeklyNews({ week, seasonSummary, gmSummary, ... })
+// → { weekNews, newsFeed, deltas, summary }
+```
+
+UI: `NewsPanel` no dashboard.
 
 ## Franchise AI
 

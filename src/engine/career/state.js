@@ -136,6 +136,8 @@ export function createCareerState(overrides = {}) {
     currentTeamId: overrides.currentTeamId ?? DEFAULT_TEAM_ID,
     lastEvent: overrides.lastEvent ?? 'Bem-vindo à carreira. Escolha uma atividade para a Semana 1.',
     lastWeekResult: overrides.lastWeekResult ?? null,
+    weekNews: overrides.weekNews ?? [],
+    newsFeed: overrides.newsFeed ?? [],
     history: overrides.history ?? createEmptyHistory(),
     careerStats: overrides.careerStats ?? createEmptyCareerStats(),
     season:

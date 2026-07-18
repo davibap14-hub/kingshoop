@@ -7,6 +7,7 @@ import {
   sortActivitiesByPersonality,
   suggestWeeklyActivity,
 } from '../personality'
+import { processWeeklyNews } from '../news'
 import { applyTraining, rangeRoll } from './activities'
 import { processWeeklyFinance, trySignSponsorship } from '../finance'
 import {
@@ -256,7 +257,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
-  const careerVariables = syncLegacyCareerVariables(status)
   const playerStats = syncPlayerStatsFromDetailed(player)
 
   // Progression Engine — XP semanal + level-up gradual
@@ -308,12 +308,35 @@ export function runCareerWeek(state, activityId, opts = {}) {
   )
   messages.push(...gmResult.messages)
 
+  // News Engine — manchetes da liga com base nos fatos da semana
+  const newsResult = processWeeklyNews({
+    week: calendar.currentWeek,
+    seasonNumber: calendar.currentSeason,
+    playerTeamId: state.currentTeamId,
+    playerName: state.playerName ?? player?.nome,
+    careerInjury: injury,
+    seasonSummary: seasonResult.summary,
+    gmSummary: gmResult.summary,
+    gmState: gmResult.gm,
+    previousSeason: { objectives: state.gm?.objectives ?? {} },
+    newsFeed: state.newsFeed ?? [],
+  })
+  messages.push(...newsResult.messages)
+
+  // impacto das notícias no status (deltas da semana)
+  for (const [k, v] of Object.entries(newsResult.deltas ?? {})) {
+    if (!v) continue
+    deltas[k] = (deltas[k] ?? 0) + v
+  }
+  const statusWithNews = applyStatusDeltas(status, newsResult.deltas)
+  const careerVariablesWithNews = syncLegacyCareerVariables(statusWithNews)
+
   let nextState = {
     ...state,
     player,
     playerStats,
-    status,
-    careerVariables,
+    status: statusWithNews,
+    careerVariables: careerVariablesWithNews,
     contract,
     sponsorships,
     finance: finance.finance,
@@ -321,6 +344,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
     progression: progResult.nextProgression,
     season: seasonResult.season,
     gm: gmResult.gm,
+    weekNews: newsResult.weekNews,
+    newsFeed: newsResult.newsFeed,
     currentWeek: calendar.currentWeek,
     currentSeason: calendar.currentSeason,
     lastEvent: messages[messages.length - 1] ?? activity.label,
@@ -362,6 +387,8 @@ export function runCareerWeek(state, activityId, opts = {}) {
     },
     season: seasonResult.summary,
     gm: gmResult.summary,
+    news: newsResult.summary,
+    weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,
   }
 
