@@ -54,6 +54,7 @@ import {
   withdrawFaOffer,
   getNbaTvView,
   getFranchiseHubView,
+  getPlayerProfileView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -235,6 +236,11 @@ export const gameService = {
   /** Franchise Hub — tela completa da franquia (engines existentes) */
   getFranchiseHubView(state) {
     return getFranchiseHubView(state)
+  },
+
+  /** Player Profile — perfil estilo NBA 2K (engines existentes) */
+  getPlayerProfileView(state) {
+    return getPlayerProfileView(state)
   },
 
   /**

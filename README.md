@@ -393,6 +393,19 @@ getFranchiseHubView(state)
 // UI: /franchise
 ```
 
+## Player Profile Engine
+
+`src/engine/playerProfile/` + `src/data/playerProfile/` — perfil estilo **NBA 2K / MyPLAYER**.
+
+Agrega Career · Personality · DNA · Achievements · Contract · Injury · History · Analytics · Progression · Legacy · Story.
+
+Seções: foto (placeholder) · nome · posição · overall · arquétipo · badges · personalidade · DNA · tendências · conquistas · histórico · contratos · lesões · prêmios · stats · gráficos · timeline.
+
+```js
+getPlayerProfileView(state)
+// UI: /player-profile
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:

@@ -266,6 +266,35 @@ export default function GameHub({
         </div>
       </HubSection>
 
+      {/* MyPLAYER */}
+      <HubSection index="01z" eyebrow="MyPLAYER" title={playerName}>
+        <Card
+          padding="lg"
+          className="border-navy/10 bg-gradient-to-br from-slate-50 to-white"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-navy font-display text-xl font-black text-amber-300">
+                {overall}
+              </div>
+              <div>
+                <Badge tone="warning">Perfil 2K</Badge>
+                <p className="mt-1 text-sm text-slate-600">
+                  {player?.posicao ?? '—'} · atributos, DNA, badges, contratos e
+                  timeline.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/player-profile"
+              className="inline-flex items-center justify-center rounded-xl bg-navy px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white no-underline transition hover:bg-navy-hover"
+            >
+              Abrir perfil
+            </Link>
+          </div>
+        </Card>
+      </HubSection>
+
       {/* Franquia */}
       <HubSection
         index="01a"

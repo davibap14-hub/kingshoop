@@ -50,6 +50,7 @@ export * from './draftNight'
 export * from './freeAgency'
 export * from './nbaTv'
 export * from './franchiseHub'
+export * from './playerProfile'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

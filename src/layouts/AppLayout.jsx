@@ -32,6 +32,10 @@ const PAGE_META = {
     title: 'Franquia',
     subtitle: 'Elenco · Cap · GM · Objetivos · Histórico',
   },
+  '/player-profile': {
+    title: 'MyPLAYER',
+    subtitle: 'Perfil 2K · DNA · Badges · Timeline',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',
