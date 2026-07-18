@@ -1,3 +1,4 @@
+import { normalizeTendencies } from '../../data/players/utils'
 import {
   SIM_POSSESSIONS_PER_QUARTER,
   SIM_QUARTERS,
@@ -12,8 +13,21 @@ import {
 import { simulatePossessionDetailed } from './possession'
 import { resetPbpSeq, stampScoreOnEvents } from './playbyplay'
 
+function withTendencies(player) {
+  if (player?.tendencias && typeof player.tendencias === 'object') {
+    return {
+      ...player,
+      tendencias: normalizeTendencies(player, player.tendencias),
+    }
+  }
+  return {
+    ...player,
+    tendencias: normalizeTendencies(player, {}),
+  }
+}
+
 function normalizeSide(side, { isHome }) {
-  const players = (side.players ?? []).slice(0, 5)
+  const players = (side.players ?? []).slice(0, 5).map(withTendencies)
   if (players.length < 5) {
     throw new Error(
       'Cada time precisa de 5 jogadores para a Simulation Engine.',

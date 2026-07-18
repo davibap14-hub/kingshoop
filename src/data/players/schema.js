@@ -53,6 +53,34 @@ export const ATTRIBUTE_GROUPS = {
 
 export const ATTRIBUTE_GROUP_KEYS = Object.keys(ATTRIBUTE_GROUPS)
 
+/**
+ * Tendências de comportamento (0–100).
+ * A Simulation Engine usa esses valores para decidir o estilo de jogo.
+ */
+export const TENDENCY_KEYS = [
+  'shoot3',
+  'drive',
+  'pass',
+  'isolation',
+  'postUp',
+  'fastBreak',
+  'alleyOop',
+  'stepBack',
+  'fadeaway',
+]
+
+export const TENDENCY_LABELS = {
+  shoot3: 'Shoot3',
+  drive: 'Drive',
+  pass: 'Pass',
+  isolation: 'Isolation',
+  postUp: 'Post Up',
+  fastBreak: 'Fast Break',
+  alleyOop: 'Alley Oop',
+  stepBack: 'Step Back',
+  fadeaway: 'Fadeaway',
+}
+
 /** Campos de topo do registro de jogador */
 export const PLAYER_FIELDS = [
   'id',
@@ -64,6 +92,7 @@ export const PLAYER_FIELDS = [
   'arremesso',
   'defesa',
   'qi',
+  'tendencias',
   'potencial',
   'popularidade',
   'arquetipo',

@@ -7,15 +7,20 @@ export {
   POSITIONS,
   ATTRIBUTE_GROUPS,
   ATTRIBUTE_GROUP_KEYS,
+  TENDENCY_KEYS,
+  TENDENCY_LABELS,
   PLAYER_FIELDS,
 } from './schema'
 
 export {
   calcGroupRating,
   calcOverall,
+  deriveTendencies,
+  normalizeTendencies,
   normalizePlayer,
   formatMoney,
   listFlatAttributes,
+  listTendencies,
 } from './utils'
 
 export { PLAYERS, PLAYER_COUNT } from './database'

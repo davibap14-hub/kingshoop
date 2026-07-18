@@ -8,10 +8,16 @@ import {
   pickRebounder,
   pickScreener,
 } from './actors'
-import { attr, combineScore, contestedSelect, weightedSelect } from './weights'
+import {
+  attr,
+  combineScore,
+  contestedSelect,
+  tendency,
+  weightedSelect,
+} from './weights'
 
 /**
- * Escolhe o set ofensivo com pesos combinados (attrs + base + contexto).
+ * Escolhe o set ofensivo com pesos combinados (attrs + tendências + contexto).
  */
 export function chooseOffensiveSet({
   offensePlayers,
@@ -20,57 +26,59 @@ export function chooseOffensiveSet({
   rng,
 }) {
   const handler = ballHandler
-  const big = offensePlayers.find((p) => p.posicao === 'C' || p.posicao === 'PF')
+  const postPlayer = pickPostPlayer(offensePlayers, rng)
 
   const sets = [
     {
       id: 'pick_and_roll',
       score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.pick_and_roll * 70, weight: 0.8 },
-        { value: attr(handler, 'qi.tomadaDecisao'), weight: 1.0 },
-        { value: attr(handler, 'qi.passe'), weight: 0.9 },
-        { value: attr(big, 'fisico.forca'), weight: 0.9 },
-        { value: context.styleThreeBias * 100, weight: 0.3 },
+        { value: ACTION_SET_BASE_WEIGHTS.pick_and_roll * 70, weight: 0.7 },
+        { value: attr(handler, 'qi.tomadaDecisao'), weight: 0.8 },
+        { value: tendency(handler, 'pass'), weight: 1.1 },
+        { value: tendency(handler, 'drive'), weight: 0.7 },
+        { value: tendency(postPlayer, 'alleyOop'), weight: 0.5 },
+        { value: context.styleThreeBias * 100, weight: 0.25 },
       ]),
     },
     {
       id: 'isolation',
       score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.isolation * 70, weight: 0.8 },
-        { value: attr(handler, 'arremesso.midRange'), weight: 1.0 },
-        { value: attr(handler, 'fisico.velocidade'), weight: 0.8 },
-        { value: attr(handler, 'qi.tomadaDecisao'), weight: 0.7 },
-        { value: handler?.overall ?? 70, weight: 0.6 },
+        { value: ACTION_SET_BASE_WEIGHTS.isolation * 70, weight: 0.6 },
+        { value: tendency(handler, 'isolation'), weight: 1.5 },
+        { value: tendency(handler, 'stepBack'), weight: 0.6 },
+        { value: tendency(handler, 'fadeaway'), weight: 0.5 },
+        { value: attr(handler, 'arremesso.midRange'), weight: 0.7 },
+        { value: handler?.overall ?? 70, weight: 0.4 },
       ]),
     },
     {
       id: 'drive',
       score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.drive * 70, weight: 0.8 },
-        { value: attr(handler, 'fisico.velocidade'), weight: 1.3 },
-        { value: attr(handler, 'arremesso.bandeja'), weight: 1.1 },
-        { value: attr(handler, 'fisico.impulsao'), weight: 0.7 },
-        { value: context.stylePace * 50, weight: 0.4 },
+        { value: ACTION_SET_BASE_WEIGHTS.drive * 70, weight: 0.6 },
+        { value: tendency(handler, 'drive'), weight: 1.5 },
+        { value: attr(handler, 'fisico.velocidade'), weight: 0.9 },
+        { value: attr(handler, 'arremesso.bandeja'), weight: 0.7 },
+        { value: context.stylePace * 50, weight: 0.35 },
       ]),
     },
     {
       id: 'post_up',
       score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.post_up * 70, weight: 0.8 },
-        { value: attr(big, 'fisico.forca'), weight: 1.3 },
-        { value: attr(big, 'arremesso.bandeja'), weight: 0.9 },
-        { value: attr(big, 'qi.tomadaDecisao'), weight: 0.6 },
-        { value: big?.overall ?? 65, weight: 0.5 },
+        { value: ACTION_SET_BASE_WEIGHTS.post_up * 70, weight: 0.55 },
+        { value: tendency(postPlayer, 'postUp'), weight: 1.6 },
+        { value: attr(postPlayer, 'fisico.forca'), weight: 0.9 },
+        { value: attr(postPlayer, 'arremesso.bandeja'), weight: 0.6 },
+        { value: postPlayer?.overall ?? 65, weight: 0.4 },
       ]),
-      meta: { postPlayer: big },
+      meta: { postPlayer },
     },
     {
       id: 'cut',
       score: combineScore([
-        { value: ACTION_SET_BASE_WEIGHTS.cut * 70, weight: 0.8 },
-        { value: attr(handler, 'qi.passe'), weight: 1.1 },
-        { value: attr(handler, 'qi.visao'), weight: 1.0 },
-        { value: context.styleMotion * 80, weight: 0.5 },
+        { value: ACTION_SET_BASE_WEIGHTS.cut * 70, weight: 0.6 },
+        { value: tendency(handler, 'pass'), weight: 1.3 },
+        { value: attr(handler, 'qi.visao'), weight: 0.9 },
+        { value: context.styleMotion * 80, weight: 0.45 },
       ]),
     },
   ]
@@ -79,17 +87,31 @@ export function chooseOffensiveSet({
     sets.push({
       id: 'fast_break',
       score: combineScore([
-        { value: 75, weight: 1.0 },
-        { value: attr(handler, 'fisico.velocidade'), weight: 1.4 },
-        { value: attr(handler, 'arremesso.bandeja'), weight: 1.0 },
-        { value: context.transitionDefense, weight: 0.9, invert: true },
-        { value: context.stylePace * 60, weight: 0.6 },
+        { value: 70, weight: 0.7 },
+        { value: tendency(handler, 'fastBreak'), weight: 1.6 },
+        { value: attr(handler, 'fisico.velocidade'), weight: 1.0 },
+        { value: context.transitionDefense, weight: 0.85, invert: true },
+        { value: context.stylePace * 60, weight: 0.5 },
       ]),
       mult: 1.25,
     })
   }
 
   return weightedSelect(sets, rng)
+}
+
+/** Escolhe o jogador de post com base na tendência Post Up. */
+export function pickPostPlayer(offensePlayers, rng) {
+  const entries = offensePlayers.map((p) => ({
+    id: p.id,
+    player: p,
+    score: combineScore([
+      { value: tendency(p, 'postUp'), weight: 1.5 },
+      { value: attr(p, 'fisico.forca'), weight: 0.9 },
+      { value: ['C', 'PF'].includes(p.posicao) ? 85 : 40, weight: 0.7 },
+    ]),
+  }))
+  return weightedSelect(entries, rng)?.player ?? offensePlayers[0]
 }
 
 /**
@@ -103,11 +125,12 @@ export function resolveOnBallPressure({
   rng,
 }) {
   const attackScore = combineScore([
-    { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 1.1 },
-    { value: attr(ballHandler, 'fisico.velocidade'), weight: 1.0 },
-    { value: attr(ballHandler, 'qi.passe'), weight: 0.7 },
-    { value: ballHandler?.overall ?? 70, weight: 0.6 },
-    { value: 50 + homeBoost(isHome, 'ballSecurity') * 100, weight: 0.4 },
+    { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 1.0 },
+    { value: attr(ballHandler, 'fisico.velocidade'), weight: 0.9 },
+    { value: tendency(ballHandler, 'drive'), weight: 0.55 },
+    { value: tendency(ballHandler, 'pass'), weight: 0.45 },
+    { value: ballHandler?.overall ?? 70, weight: 0.5 },
+    { value: 50 + homeBoost(isHome, 'ballSecurity') * 100, weight: 0.35 },
   ])
 
   const defenseScore = combineScore([
@@ -123,7 +146,6 @@ export function resolveOnBallPressure({
     { value: attr(helpDefender, 'defesa.roubo'), weight: 0.7 },
   ])
 
-  // Ajuda entra como peso combinado no lado defensivo (não coin-flip)
   const helpCommit = contestedSelect(helpScore, 0.55, rng)
   const effectiveDefense =
     helpCommit.winner === 'a'
@@ -150,44 +172,174 @@ function homeBoost(isHome, key) {
 }
 
 /**
+ * Escolhe o estilo de finalização a partir das tendências do shooter.
+ * @returns {{ shotType: string, action: string|null, label: string }}
+ */
+export function chooseFinishStyle({
+  shooter,
+  context = {},
+  rng,
+}) {
+  const allowThree = context.allowThree !== false
+  const allowAlley = Boolean(context.allowAlleyOop)
+  const preferInside = Boolean(context.preferInside)
+
+  const entries = [
+    {
+      id: 'drive_finish',
+      shotType: 'layup',
+      action: null,
+      score: combineScore([
+        { value: tendency(shooter, 'drive'), weight: preferInside ? 1.4 : 1.0 },
+        { value: attr(shooter, 'arremesso.bandeja'), weight: 0.8 },
+      ]),
+    },
+    {
+      id: 'step_back',
+      shotType: tendency(shooter, 'shoot3') >= tendency(shooter, 'stepBack')
+        ? 'three'
+        : 'two',
+      action: 'step_back',
+      score: combineScore([
+        { value: tendency(shooter, 'stepBack'), weight: 1.4 },
+        { value: attr(shooter, 'arremesso.midRange'), weight: 0.7 },
+        { value: attr(shooter, 'arremesso.tresPontos'), weight: 0.55 },
+      ]),
+    },
+    {
+      id: 'fadeaway',
+      shotType: 'two',
+      action: 'fadeaway',
+      score: combineScore([
+        { value: tendency(shooter, 'fadeaway'), weight: 1.45 },
+        { value: attr(shooter, 'arremesso.midRange'), weight: 0.9 },
+      ]),
+    },
+  ]
+
+  if (allowThree) {
+    entries.push({
+      id: 'shoot3',
+      shotType: 'three',
+      action: null,
+      score: combineScore([
+        { value: tendency(shooter, 'shoot3'), weight: 1.55 },
+        { value: attr(shooter, 'arremesso.tresPontos'), weight: 0.85 },
+      ]),
+    })
+  }
+
+  if (allowAlley) {
+    entries.push({
+      id: 'alley_oop',
+      shotType: 'alley_oop',
+      action: 'alley_oop',
+      score: combineScore([
+        { value: tendency(shooter, 'alleyOop'), weight: 1.5 },
+        { value: attr(shooter, 'fisico.impulsao'), weight: 1.0 },
+        { value: attr(shooter, 'arremesso.bandeja'), weight: 0.7 },
+        { value: context.passerPassTend ?? 50, weight: 0.8 },
+      ]),
+      mult: 1.1,
+    })
+  }
+
+  if (context.allowPost) {
+    entries.push({
+      id: 'post',
+      shotType: 'post',
+      action: null,
+      score: combineScore([
+        { value: tendency(shooter, 'postUp'), weight: 1.5 },
+        { value: attr(shooter, 'fisico.forca'), weight: 0.9 },
+      ]),
+    })
+  }
+
+  const pick = weightedSelect(entries, rng)
+  return {
+    id: pick?.id ?? 'drive_finish',
+    shotType: pick?.shotType ?? 'two',
+    action: pick?.action ?? null,
+  }
+}
+
+/**
  * Resolve finalização / chute com pesos combinados.
  */
 export function resolveShot({
   shooter,
   defender,
   helpDefender,
-  shotType, // 'two' | 'three' | 'layup' | 'post'
+  shotType, // 'two' | 'three' | 'layup' | 'post' | 'alley_oop' | 'step_back' | 'fadeaway'
   isHome,
   openLook,
   rng,
 }) {
+  const normalizedType =
+    shotType === 'step_back'
+      ? tendency(shooter, 'shoot3') >= 60
+        ? 'three'
+        : 'two'
+      : shotType === 'fadeaway'
+        ? 'two'
+        : shotType
+
   const finishAttr =
-    shotType === 'three'
+    normalizedType === 'three'
       ? attr(shooter, 'arremesso.tresPontos')
-      : shotType === 'layup' || shotType === 'post'
+      : normalizedType === 'layup' ||
+          normalizedType === 'post' ||
+          normalizedType === 'alley_oop'
         ? attr(shooter, 'arremesso.bandeja')
         : attr(shooter, 'arremesso.midRange')
 
+  const tendencyBoost =
+    normalizedType === 'three'
+      ? tendency(shooter, 'shoot3')
+      : normalizedType === 'alley_oop'
+        ? tendency(shooter, 'alleyOop')
+        : shotType === 'fadeaway'
+          ? tendency(shooter, 'fadeaway')
+          : shotType === 'step_back'
+            ? tendency(shooter, 'stepBack')
+            : normalizedType === 'post'
+              ? tendency(shooter, 'postUp')
+              : tendency(shooter, 'drive')
+
   const makeScore = combineScore([
-    { value: finishAttr, weight: 1.4 },
-    { value: attr(shooter, 'fisico.impulsao'), weight: shotType === 'layup' ? 0.9 : 0.4 },
-    { value: attr(shooter, 'qi.tomadaDecisao'), weight: 0.6 },
-    { value: shooter?.overall ?? 70, weight: 0.5 },
-    { value: openLook ? 88 : 52, weight: 1.0 },
-    { value: 50 + homeBoost(isHome, 'finish') * 100, weight: 0.35 },
+    { value: finishAttr, weight: 1.25 },
+    { value: tendencyBoost, weight: 0.85 },
+    {
+      value: attr(shooter, 'fisico.impulsao'),
+      weight:
+        normalizedType === 'layup' || normalizedType === 'alley_oop' ? 1.0 : 0.35,
+    },
+    { value: attr(shooter, 'qi.tomadaDecisao'), weight: 0.5 },
+    { value: shooter?.overall ?? 70, weight: 0.45 },
+    { value: openLook ? 88 : 52, weight: 0.95 },
+    { value: 50 + homeBoost(isHome, 'finish') * 100, weight: 0.3 },
   ])
+
+  const perimeter =
+    normalizedType === 'three' ||
+    normalizedType === 'two' ||
+    shotType === 'step_back' ||
+    shotType === 'fadeaway'
 
   const contestScore = combineScore([
     {
-      value:
-        shotType === 'three' || shotType === 'two'
-          ? attr(defender, 'defesa.perimetro')
-          : attr(defender, 'defesa.garrafao'),
+      value: perimeter
+        ? attr(defender, 'defesa.perimetro')
+        : attr(defender, 'defesa.garrafao'),
       weight: 1.2,
     },
     { value: attr(defender, 'defesa.toco'), weight: 1.0 },
     { value: attr(defender, 'fisico.impulsao'), weight: 0.8 },
-    { value: helpDefender ? attr(helpDefender, 'defesa.toco') : 40, weight: helpDefender ? 0.7 : 0.2 },
+    {
+      value: helpDefender ? attr(helpDefender, 'defesa.toco') : 40,
+      weight: helpDefender ? 0.7 : 0.2,
+    },
     { value: 50 + homeBoost(!isHome, 'contest') * 100, weight: 0.3 },
   ])
 
@@ -201,10 +353,13 @@ export function resolveShot({
   const outcomes = weightedSelect(
     [
       { id: 'make', score: makeScore, mult: 1.0 },
-      { id: 'miss', score: combineScore([
-        { value: contestScore * 100, weight: 1.0, scale: 100 },
-        { value: makeScore * 100, weight: 0.85, scale: 100, invert: true },
-      ]) },
+      {
+        id: 'miss',
+        score: combineScore([
+          { value: contestScore * 100, weight: 1.0, scale: 100 },
+          { value: makeScore * 100, weight: 0.85, scale: 100, invert: true },
+        ]),
+      },
       { id: 'block', score: blockScore, mult: 0.55 },
       {
         id: 'foul',
@@ -220,13 +375,14 @@ export function resolveShot({
     rng,
   )
 
+  const isThree = normalizedType === 'three'
   const points =
     outcomes?.id === 'make'
-      ? shotType === 'three'
+      ? isThree
         ? 3
         : 2
       : outcomes?.id === 'foul'
-        ? shotType === 'three'
+        ? isThree
           ? resolveFtPoints(shooter, 3, rng)
           : resolveFtPoints(shooter, 2, rng)
         : 0
@@ -234,7 +390,8 @@ export function resolveShot({
   return {
     outcome: outcomes?.id ?? 'miss',
     points,
-    shotType,
+    shotType: normalizedType,
+    finishStyle: shotType,
     makeScore,
     contestScore,
   }

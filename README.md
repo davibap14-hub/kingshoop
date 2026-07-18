@@ -145,9 +145,9 @@ A IA altera ritmo, taxa de 3PT/2PT, turnovers, roubos e agressão por posse.
 
 `src/engine/simulation/` — substitui a Match Engine. Simulação **posse a posse** com Play-by-Play completo.
 
-Cada posse modela: Ball Handler, defesa individual, ajuda defensiva, Pick and Roll, Isolation, Drive, Kick Out, Corte, Screen, Post Up, Fast Break e Offensive Rebound.
+Cada posse modela: Ball Handler, defesa individual, ajuda defensiva, Pick and Roll, Isolation, Drive, Kick Out, Corte, Screen, Post Up, Fast Break e Offensive Rebound — além de finalizações por tendência (Alley Oop, Step Back, Fadeaway).
 
-Probabilidades por **pesos combinados** de atributos (`combineScore` + `weightedSelect`) — sem rolagens simples.
+Cada jogador tem **Tendências** (0–100): Shoot3, Drive, Pass, Isolation, Post Up, Fast Break, Alley Oop, Step Back, Fadeaway. A engine combina attrs + tendências (`combineScore` + `weightedSelect`) — sem rolagens simples.
 
 ```js
 import { simulateGame, buildDefaultMatchup } from './engine'

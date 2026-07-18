@@ -1,5 +1,6 @@
 import { PLAY_ACTIONS } from '../../data/simulation/constants'
 import {
+  chooseFinishStyle,
   chooseOffensiveSet,
   pickBallHandler,
   pickCutter,
@@ -11,11 +12,11 @@ import {
   resolveRebound,
   resolveShot,
 } from './actions'
-import { attr, combineScore, contestedSelect, weightedSelect } from './weights'
+import { attr, combineScore, contestedSelect, tendency, weightedSelect } from './weights'
 import { formatPbpEvent } from './playbyplay'
 
 /**
- * Simula uma posse completa com ações e pesos combinados.
+ * Simula uma posse completa com ações, atributos e tendências.
  * Retorna resultado estatístico + eventos de Play-by-Play.
  */
 export function simulatePossessionDetailed({
@@ -47,7 +48,7 @@ export function simulatePossessionDetailed({
     )
   }
 
-  // —— Ball Handler ——
+  // —— Ball Handler (tendência Pass favorece quem inicia) ——
   const ballHandler = pickBallHandler(offensePlayers, rng, {
     preferPerimeter: true,
   })
@@ -57,7 +58,6 @@ export function simulatePossessionDetailed({
     actors: { ballHandler: ballHandler.nome },
   })
 
-  // —— Defesa individual + ajuda ——
   const defender = pickIndividualDefender(defensePlayers, ballHandler, rng)
   const help = pickHelpDefender(defensePlayers, defender, rng)
   push({
@@ -82,7 +82,6 @@ export function simulatePossessionDetailed({
     })
   }
 
-  // Roubo / turnover sob pressão defensiva (pesos combinados)
   if (pressure.winner === 'defense') {
     const stealScore = combineScore([
       { value: attr(defender, 'defesa.roubo'), weight: 1.3 },
@@ -91,8 +90,9 @@ export function simulatePossessionDetailed({
     ])
     const holdScore = combineScore([
       { value: pressure.attackScore * 100, weight: 1.0, scale: 100 },
-      { value: attr(ballHandler, 'qi.passe'), weight: 0.9 },
-      { value: attr(ballHandler, 'fisico.forca'), weight: 0.5 },
+      { value: tendency(ballHandler, 'pass'), weight: 0.7 },
+      { value: attr(ballHandler, 'qi.passe'), weight: 0.8 },
+      { value: attr(ballHandler, 'fisico.forca'), weight: 0.45 },
     ])
     const stealDuel = contestedSelect(stealScore, holdScore, rng)
     if (stealDuel.winner === 'a') {
@@ -111,7 +111,7 @@ export function simulatePossessionDetailed({
         transitionNext: true,
       })
     }
-    // força erro / turnover sem steal
+
     const toDuel = contestedSelect(
       combineScore([
         { value: pressure.defenseScore * 100, weight: 1, scale: 100 },
@@ -119,6 +119,7 @@ export function simulatePossessionDetailed({
       ]),
       combineScore([
         { value: pressure.attackScore * 100, weight: 1, scale: 100 },
+        { value: tendency(ballHandler, 'pass'), weight: 0.6 },
         { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 0.8 },
       ]),
       rng,
@@ -140,18 +141,18 @@ export function simulatePossessionDetailed({
     }
   }
 
-  // —— Escolha do set ——
   const set = chooseOffensiveSet({
     offensePlayers,
     ballHandler,
     context: {
       allowFastBreak: Boolean(context.allowFastBreak),
-      transitionDefense: combineScore(
-        defensePlayers.map((p) => ({
-          value: attr(p, 'fisico.velocidade'),
-          weight: 1,
-        })),
-      ) * 100,
+      transitionDefense:
+        combineScore(
+          defensePlayers.map((p) => ({
+            value: attr(p, 'fisico.velocidade'),
+            weight: 1,
+          })),
+        ) * 100,
       styleThreeBias: context.styleThreeBias ?? 0,
       stylePace: context.stylePace ?? 1,
       styleMotion: context.styleMotion ?? 0.5,
@@ -164,17 +165,29 @@ export function simulatePossessionDetailed({
   let assister = null
   let openLook = pressure.winner === 'offense' && !pressure.helpCommitted
   let shotType = 'two'
+  let finishAction = null
   let screener = null
   let activeHelp = pressure.helpCommitted ? help : null
 
   if (setId === 'fast_break') {
     push({
       action: PLAY_ACTIONS.fast_break,
-      text: `Contra-ataque! ${ballHandler.nome} em transição.`,
+      text: `Contra-ataque! ${ballHandler.nome} em transição (tend. Fast Break ${tendency(ballHandler, 'fastBreak')}).`,
       actors: { ballHandler: ballHandler.nome },
     })
+
+    const fbFinish = chooseFinishStyle({
+      shooter: ballHandler,
+      context: {
+        allowThree: tendency(ballHandler, 'shoot3') >= 55,
+        preferInside: true,
+        allowAlleyOop: false,
+      },
+      rng,
+    })
     shooter = ballHandler
-    shotType = 'layup'
+    shotType = fbFinish.shotType === 'three' ? 'three' : 'layup'
+    finishAction = fbFinish.action
     openLook = true
   } else if (setId === 'pick_and_roll') {
     screener = pickScreener(offensePlayers, ballHandler, rng)
@@ -189,37 +202,63 @@ export function simulatePossessionDetailed({
       actors: { ballHandler: ballHandler.nome, screener: screener.nome },
     })
 
-    const rollScore = combineScore([
-      { value: attr(screener, 'arremesso.bandeja'), weight: 1.0 },
-      { value: attr(screener, 'fisico.impulsao'), weight: 0.9 },
-      { value: attr(ballHandler, 'qi.passe'), weight: 1.1 },
-    ])
-    const pullScore = combineScore([
-      { value: attr(ballHandler, 'arremesso.tresPontos'), weight: 1.0 },
-      { value: attr(ballHandler, 'arremesso.midRange'), weight: 0.9 },
-      { value: attr(ballHandler, 'qi.tomadaDecisao'), weight: 0.8 },
-    ])
-    const driveScore = combineScore([
-      { value: attr(ballHandler, 'fisico.velocidade'), weight: 1.2 },
-      { value: attr(ballHandler, 'arremesso.bandeja'), weight: 1.0 },
-    ])
-    const branch = weightedBranch(
+    const branch = weightedSelect(
       [
-        { id: 'roll', score: rollScore },
-        { id: 'pull', score: pullScore },
-        { id: 'drive', score: driveScore },
+        {
+          id: 'roll',
+          score: combineScore([
+            { value: tendency(screener, 'alleyOop'), weight: 0.7 },
+            { value: tendency(screener, 'postUp'), weight: 0.5 },
+            { value: attr(screener, 'arremesso.bandeja'), weight: 0.9 },
+            { value: tendency(ballHandler, 'pass'), weight: 1.1 },
+          ]),
+        },
+        {
+          id: 'pull',
+          score: combineScore([
+            { value: tendency(ballHandler, 'shoot3'), weight: 1.2 },
+            { value: tendency(ballHandler, 'stepBack'), weight: 0.9 },
+            { value: attr(ballHandler, 'arremesso.tresPontos'), weight: 0.7 },
+          ]),
+        },
+        {
+          id: 'drive',
+          score: combineScore([
+            { value: tendency(ballHandler, 'drive'), weight: 1.4 },
+            { value: attr(ballHandler, 'fisico.velocidade'), weight: 0.9 },
+          ]),
+        },
         {
           id: 'kick',
           score: combineScore([
-            { value: attr(ballHandler, 'qi.visao'), weight: 1.2 },
-            { value: pressure.helpCommitted ? 80 : 45, weight: 0.9 },
+            { value: tendency(ballHandler, 'pass'), weight: 1.4 },
+            { value: pressure.helpCommitted ? 80 : 42, weight: 0.9 },
+          ]),
+        },
+        {
+          id: 'alley',
+          score: combineScore([
+            { value: tendency(screener, 'alleyOop'), weight: 1.5 },
+            { value: tendency(ballHandler, 'pass'), weight: 1.2 },
+            { value: attr(screener, 'fisico.impulsao'), weight: 0.9 },
           ]),
         },
       ],
       rng,
-    )
+    )?.id
 
-    if (branch === 'roll') {
+    if (branch === 'alley') {
+      shooter = screener
+      assister = ballHandler
+      shotType = 'alley_oop'
+      finishAction = 'alley_oop'
+      openLook = true
+      push({
+        action: PLAY_ACTIONS.alley_oop,
+        text: `Alley Oop! ${ballHandler.nome} lança para ${screener.nome}.`,
+        actors: { ballHandler: ballHandler.nome, screener: screener.nome },
+      })
+    } else if (branch === 'roll') {
       shooter = screener
       assister = ballHandler
       shotType = 'layup'
@@ -233,12 +272,18 @@ export function simulatePossessionDetailed({
       const kickTo = pickKickTarget(offensePlayers, ballHandler, rng)
       push({
         action: PLAY_ACTIONS.kick_out,
-        text: `Kick out de ${ballHandler.nome} para ${kickTo.nome}.`,
+        text: `Kick out de ${ballHandler.nome} para ${kickTo.nome} (tend. Pass ${tendency(ballHandler, 'pass')}).`,
         actors: { ballHandler: ballHandler.nome, receiver: kickTo.nome },
       })
       shooter = kickTo
       assister = ballHandler
-      shotType = 'three'
+      const kickFinish = chooseFinishStyle({
+        shooter: kickTo,
+        context: { allowThree: true, preferInside: false },
+        rng,
+      })
+      shotType = kickFinish.shotType
+      finishAction = kickFinish.action
       openLook = Boolean(pressure.helpCommitted)
     } else if (branch === 'drive') {
       push({
@@ -249,34 +294,64 @@ export function simulatePossessionDetailed({
       shooter = ballHandler
       shotType = 'layup'
     } else {
+      const pull = chooseFinishStyle({
+        shooter: ballHandler,
+        context: { allowThree: true, preferInside: false },
+        rng,
+      })
       shooter = ballHandler
-      shotType = pullScore > 0.55 ? 'three' : 'two'
+      shotType = pull.shotType
+      finishAction = pull.action
+      if (finishAction === 'step_back') {
+        push({
+          action: PLAY_ACTIONS.step_back,
+          text: `Step Back de ${ballHandler.nome}.`,
+          actors: { shooter: ballHandler.nome },
+        })
+      }
     }
   } else if (setId === 'isolation') {
     push({
       action: PLAY_ACTIONS.isolation,
-      text: `Isolation: ${ballHandler.nome} vs ${defender.nome}.`,
+      text: `Isolation: ${ballHandler.nome} vs ${defender.nome} (tend. Iso ${tendency(ballHandler, 'isolation')}).`,
       actors: { ballHandler: ballHandler.nome, defender: defender.nome },
     })
-    const isoBranch = weightedBranch(
+
+    const isoBranch = weightedSelect(
       [
-        {
-          id: 'jumper',
-          score: combineScore([
-            { value: attr(ballHandler, 'arremesso.midRange'), weight: 1.2 },
-            { value: attr(ballHandler, 'arremesso.tresPontos'), weight: 0.8 },
-          ]),
-        },
         {
           id: 'drive',
           score: combineScore([
-            { value: attr(ballHandler, 'fisico.velocidade'), weight: 1.2 },
-            { value: attr(ballHandler, 'arremesso.bandeja'), weight: 1.0 },
+            { value: tendency(ballHandler, 'drive'), weight: 1.4 },
+            { value: attr(ballHandler, 'fisico.velocidade'), weight: 0.8 },
+          ]),
+        },
+        {
+          id: 'step_back',
+          score: combineScore([
+            { value: tendency(ballHandler, 'stepBack'), weight: 1.45 },
+            { value: tendency(ballHandler, 'shoot3'), weight: 0.7 },
+          ]),
+        },
+        {
+          id: 'fadeaway',
+          score: combineScore([
+            { value: tendency(ballHandler, 'fadeaway'), weight: 1.45 },
+            { value: attr(ballHandler, 'arremesso.midRange'), weight: 0.8 },
+          ]),
+        },
+        {
+          id: 'jumper',
+          score: combineScore([
+            { value: tendency(ballHandler, 'shoot3'), weight: 1.2 },
+            { value: attr(ballHandler, 'arremesso.tresPontos'), weight: 0.8 },
           ]),
         },
       ],
       rng,
-    )
+    )?.id
+
+    shooter = ballHandler
     if (isoBranch === 'drive') {
       push({
         action: PLAY_ACTIONS.drive,
@@ -284,26 +359,42 @@ export function simulatePossessionDetailed({
         actors: { ballHandler: ballHandler.nome },
       })
       shotType = 'layup'
+    } else if (isoBranch === 'step_back') {
+      push({
+        action: PLAY_ACTIONS.step_back,
+        text: `Step Back de ${ballHandler.nome}.`,
+        actors: { shooter: ballHandler.nome },
+      })
+      shotType = 'step_back'
+      finishAction = 'step_back'
+    } else if (isoBranch === 'fadeaway') {
+      push({
+        action: PLAY_ACTIONS.fadeaway,
+        text: `Fadeaway de ${ballHandler.nome}.`,
+        actors: { shooter: ballHandler.nome },
+      })
+      shotType = 'fadeaway'
+      finishAction = 'fadeaway'
     } else {
       shotType =
-        attr(ballHandler, 'arremesso.tresPontos') >=
-        attr(ballHandler, 'arremesso.midRange')
+        tendency(ballHandler, 'shoot3') >= tendency(ballHandler, 'fadeaway')
           ? 'three'
           : 'two'
     }
-    shooter = ballHandler
   } else if (setId === 'drive') {
     push({
       action: PLAY_ACTIONS.drive,
-      text: `${ballHandler.nome} inicia o drive para a cesta.`,
+      text: `${ballHandler.nome} inicia o drive (tend. Drive ${tendency(ballHandler, 'drive')}).`,
       actors: { ballHandler: ballHandler.nome },
     })
+
     if (pressure.helpCommitted) {
       const kickTo = pickKickTarget(offensePlayers, ballHandler, rng)
       const kickDuel = contestedSelect(
         combineScore([
-          { value: attr(ballHandler, 'qi.visao'), weight: 1.2 },
-          { value: attr(ballHandler, 'qi.passe'), weight: 1.1 },
+          { value: tendency(ballHandler, 'pass'), weight: 1.4 },
+          { value: attr(ballHandler, 'qi.visao'), weight: 1.0 },
+          { value: attr(ballHandler, 'qi.passe'), weight: 0.9 },
         ]),
         combineScore([
           { value: attr(help, 'defesa.roubo'), weight: 0.9 },
@@ -319,7 +410,13 @@ export function simulatePossessionDetailed({
         })
         shooter = kickTo
         assister = ballHandler
-        shotType = 'three'
+        const kickFinish = chooseFinishStyle({
+          shooter: kickTo,
+          context: { allowThree: true },
+          rng,
+        })
+        shotType = kickFinish.shotType
+        finishAction = kickFinish.action
         openLook = true
         activeHelp = null
       } else {
@@ -337,12 +434,28 @@ export function simulatePossessionDetailed({
     const post = set.meta?.postPlayer ?? ballHandler
     push({
       action: PLAY_ACTIONS.post_up,
-      text: `Post Up: ${post.nome} recebe no garrafão.`,
+      text: `Post Up: ${post.nome} recebe no garrafão (tend. ${tendency(post, 'postUp')}).`,
       actors: { post: post.nome },
     })
     shooter = post
     assister = post.id !== ballHandler.id ? ballHandler : null
-    shotType = 'post'
+
+    const postFinish = chooseFinishStyle({
+      shooter: post,
+      context: { allowThree: false, allowPost: true, preferInside: true },
+      rng,
+    })
+    if (postFinish.id === 'fadeaway') {
+      push({
+        action: PLAY_ACTIONS.fadeaway,
+        text: `Fadeaway no post de ${post.nome}.`,
+        actors: { shooter: post.nome },
+      })
+      shotType = 'fadeaway'
+      finishAction = 'fadeaway'
+    } else {
+      shotType = 'post'
+    }
     openLook = pressure.winner === 'offense'
   } else if (setId === 'cut') {
     screener = pickScreener(offensePlayers, ballHandler, rng)
@@ -354,14 +467,16 @@ export function simulatePossessionDetailed({
     })
     push({
       action: PLAY_ACTIONS.cut,
-      text: `${cutter.nome} corta à cesta; ${ballHandler.nome} procura o passe.`,
+      text: `${cutter.nome} corta à cesta; ${ballHandler.nome} procura o passe (tend. Pass ${tendency(ballHandler, 'pass')}).`,
       actors: { cutter: cutter.nome, ballHandler: ballHandler.nome },
     })
+
     const cutDuel = contestedSelect(
       combineScore([
-        { value: attr(ballHandler, 'qi.passe'), weight: 1.2 },
-        { value: attr(cutter, 'fisico.velocidade'), weight: 1.1 },
-        { value: attr(cutter, 'arremesso.bandeja'), weight: 0.8 },
+        { value: tendency(ballHandler, 'pass'), weight: 1.3 },
+        { value: attr(ballHandler, 'qi.passe'), weight: 1.0 },
+        { value: attr(cutter, 'fisico.velocidade'), weight: 1.0 },
+        { value: tendency(cutter, 'alleyOop'), weight: 0.5 },
       ]),
       combineScore([
         { value: attr(defender, 'defesa.garrafao'), weight: 1.0 },
@@ -369,24 +484,58 @@ export function simulatePossessionDetailed({
       ]),
       rng,
     )
+
     if (cutDuel.winner === 'a') {
-      shooter = cutter
-      assister = ballHandler
-      shotType = 'layup'
-      openLook = true
+      const alleyDuel = contestedSelect(
+        combineScore([
+          { value: tendency(cutter, 'alleyOop'), weight: 1.3 },
+          { value: tendency(ballHandler, 'pass'), weight: 1.0 },
+        ]),
+        0.58,
+        rng,
+      )
+      if (alleyDuel.winner === 'a') {
+        push({
+          action: PLAY_ACTIONS.alley_oop,
+          text: `Alley Oop no corte: ${ballHandler.nome} → ${cutter.nome}.`,
+          actors: { ballHandler: ballHandler.nome, cutter: cutter.nome },
+        })
+        shooter = cutter
+        assister = ballHandler
+        shotType = 'alley_oop'
+        finishAction = 'alley_oop'
+        openLook = true
+      } else {
+        shooter = cutter
+        assister = ballHandler
+        shotType = 'layup'
+        openLook = true
+      }
     } else {
+      const salvage = chooseFinishStyle({
+        shooter: ballHandler,
+        context: { allowThree: true },
+        rng,
+      })
       shooter = ballHandler
-      shotType = 'two'
+      shotType = salvage.shotType
+      finishAction = salvage.action
       openLook = false
     }
   }
 
-  // —— Finalização ——
+  const resolvedShotType =
+    finishAction === 'step_back'
+      ? 'step_back'
+      : finishAction === 'fadeaway'
+        ? 'fadeaway'
+        : shotType
+
   const shot = resolveShot({
     shooter,
     defender,
     helpDefender: activeHelp,
-    shotType,
+    shotType: resolvedShotType,
     isHome: offenseIsHome,
     openLook,
     rng,
@@ -409,7 +558,6 @@ export function simulatePossessionDetailed({
       shot,
       reb,
       shooter,
-      assister: null,
       blocker,
       events,
       push,
@@ -437,7 +585,7 @@ export function simulatePossessionDetailed({
       scorerId: shot.points > 0 ? shooter.id : null,
       foulerId: defender.id,
       fouledId: shooter.id,
-      isThree: shotType === 'three',
+      isThree: shot.shotType === 'three',
       events,
       keepsPossession: false,
       transitionNext: false,
@@ -446,11 +594,31 @@ export function simulatePossessionDetailed({
 
   if (shot.outcome === 'make') {
     const pts = shot.points
+    const styleAction =
+      finishAction === 'alley_oop'
+        ? PLAY_ACTIONS.alley_oop
+        : finishAction === 'step_back'
+          ? PLAY_ACTIONS.step_back
+          : finishAction === 'fadeaway'
+            ? PLAY_ACTIONS.fadeaway
+            : setId === 'fast_break'
+              ? PLAY_ACTIONS.fast_break
+              : PLAY_ACTIONS.drive
+
+    const styleLabel =
+      finishAction === 'alley_oop'
+        ? 'Alley Oop'
+        : finishAction === 'step_back'
+          ? 'Step Back'
+          : finishAction === 'fadeaway'
+            ? 'Fadeaway'
+            : null
+
     push({
-      action: setId === 'fast_break' ? PLAY_ACTIONS.fast_break : PLAY_ACTIONS.drive,
+      action: styleAction,
       text: assister
-        ? `Cesta de ${shooter.nome} (${pts}) — assistência de ${assister.nome}.`
-        : `Cesta de ${shooter.nome} (${pts}).`,
+        ? `${styleLabel ? `${styleLabel}: ` : ''}Cesta de ${shooter.nome} (${pts}) — assistência de ${assister.nome}.`
+        : `${styleLabel ? `${styleLabel}: ` : ''}Cesta de ${shooter.nome} (${pts}).`,
       actors: {
         shooter: shooter.nome,
         assister: assister?.nome,
@@ -469,7 +637,6 @@ export function simulatePossessionDetailed({
     })
   }
 
-  // Miss → rebound
   push({
     action: PLAY_ACTIONS.individual_defense,
     text: `${shooter.nome} erra o arremesso; disputa de rebote.`,
@@ -487,7 +654,6 @@ export function simulatePossessionDetailed({
     shot: { ...shot, outcome: 'miss' },
     reb,
     shooter,
-    assister: null,
     blocker: null,
     events,
     push,
@@ -561,8 +727,4 @@ function packResult(payload) {
     transitionNext: Boolean(payload.transitionNext),
     events: payload.events ?? [],
   }
-}
-
-function weightedBranch(entries, rng) {
-  return weightedSelect(entries, rng)?.id
 }

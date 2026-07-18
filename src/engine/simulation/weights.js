@@ -75,3 +75,13 @@ export function attr(player, path, fallback = 60) {
   if (!key) return player[group] ?? fallback
   return player[group]?.[key] ?? player[group] ?? fallback
 }
+
+/**
+ * Lê tendência do jogador (0–100). Fallback 50 se ausente.
+ */
+export function tendency(player, key, fallback = 50) {
+  if (!player) return fallback
+  const v = player.tendencias?.[key]
+  if (v == null || Number.isNaN(Number(v))) return fallback
+  return Math.max(0, Math.min(100, Number(v)))
+}

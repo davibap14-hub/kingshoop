@@ -19,6 +19,9 @@ export const PLAY_ACTIONS = {
   post_up: 'post_up',
   fast_break: 'fast_break',
   offensive_rebound: 'offensive_rebound',
+  alley_oop: 'alley_oop',
+  step_back: 'step_back',
+  fadeaway: 'fadeaway',
 }
 
 export const PLAY_ACTION_LABELS = {
@@ -34,6 +37,9 @@ export const PLAY_ACTION_LABELS = {
   post_up: 'Post Up',
   fast_break: 'Fast Break',
   offensive_rebound: 'Rebound ofensivo',
+  alley_oop: 'Alley Oop',
+  step_back: 'Step Back',
+  fadeaway: 'Fadeaway',
 }
 
 /** Pesos base para escolher o set ofensivo (combinados com attrs) */

@@ -1,20 +1,25 @@
-import { combineScore, weightedSelect, attr } from './weights'
+import { combineScore, weightedSelect, attr, tendency } from './weights'
 
 /**
- * Escolhe ball handler com pesos combinados (QI, velocidade, overall).
+ * Escolhe ball handler com pesos combinados (QI, tendências, overall).
  */
 export function pickBallHandler(players, rng, context = {}) {
   const entries = players.map((p) => ({
     id: p.id,
     player: p,
     score: combineScore([
-      { value: attr(p, 'qi.tomadaDecisao'), weight: 1.2 },
-      { value: attr(p, 'qi.passe'), weight: 1.0 },
-      { value: attr(p, 'qi.visao'), weight: 0.9 },
-      { value: attr(p, 'fisico.velocidade'), weight: 0.8 },
-      { value: p.overall ?? 70, weight: 0.7 },
+      { value: tendency(p, 'pass'), weight: 1.15 },
+      { value: tendency(p, 'isolation'), weight: 0.55 },
+      { value: attr(p, 'qi.tomadaDecisao'), weight: 1.0 },
+      { value: attr(p, 'qi.passe'), weight: 0.85 },
+      { value: attr(p, 'qi.visao'), weight: 0.75 },
+      { value: attr(p, 'fisico.velocidade'), weight: 0.65 },
+      { value: p.overall ?? 70, weight: 0.6 },
       {
-        value: context.preferPerimeter && ['PG', 'SG', 'SF'].includes(p.posicao) ? 85 : 50,
+        value:
+          context.preferPerimeter && ['PG', 'SG', 'SF'].includes(p.posicao)
+            ? 85
+            : 50,
         weight: 0.35,
       },
     ]),
@@ -104,10 +109,12 @@ export function pickKickTarget(offensePlayers, ballHandler, rng) {
     id: p.id,
     player: p,
     score: combineScore([
-      { value: attr(p, 'arremesso.tresPontos'), weight: 1.4 },
-      { value: attr(p, 'arremesso.midRange'), weight: 0.6 },
-      { value: attr(p, 'qi.tomadaDecisao'), weight: 0.5 },
-      { value: p.overall ?? 70, weight: 0.4 },
+      { value: tendency(p, 'shoot3'), weight: 1.5 },
+      { value: tendency(p, 'stepBack'), weight: 0.55 },
+      { value: attr(p, 'arremesso.tresPontos'), weight: 1.0 },
+      { value: attr(p, 'arremesso.midRange'), weight: 0.5 },
+      { value: attr(p, 'qi.tomadaDecisao'), weight: 0.4 },
+      { value: p.overall ?? 70, weight: 0.35 },
     ]),
   }))
   return weightedSelect(entries, rng)?.player ?? pool[0]
