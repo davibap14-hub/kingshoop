@@ -216,11 +216,22 @@ export function simulatePossessionDetailed({
         ) * 100,
       chemistryEffects,
       coachSetBias: decisionCtx.coachSetBias,
+      playbook: decisionCtx.playbook,
+      matchup: decisionCtx.matchup,
     },
     rng,
   })
 
   const setId = set?.id ?? 'isolation'
+  const calledPlay = set?.meta?.play ?? null
+  if (calledPlay?.name) {
+    push({
+      action: 'play_call',
+      text: `Playbook: ${calledPlay.name} (${calledPlay.category}) — 1ª opção: ${calledPlay.firstOption}.`,
+      actors: { ballHandler: ballHandler.nome },
+    })
+  }
+
   let shooter = ballHandler
   let assister = null
   let openLook = pressure.winner === 'offense' && !pressure.helpCommitted

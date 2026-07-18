@@ -41,6 +41,7 @@ src/
  │    ├── scouting/
  │    ├── personality/
  │    ├── dna/
+ │    ├── playbook/
  │    ├── career/
  │    ├── match/
  │    ├── progression/
@@ -59,6 +60,7 @@ src/
  │    ├── injuries/
  │    ├── personality/
  │    ├── dna/
+ │    ├── playbook/
  │    ├── teams/
  │    ├── events/
  │    ├── coaches/
@@ -465,6 +467,27 @@ const result = simulateGame(matchup)
 
 Rota UI: `/match` (facade em `engine/match` só para lineups + compat).
 
+## Playbook Engine
+
+`src/engine/playbook/` + `src/data/playbook/` — jogadas por franquia.
+
+Categorias: **Pick and Roll · Pick and Pop · Isolation · Motion · Triangle · Horns · Flex · Spain PnR · Five Out · Post Up · High Low · Fast Break · Off Ball Screen**.
+
+Cada jogada define: **posicionamento · prioridade · leitura · 1ª / 2ª / 3ª opção**.
+
+A **Decision Engine** escolhe automaticamente a melhor jogada em cada posse, ponderando:
+
+Coach · Jogadores disponíveis · Fadiga · Matchup · Tempo restante · Placar · Importância da partida.
+
+```js
+generateTeamPlaybook(teamId, coach)
+decidePlaybookPlay({ offensePlayers, ballHandler, ctx, playbook, rng })
+processWeeklyPlaybooks({ playbooks, gm, seasonRolled })
+getPlaybookView(state)
+```
+
+Persistido em `gm.playbooks` (**Save v16**). UI: `PlaybookPanel`.
+
 ## Player DNA Engine
 
 `src/engine/dna/` + `src/data/dna/` — identidade única de cada jogador.
@@ -486,7 +509,7 @@ dnaSetBias(handler, setId)
 getDnaView(state)
 ```
 
-Persistido no Save (**v15**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
+Persistido no Save (**v16**, em `player.dna` / `player.dnaAnchor` + overrides do GM). UI: `DnaPanel`.
 
 ## Decision Engine
 
@@ -522,7 +545,7 @@ evaluateAchievements(achievements, state)
 getAchievementsView(state)
 ```
 
-Persistido em `state.achievements` via Save Engine (**v15**). UI: `AchievementsPanel`.
+Persistido em `state.achievements` via Save Engine (**v16**). UI: `AchievementsPanel`.
 
 ## Story Engine
 

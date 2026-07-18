@@ -80,6 +80,21 @@ export function buildPossessionDecisionContext({
     100,
   )
 
+  const avgOvr = (players) => {
+    if (!players?.length) return 70
+    return (
+      players.reduce((s, p) => s + (p.overall ?? 70), 0) / players.length
+    )
+  }
+  const matchup = clamp(
+    Number(
+      context.matchup ??
+        50 + (avgOvr(offensePlayers) - avgOvr(defensePlayers)) * 2.2,
+    ),
+    0,
+    100,
+  )
+
   return {
     offensePlayers,
     defensePlayers,
@@ -102,6 +117,9 @@ export function buildPossessionDecisionContext({
     defenseChemistryEffects: context.defenseChemistryEffects ?? null,
     coachSetBias: context.coachSetBias ?? {},
     coach: context.coach ?? null,
+    playbook: context.playbook ?? null,
+    playbookCategoryBias: context.playbookCategoryBias ?? null,
+    matchup,
     styleThreeBias: context.styleThreeBias ?? 0,
     stylePace: context.stylePace ?? 1,
     styleMotion: context.styleMotion ?? 0.5,

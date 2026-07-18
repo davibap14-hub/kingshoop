@@ -22,6 +22,7 @@ export const PLAY_ACTIONS = {
   alley_oop: 'alley_oop',
   step_back: 'step_back',
   fadeaway: 'fadeaway',
+  play_call: 'play_call',
 }
 
 export const PLAY_ACTION_LABELS = {
@@ -40,6 +41,7 @@ export const PLAY_ACTION_LABELS = {
   alley_oop: 'Alley Oop',
   step_back: 'Step Back',
   fadeaway: 'Fadeaway',
+  play_call: 'Jogada (Playbook)',
 }
 
 /** Pesos base para escolher o set ofensivo (combinados com attrs) */

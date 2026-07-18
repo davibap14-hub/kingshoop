@@ -7,6 +7,11 @@ import {
 } from '../chemistry'
 import { decideTeamStyle } from '../coaches/decide.js'
 import { getTeamCoach } from '../coaches/state.js'
+import { ensureLeaguePlaybooks } from '../playbook/generate.js'
+import {
+  createPlaybookEngineState,
+  getTeamPlaybook,
+} from '../playbook/state.js'
 import { calcRosterChemistry } from '../personality/chemistry'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
@@ -94,6 +99,12 @@ export function buildLineupFromDb(
       ? decideTeamStyle(coach, lineup)
       : chooseBestStyle(lineup)
 
+  const playbooks = ensureLeaguePlaybooks(
+    createPlaybookEngineState(gm?.playbooks ?? {}),
+    { coaches: gm?.coaches },
+  ).state
+  const playbook = getTeamPlaybook(playbooks, teamId)
+
   return {
     teamId: team.id,
     teamName: team.name,
@@ -106,6 +117,7 @@ export function buildLineupFromDb(
     chemistryEffects,
     coach,
     coachSetBias: coach?.setBias ?? ai.setBias ?? {},
+    playbook,
     fatigue: 0,
     styleId: ai.styleId,
   }

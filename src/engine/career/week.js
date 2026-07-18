@@ -40,6 +40,7 @@ import { resolvePlayer } from '../gm/situation'
 import { processWeeklyAchievements } from '../achievements'
 import { processWeeklyAnalytics } from '../analytics'
 import { processWeeklyDna } from '../dna'
+import { processWeeklyPlaybooks } from '../playbook'
 import { processWeeklyHistory } from '../history'
 import { processWeeklySeason } from '../season'
 import {
@@ -479,10 +480,19 @@ export function runCareerWeek(state, activityId, opts = {}) {
   messages.push(...coachResult.messages)
   const gmWithCoaches = coachResult.gm ?? gmWithChemistry
 
+  // Playbook Engine — garante jogadas por franquia (alinha ao coach)
+  const playbookResult = processWeeklyPlaybooks({
+    playbooks: gmWithCoaches?.playbooks,
+    gm: gmWithCoaches,
+    seasonRolled: calendar.seasonRolled,
+  })
+  messages.push(...playbookResult.messages)
+  const gmWithPlaybooks = playbookResult.gm ?? gmWithCoaches
+
   // Player DNA Engine — evolução lenta da identidade (preso à âncora)
   const dnaResult = processWeeklyDna({
     player,
-    gm: gmWithCoaches,
+    gm: gmWithPlaybooks,
     currentTeamId: contractResult.currentTeamId ?? state.currentTeamId,
     week: calendar.currentWeek,
     activityType: activity.type,
@@ -491,7 +501,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
       state.playingTimeShare ?? priorRelEffects.playingTimeShare ?? 24,
   })
   player = dnaResult.player ?? player
-  const gmWithDna = dnaResult.gm ?? gmWithCoaches
+  const gmWithDna = dnaResult.gm ?? gmWithPlaybooks
   messages.push(...dnaResult.messages)
 
   // Analytics Engine — estatísticas avançadas (PER, TS%, ratings, WS, PIE…)
@@ -654,6 +664,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     historyEngine: historyResult.summary,
     analytics: analyticsResult.summary,
     dna: dnaResult.summary,
+    playbook: playbookResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
     pendingEvent: nextState.pendingEvent,

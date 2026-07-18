@@ -14,6 +14,8 @@ import { ensureLeagueCoaches } from '../coaches/generate.js'
 import { createCoachEngineState } from '../coaches/state.js'
 import { generateDraftClass as generateDraftClassFromEngine } from '../draft/generate'
 import { createScoutingState } from '../scouting/state.js'
+import { ensureLeaguePlaybooks } from '../playbook/generate.js'
+import { createPlaybookEngineState } from '../playbook/state.js'
 
 /** @deprecated use Draft Engine `generateDraftClass` */
 export function generateDraftClass(seasonNumber, rng = Math.random) {
@@ -98,6 +100,13 @@ export function createGmState(overrides = {}) {
     : buildInitialRosters()
 
   const contracts = overrides.contracts ?? buildInitialContracts(built.rosters)
+  const coaches = ensureLeagueCoaches(
+    createCoachEngineState(overrides.coaches ?? {}),
+  )
+  const playbooks = ensureLeaguePlaybooks(
+    createPlaybookEngineState(overrides.playbooks ?? {}),
+    { coaches, teams: TEAMS },
+  ).state
 
   return {
     personalities: overrides.personalities ?? assignPersonalities(),
@@ -115,11 +124,11 @@ export function createGmState(overrides = {}) {
     /** Chemistry Engine — matriz de pares (−100…+100) */
     chemistry: createChemistryState(overrides.chemistry ?? {}),
     /** Coach Engine — head coach por franquia */
-    coaches: ensureLeagueCoaches(
-      createCoachEngineState(overrides.coaches ?? {}),
-    ),
+    coaches,
     /** Scouting Engine — investimento + relatórios por time */
     scouting: createScoutingState(overrides.scouting ?? {}),
+    /** Playbook Engine — jogadas por franquia */
+    playbooks,
     log: overrides.log ?? [],
     lastWeekDecisions: overrides.lastWeekDecisions ?? [],
   }

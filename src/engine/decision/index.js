@@ -57,3 +57,5 @@ export {
 } from './roles.js'
 
 export { decideOffensiveSet } from './sets.js'
+
+export { decidePlaybookPlay, scorePlaybookPlay } from '../playbook'

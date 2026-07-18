@@ -24,6 +24,7 @@ import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
 import ChemistryPanel from './ChemistryPanel'
 import DnaPanel from './DnaPanel'
+import PlaybookPanel from './PlaybookPanel'
 import CoachPanel from './CoachPanel'
 import InjuryPanel from './InjuryPanel'
 import RelationshipPanel from './RelationshipPanel'
@@ -140,6 +141,7 @@ export default function CareerDashboard() {
           <ContractPanel />
           <RelationshipPanel />
           <DnaPanel />
+          <PlaybookPanel />
           <ChemistryPanel />
           <InjuryPanel />
           <CoachPanel />

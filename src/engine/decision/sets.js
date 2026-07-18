@@ -1,11 +1,14 @@
 /**
  * Decisão de set ofensivo / PnR / isolamento — Decision Engine.
+ * Preferência: Playbook Engine (melhor jogada da franquia por posse).
  */
 
 import { CHEMISTRY_SIM_WEIGHTS } from '../../data/chemistry'
 import { ACTION_SET_BASE_WEIGHTS } from '../../data/simulation/constants'
 import { DECISION_IDS } from '../../data/decision'
+import { COACH_CATEGORY_BIAS, DEFAULT_CATEGORY_BIAS } from '../../data/playbook/constants.js'
 import { boostToScoreFactor } from '../chemistry/effects'
+import { decidePlaybookPlay } from '../playbook/decide.js'
 import { combineScore } from '../simulation/weights'
 import { decide } from './decide.js'
 import { dnaSetBias } from '../dna/factors.js'
@@ -14,6 +17,7 @@ import { decidePostPlayer } from './roles.js'
 
 /**
  * Escolhe o set ofensivo com todos os fatores situacionais.
+ * Se houver playbook da franquia, a Playbook Engine decide a jogada.
  */
 export function decideOffensiveSet({
   offensePlayers,
@@ -22,6 +26,25 @@ export function decideOffensiveSet({
   rng,
 }) {
   const handler = ballHandler
+
+  if (ctx.playbook?.plays?.length || ctx.playbook?.playIds?.length) {
+    const archetypeId = ctx.coach?.archetypeId
+    const play = decidePlaybookPlay({
+      offensePlayers,
+      ballHandler,
+      ctx: {
+        ...ctx,
+        playbookCategoryBias:
+          ctx.playbookCategoryBias ??
+          COACH_CATEGORY_BIAS[archetypeId] ??
+          DEFAULT_CATEGORY_BIAS,
+      },
+      playbook: ctx.playbook,
+      rng,
+    })
+    if (play?.id) return play
+  }
+
   const postPlayer = decidePostPlayer(offensePlayers, ctx, rng)
   const chem = ctx.chemistryEffects
   const cw = chem?.weights ?? CHEMISTRY_SIM_WEIGHTS
