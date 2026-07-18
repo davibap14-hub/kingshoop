@@ -266,6 +266,33 @@ export default function GameHub({
         </div>
       </HubSection>
 
+      {/* NBA TV */}
+      <HubSection index="01b" eyebrow="NBA TV" title="Portal de notícias da liga">
+        <Card
+          padding="lg"
+          className="border-red-500/20 bg-gradient-to-br from-[#0a1220] via-[#152845] to-[#1a3352] text-white"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em]">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                Ao vivo
+              </span>
+              <p className="mt-2 text-sm text-blue-100/85">
+                Últimas notícias, rumores, performances, recordes, Power Ranking
+                e prêmios — só dados das Engines.
+              </p>
+            </div>
+            <Link
+              to="/nba-tv"
+              className="inline-flex items-center justify-center rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white no-underline transition hover:bg-red-500"
+            >
+              Abrir NBA TV
+            </Link>
+          </div>
+        </Card>
+      </HubSection>
+
       {/* Free Agency */}
       {(gm?.freeAgents?.length ?? 0) > 0 ? (
         <HubSection

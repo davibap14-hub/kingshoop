@@ -367,6 +367,19 @@ acceptFaOffer(state)
 // UI: /free-agency · Save v26 (gm.pendingFaOffer)
 ```
 
+## NBA TV Engine
+
+`src/engine/nbaTv/` + `src/data/nbaTv/` — portal de **notícias da liga**.
+
+Consome apenas **News Engine**, **History Engine** e **Analytics Engine** (plus Records/Season para seções). **Nunca gera notícias na Interface.**
+
+Seções: últimas notícias · rumores · top performances · recordes quebrados · Power Ranking · Jogador da Semana · Jogador do Mês · rookies · estatísticas.
+
+```js
+getNbaTvView(state, { category })
+// UI: /nba-tv
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:

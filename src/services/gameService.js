@@ -52,6 +52,7 @@ import {
   negotiateFaOffer,
   acceptFaOffer,
   withdrawFaOffer,
+  getNbaTvView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -223,6 +224,11 @@ export const gameService = {
 
   withdrawFaOffer(state) {
     return withdrawFaOffer(state)
+  },
+
+  /** NBA TV Engine — portal (só agrega News · History · Analytics) */
+  getNbaTvView(state, filters) {
+    return getNbaTvView(state, filters)
   },
 
   /**

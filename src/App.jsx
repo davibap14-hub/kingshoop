@@ -7,6 +7,7 @@ import {
   LiveMatchPage,
   MatchCenterPage,
   MatchPage,
+  NbaTvPage,
 } from './pages'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/live-match" element={<LiveMatchPage />} />
           <Route path="/draft-night" element={<DraftNightPage />} />
           <Route path="/free-agency" element={<FreeAgencyPage />} />
+          <Route path="/nba-tv" element={<NbaTvPage />} />
           <Route path="/match" element={<MatchPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

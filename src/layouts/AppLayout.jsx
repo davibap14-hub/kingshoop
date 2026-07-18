@@ -24,6 +24,10 @@ const PAGE_META = {
     title: 'Free Agency',
     subtitle: 'Mercado · negociação via Contract Engine',
   },
+  '/nba-tv': {
+    title: 'NBA TV',
+    subtitle: 'Portal · News · History · Analytics',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',
