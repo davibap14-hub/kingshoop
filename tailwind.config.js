@@ -4,39 +4,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Kings League / KingsHoop
-        'court-orange': '#e07a5f',
-        'kings-green': '#2ec4b6',
-        'kings-gold': '#f5b731',
-        'kings-red': '#e63946',
-        'dark-bg': '#0b1220',
-        'card-dark': '#151e2e',
-        'panel': '#1a2436',
-        // aliases de layout (mesmo tom KL, evita classes NBA)
-        'pf-bg': '#0b1220',
-        'pf-subtle': '#111827',
-        'pf-surface': '#151e2e',
-        'pf-muted': '#1a2436',
-        'nba-navy': '#2ec4b6',
-        'nba-navy-hover': '#3dd9ca',
-        'nba-red': '#e63946',
-        'nba-gold': '#f5b731',
-        'nba-orange': '#e07a5f',
+        navy: {
+          DEFAULT: '#0c2340',
+          hover: '#163556',
+          soft: '#1e3a5f',
+        },
+        accent: {
+          DEFAULT: '#2563eb',
+          soft: '#dbeafe',
+          muted: '#93c5fd',
+        },
+        ink: '#0a0a0a',
+        ice: '#f8fafc',
+        court: '#c8102e',
       },
       fontFamily: {
-        display: ['"Barlow Condensed"', 'Outfit', 'system-ui', 'sans-serif'],
-        body: ['Outfit', 'system-ui', 'sans-serif'],
+        display: ['Oswald', 'Segoe UI', 'sans-serif'],
+        body: ['DM Sans', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
-        'pf-sm': '0 1px 2px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)',
-        'pf-md': '0 8px 24px rgba(0,0,0,0.35)',
-        'pf-lg': '0 16px 40px rgba(0,0,0,0.45)',
-        'pf-navy': '0 0 28px rgba(46,196,182,0.28)',
+        panel: '0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04)',
       },
-      borderRadius: {
-        pf: '14px',
-        'pf-lg': '18px',
-        'pf-xl': '24px',
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'bar-in': {
+          '0%': { transform: 'scaleX(0)' },
+          '100%': { transform: 'scaleX(1)' },
+        },
+      },
+      animation: {
+        'fade-up': 'fade-up 0.45s ease-out both',
+        'bar-in': 'bar-in 0.55s ease-out both',
       },
     },
   },
