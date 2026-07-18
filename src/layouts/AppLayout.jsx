@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { getScreenTheme } from '../design-system'
 import { Header, Sidebar } from '../components/dashboard'
+import { PageTransition } from '../components/motion'
 import { useCareerSnapshot } from '../hooks/useCareer'
+import { useGameStore } from '../store/useGameStore'
 
 const PAGE_META = {
   '/': {
@@ -51,6 +53,9 @@ export default function AppLayout({ children }) {
   const location = useLocation()
   const { playerName, team, overall, currentWeek, currentSeason } =
     useCareerSnapshot()
+  const pendingEvent = useGameStore((s) => s.pendingEvent)
+  const pendingContractOffer = useGameStore((s) => s.pendingContractOffer)
+  const hasAlert = Boolean(pendingEvent || pendingContractOffer)
 
   const meta = PAGE_META[location.pathname] ?? {
     title: 'The Fenômeno',
@@ -113,16 +118,17 @@ export default function AppLayout({ children }) {
           overall={overall}
           week={currentWeek}
           season={currentSeason}
+          notify={hasAlert}
           onMenuClick={() => setMobileOpen(true)}
         />
 
         <main className="dashboard-scroll flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
-          <div
-            key={location.pathname}
-            className="mx-auto max-w-7xl animate-rise ds-stagger"
+          <PageTransition
+            routeKey={location.pathname}
+            className="mx-auto max-w-7xl"
           >
             {children}
-          </div>
+          </PageTransition>
         </main>
       </div>
     </div>

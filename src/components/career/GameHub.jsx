@@ -3,10 +3,19 @@
  * Prioridade: Story → Decisão → Partida → Objetivos → Notícias → Evolução → Conquistas.
  */
 
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getTeamById } from '../../data/teams'
 import { gameService } from '../../services/gameService'
 import { useGameStore } from '../../store/useGameStore'
+import {
+  AchievementGlow,
+  ConfettiBurst,
+  CountUp,
+  Pulse,
+  SkeletonBlock,
+  SlideUp,
+} from '../motion'
 import { Badge, Button, Card, ProgressBar } from '../ui'
 import ContractOfferPanel from './ContractOfferPanel'
 import EventChoicePanel from './EventChoicePanel'
@@ -46,11 +55,27 @@ export default function GameHub({
   const achievements = useGameStore((s) => s.achievements)
   const archetypeId = useGameStore((s) => s.archetypeId)
   const seasonResults = useGameStore((s) => s.season?.results)
+  const [confetti, setConfetti] = useState(false)
+  const confettiKeyRef = useRef(null)
 
   const storyView = gameService.getStoryView({ story, pendingEvent })
   const achView = gameService.getAchievementsView({ achievements })
 
   const blocked = Boolean(pendingEvent || pendingContractOffer)
+
+  useEffect(() => {
+    if (!weekEffects?.progression?.leveledUp) return
+    const key = `${weekEffects.seasonNumber ?? currentSeason}-${weekEffects.weekFrom ?? currentWeek}`
+    if (confettiKeyRef.current === key) return
+    confettiKeyRef.current = key
+    setConfetti(true)
+  }, [
+    weekEffects?.progression?.leveledUp,
+    weekEffects?.weekFrom,
+    weekEffects?.seasonNumber,
+    currentWeek,
+    currentSeason,
+  ])
   const ctaLabel = pendingContractOffer
     ? 'Resolva o contrato'
     : pendingEvent
@@ -97,6 +122,8 @@ export default function GameHub({
 
   return (
     <div className="flex flex-col gap-6">
+      <ConfettiBurst active={confetti} onComplete={() => setConfetti(false)} />
+
       <GameHubHero
         playerName={playerName}
         team={team}
@@ -448,9 +475,12 @@ export default function GameHub({
         title="O que a liga está falando"
       >
         {importantNews.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Sem manchetes críticas ainda. Avance uma semana para gerar notícias.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-500">
+              Sem manchetes críticas ainda. Avance uma semana para gerar notícias.
+            </p>
+            <SkeletonBlock lines={3} />
+          </div>
         ) : (
           <ul className="space-y-3">
             {importantNews.map((n) => (
@@ -459,9 +489,16 @@ export default function GameHub({
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={NEWS_TONE[n.impact?.tone] ?? 'neutral'}>
-                    {n.categoryLabel ?? n.category}
-                  </Badge>
+                  <Pulse
+                    active={Boolean(n.aboutPlayerTeam || n.impact?.tone === 'negative')}
+                    color={
+                      n.impact?.tone === 'negative' ? '#f43f5e' : '#1d6fea'
+                    }
+                  >
+                    <Badge tone={NEWS_TONE[n.impact?.tone] ?? 'neutral'}>
+                      {n.categoryLabel ?? n.category}
+                    </Badge>
+                  </Pulse>
                   {n.aboutPlayerTeam ? (
                     <Badge tone="blue">Seu time</Badge>
                   ) : null}
@@ -488,10 +525,21 @@ export default function GameHub({
         >
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-              <span>Nível {progression?.level ?? 1}</span>
+              <span>
+                Nível{' '}
+                <CountUp
+                  value={progression?.level ?? 1}
+                  className="font-semibold text-navy"
+                />
+              </span>
               <span className="tabular-nums font-semibold text-navy">
-                XP {progression?.xp ?? 0}
-                {progression?.xpToNext ? ` / ${progression.xpToNext}` : ''}
+                XP <CountUp value={progression?.xp ?? 0} />
+                {progression?.xpToNext ? (
+                  <>
+                    {' / '}
+                    <CountUp value={progression.xpToNext} />
+                  </>
+                ) : null}
               </span>
             </div>
             <ProgressBar
@@ -540,7 +588,9 @@ export default function GameHub({
         >
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <p className="mb-3 text-xs text-slate-500">
-              {achView.unlockedCount}/{achView.total} · {achView.percent}%
+              <CountUp value={achView.unlockedCount} />/
+              <CountUp value={achView.total} /> ·{' '}
+              <CountUp value={achView.percent} />%
             </p>
             {recentAchievements.length === 0 ? (
               <p className="text-sm text-slate-500">
@@ -549,16 +599,17 @@ export default function GameHub({
             ) : (
               <ul className="space-y-2">
                 {recentAchievements.map((a) => (
-                  <li
-                    key={a.id ?? a.name}
-                    className="rounded-xl bg-slate-50 px-3 py-2"
-                  >
-                    <p className="text-sm font-bold text-navy">{a.name}</p>
-                    {a.description ? (
-                      <p className="text-[11px] text-slate-500 line-clamp-1">
-                        {a.description}
-                      </p>
-                    ) : null}
+                  <li key={a.id ?? a.name}>
+                    <AchievementGlow active intensity="md">
+                      <div className="rounded-xl bg-amber-50/80 px-3 py-2 ring-1 ring-amber-200/60">
+                        <p className="text-sm font-bold text-navy">{a.name}</p>
+                        {a.description ? (
+                          <p className="text-[11px] text-slate-500 line-clamp-1">
+                            {a.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </AchievementGlow>
                   </li>
                 ))}
               </ul>
@@ -595,11 +646,20 @@ export default function GameHub({
   )
 }
 
-function HubSection({ index, eyebrow, title, children, accent = false }) {
+function HubSection({
+  index,
+  eyebrow,
+  title,
+  children,
+  accent = false,
+  delay = 0,
+}) {
   return (
-    <section
+    <SlideUp
+      as="section"
+      delay={delay}
       className={[
-        'rounded-2xl border p-4 shadow-lift backdrop-blur-xl transition-all duration-300 sm:p-6',
+        'rounded-2xl border p-4 shadow-lift backdrop-blur-xl sm:p-6',
         accent
           ? 'border-[color-mix(in_srgb,var(--ds-accent)_28%,transparent)] bg-white/80'
           : 'border-white/50 bg-white/70',
@@ -619,7 +679,7 @@ function HubSection({ index, eyebrow, title, children, accent = false }) {
         </div>
       </header>
       {children}
-    </section>
+    </SlideUp>
   )
 }
 

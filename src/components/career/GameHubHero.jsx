@@ -4,6 +4,7 @@
  */
 
 import { ARCHETYPES } from '../../data/constants/archetypes'
+import { CountUp, FadeIn } from '../motion'
 import { Avatar, Button } from '../ui'
 
 export default function GameHubHero({
@@ -41,8 +42,9 @@ export default function GameHubHero({
   const mark = (team?.short ?? 'FA').slice(0, 3)
 
   return (
-    <section
-      className="relative h-[300px] overflow-hidden rounded-2xl border border-white/10 text-white shadow-hero animate-rise"
+    <FadeIn
+      as="section"
+      className="relative h-[300px] overflow-hidden rounded-2xl border border-white/10 text-white shadow-hero"
       aria-label="Hero da carreira"
     >
       {/* Arena desfocada */}
@@ -141,7 +143,7 @@ export default function GameHubHero({
                 className="mb-0.5 font-display text-3xl font-black tabular-nums leading-none sm:text-4xl"
                 style={{ color: secondary }}
               >
-                {overall}
+                <CountUp value={overall ?? 0} />
               </span>
             </div>
             <p className="mt-1.5 truncate text-sm text-white/75">
@@ -184,8 +186,9 @@ export default function GameHubHero({
             />
             <HeroStat
               label="Energia"
-              value={String(status?.energia ?? 0)}
+              value={status?.energia ?? 0}
               hint={`Mot. ${status?.motivacao ?? 0}`}
+              countUp
             />
           </div>
         </div>
@@ -224,7 +227,7 @@ export default function GameHubHero({
           {ctaLabel}
         </Button>
       </div>
-    </section>
+    </FadeIn>
   )
 }
 
@@ -246,14 +249,14 @@ function HeroBadge({ children, tone = 'ice' }) {
   )
 }
 
-function HeroStat({ label, value, hint }) {
+function HeroStat({ label, value, hint, countUp = false }) {
   return (
     <div className="min-w-[4.75rem] rounded-lg bg-black/35 px-2.5 py-1.5 ring-1 ring-white/10 backdrop-blur-sm sm:min-w-[5.5rem] sm:px-3">
       <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/50">
         {label}
       </p>
       <p className="mt-0.5 font-display text-lg font-extrabold tabular-nums leading-none sm:text-xl">
-        {value}
+        {countUp && typeof value === 'number' ? <CountUp value={value} /> : value}
       </p>
       {hint ? (
         <p className="mt-0.5 truncate text-[10px] text-white/55">{hint}</p>
