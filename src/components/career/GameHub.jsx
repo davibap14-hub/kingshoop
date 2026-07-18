@@ -7,9 +7,10 @@ import { Link } from 'react-router-dom'
 import { getTeamById } from '../../data/teams'
 import { gameService } from '../../services/gameService'
 import { useGameStore } from '../../store/useGameStore'
-import { Badge, Button, Card, PageHero, ProgressBar } from '../ui'
+import { Badge, Button, Card, ProgressBar } from '../ui'
 import ContractOfferPanel from './ContractOfferPanel'
 import EventChoicePanel from './EventChoicePanel'
+import GameHubHero from './GameHubHero'
 
 const NEWS_TONE = {
   positive: 'blue',
@@ -43,6 +44,8 @@ export default function GameHub({
   const weekNews = useGameStore((s) => s.weekNews)
   const newsFeed = useGameStore((s) => s.newsFeed)
   const achievements = useGameStore((s) => s.achievements)
+  const archetypeId = useGameStore((s) => s.archetypeId)
+  const seasonResults = useGameStore((s) => s.season?.results ?? [])
 
   const storyView = gameService.getStoryView({ story, pendingEvent })
   const achView = gameService.getAchievementsView({ achievements })
@@ -94,41 +97,22 @@ export default function GameHub({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
-        eyebrow={`Semana ${currentWeek} · Temporada ${currentSeason}`}
-        title={playerName}
-        description={`${team?.name ?? 'Free Agent'} · OVR ${overall}${player?.posicao ? ` · ${player.posicao}` : ''}${injury ? ` · ${injury.label}` : ''}`}
-        meta={
-          <>
-            <StatusChip label="Energia" value={status?.energia} />
-            <StatusChip label="Motivação" value={status?.motivacao} />
-            <StatusChip label="Fama" value={status?.popularidade} />
-            {seasonView?.teamRecord ? (
-              <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-bold tabular-nums ring-1 ring-white/15">
-                {seasonView.teamRecord.wins}-{seasonView.teamRecord.losses}
-              </span>
-            ) : null}
-          </>
-        }
-        actions={
-          <div className="flex w-full min-w-[14rem] flex-col gap-2 sm:max-w-xs">
-            {!blocked && selected ? (
-              <p className="text-right text-[11px] text-white/70">
-                Atividade:{' '}
-                <span className="font-semibold text-white">{selected.label}</span>
-              </p>
-            ) : null}
-            <Button
-              variant="accent"
-              size="lg"
-              className="w-full"
-              onClick={() => runWeek(selectedActivityId)}
-              disabled={blocked}
-            >
-              {ctaLabel}
-            </Button>
-          </div>
-        }
+      <GameHubHero
+        playerName={playerName}
+        team={team}
+        overall={overall}
+        player={player}
+        status={status}
+        injury={injury}
+        currentWeek={currentWeek}
+        currentSeason={currentSeason}
+        seasonView={seasonView}
+        archetypeId={archetypeId}
+        seasonResults={seasonResults}
+        ctaLabel={ctaLabel}
+        onCta={() => runWeek(selectedActivityId)}
+        ctaDisabled={blocked}
+        selectedActivityLabel={!blocked && selected ? selected.label : null}
       />
 
       {/* 1. História atual */}
@@ -636,15 +620,6 @@ function HubSection({ index, eyebrow, title, children, accent = false }) {
       </header>
       {children}
     </section>
-  )
-}
-
-function StatusChip({ label, value }) {
-  return (
-    <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-semibold ring-1 ring-white/15">
-      {label}{' '}
-      <span className="tabular-nums text-white">{value ?? 0}</span>
-    </span>
   )
 }
 
