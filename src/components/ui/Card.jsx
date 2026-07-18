@@ -1,5 +1,8 @@
+import { motion, useReducedMotion } from 'framer-motion'
+import { hoverLift } from '../motion/variants'
+
 /**
- * Card — compatível com o Design System (Surface sólido).
+ * Card — Surface sólido com Hover Cards (Framer Motion).
  */
 
 export default function Card({
@@ -7,9 +10,10 @@ export default function Card({
   className = '',
   padding = 'md',
   hover = false,
-  as: Tag = 'div',
+  as = 'div',
   ...props
 }) {
+  const reduce = useReducedMotion()
   const paddings = {
     none: '',
     sm: 'p-3 sm:p-4',
@@ -17,22 +21,46 @@ export default function Card({
     lg: 'p-5 sm:p-7',
   }
 
+  const baseClass = [
+    'relative overflow-hidden rounded-2xl border border-[var(--ds-line)] bg-[var(--ds-surface)] shadow-lift',
+    paddings[padding] ?? paddings.md,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  if (!hover || reduce) {
+    const Tag = as
+    return (
+      <Tag
+        className={[
+          baseClass,
+          hover
+            ? 'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift-lg'
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        {...props}
+      >
+        {children}
+      </Tag>
+    )
+  }
+
+  const MotionTag = motion[as] ?? motion.div
+
   return (
-    <Tag
-      className={[
-        'relative overflow-hidden rounded-2xl border border-[var(--ds-line)] bg-[var(--ds-surface)] shadow-lift transition-all duration-300 ease-sport',
-        hover
-          ? 'hover:-translate-y-0.5 hover:shadow-lift-lg hover:border-[color-mix(in_srgb,var(--ds-accent)_30%,var(--ds-line))]'
-          : '',
-        paddings[padding] ?? paddings.md,
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+    <MotionTag
+      className={baseClass}
+      initial="rest"
+      whileHover="hover"
+      whileTap="tap"
+      variants={hoverLift}
       {...props}
     >
       {children}
-    </Tag>
+    </MotionTag>
   )
 }
 

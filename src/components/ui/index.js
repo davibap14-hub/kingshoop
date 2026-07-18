@@ -8,3 +8,16 @@ export { default as SectionHeader } from './SectionHeader'
 export { default as Icon, NAV_ICONS } from './Icon'
 export { default as Surface, SurfaceHeader } from './Surface'
 export { default as PageHero } from './PageHero'
+
+export {
+  FadeIn,
+  SlideUp,
+  SlideUpItem,
+  CountUp,
+  Skeleton,
+  SkeletonBlock,
+  Pulse,
+  AchievementGlow,
+  ConfettiBurst,
+  PageTransition,
+} from '../motion'

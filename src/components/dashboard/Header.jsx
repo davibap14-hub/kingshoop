@@ -1,3 +1,4 @@
+import { CountUp, Pulse } from '../motion'
 import { Avatar, Badge, Button, Icon } from '../ui'
 
 /**
@@ -13,6 +14,7 @@ export default function Header({
   season,
   onMenuClick,
   actions,
+  notify = false,
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-white/40 bg-white/70 shadow-soft backdrop-blur-2xl">
@@ -39,6 +41,11 @@ export default function Header({
                   T{season} · Sem {week}
                 </Badge>
               )}
+              {notify ? (
+                <Pulse active color="#ef4444">
+                  <Badge tone="danger">Ação pendente</Badge>
+                </Pulse>
+              ) : null}
             </div>
             {subtitle && (
               <p className="mt-0.5 truncate text-xs text-[var(--ds-muted)] sm:text-sm">
@@ -55,9 +62,10 @@ export default function Header({
               <p className="text-sm font-semibold text-ink">{playerName}</p>
               <p className="text-[11px] font-medium text-[var(--ds-muted)]">
                 {teamShort} · OVR{' '}
-                <span className="font-display text-sm font-bold text-[var(--ds-accent)]">
-                  {overall}
-                </span>
+                <CountUp
+                  value={overall ?? 0}
+                  className="font-display text-sm font-bold text-[var(--ds-accent)]"
+                />
               </p>
             </div>
             <Avatar name={playerName} size="md" />
