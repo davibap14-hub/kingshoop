@@ -635,6 +635,20 @@ getMatchCenterView(state)
 
 UI: `MatchCenterPanel`. Nenhuma lógica na Interface.
 
+## Live Match Engine
+
+`src/engine/liveMatch/` + `src/data/liveMatch/` — tela de **partida ao vivo**.
+
+Consome apenas o Play-by-Play da Simulation Engine (frames pré-montados). A Interface só avança o índice com animações — **nunca re-simula**.
+
+Mostra: placar · relógio · quarto · sequência · marcador · assistências · faltas · timeouts · momentum · probabilidade · stats ao vivo.
+
+```js
+buildLiveMatchFeed(matchResult)
+getLiveMatchFrame(feed, index)
+// UI: /live-match ← Jogar Partida no Match Center
+```
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

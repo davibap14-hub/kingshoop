@@ -39,6 +39,9 @@ import {
   getAnimationCueAt,
   updatePresentationPrefs,
   getMatchCenterView,
+  buildLiveMatchFeed,
+  getLiveMatchFrame,
+  rescaleLiveFeedSpeed,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -141,6 +144,19 @@ export const gameService = {
   /** Match Center Engine — pré-jogo (somente leitura / agregação) */
   getMatchCenterView(state) {
     return getMatchCenterView(state)
+  },
+
+  /** Live Match Engine — frames a partir do PBP (nunca re-simula) */
+  buildLiveMatchFeed(matchResult, opts) {
+    return buildLiveMatchFeed(matchResult, opts)
+  },
+
+  getLiveMatchFrame(feed, index) {
+    return getLiveMatchFrame(feed, index)
+  },
+
+  rescaleLiveFeedSpeed(feed, speedId) {
+    return rescaleLiveFeedSpeed(feed, speedId)
   },
 
   /**

@@ -12,6 +12,10 @@ const PAGE_META = {
     title: 'Match Center',
     subtitle: 'Pré-jogo · dados das Engines',
   },
+  '/live-match': {
+    title: 'Ao vivo',
+    subtitle: 'Replay do Play-by-Play · sem re-simular',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',

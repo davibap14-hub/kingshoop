@@ -45,6 +45,7 @@ export * from './legacy'
 export * from './records'
 export * from './presentation'
 export * from './matchCenter'
+export * from './liveMatch'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

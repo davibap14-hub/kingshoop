@@ -59,7 +59,7 @@ export default function MatchCenterPanel() {
 
   const playMatch = () => {
     playFromMatchCenter(home.team.id, away.team.id, gm)
-    navigate('/match')
+    navigate('/live-match')
   }
 
   return (
