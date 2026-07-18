@@ -4,6 +4,7 @@ const NAV = [
   { to: '/', label: 'Jogo', end: true },
   { to: '/match-center', label: 'Match Center', end: false },
   { to: '/live-match', label: 'Ao vivo', end: false },
+  { to: '/draft-night', label: 'Draft Night', end: false },
   { to: '/match', label: 'Partida', end: false },
   { to: '/#temporada', label: 'Temporada', end: false, hash: true },
   { to: '/#gm', label: 'GM', end: false, hash: true },

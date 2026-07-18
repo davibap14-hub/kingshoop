@@ -16,6 +16,10 @@ const PAGE_META = {
     title: 'Ao vivo',
     subtitle: 'Replay do Play-by-Play · sem re-simular',
   },
+  '/draft-night': {
+    title: 'Draft Night',
+    subtitle: 'Transmissão ESPN · painel ao vivo por pick',
+  },
   '/match': {
     title: 'Partida',
     subtitle: 'Simulation Engine · Play-by-Play',

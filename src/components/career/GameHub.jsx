@@ -266,6 +266,44 @@ export default function GameHub({
         </div>
       </HubSection>
 
+      {/* Draft Night — quando a classe está na mesa ou há replay */}
+      {(gm?.draftClass?.length > 0 && !gm?.draftComplete) ||
+      gm?.lastDraft?.picks?.length > 0 ? (
+        <HubSection
+          index="02b"
+          eyebrow="Draft Night"
+          title={
+            gm?.draftClass?.length > 0 && !gm?.draftComplete
+              ? 'A noite do Draft está no ar'
+              : 'Replay do último Draft'
+          }
+        >
+          <Card
+            padding="lg"
+            className="border-red-500/20 bg-gradient-to-br from-[#0b1524] via-[#152f4d] to-[#1a3a5c] text-white"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em]">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                  Ao vivo
+                </span>
+                <p className="mt-2 text-sm text-blue-100/85">
+                  Relógio · Mock Draft · board · necessidades · análise · torcida ·
+                  ticker — atualiza a cada escolha.
+                </p>
+              </div>
+              <Link
+                to="/draft-night"
+                className="inline-flex items-center justify-center rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-navy no-underline transition hover:bg-amber-300"
+              >
+                Abrir Draft Night
+              </Link>
+            </div>
+          </Card>
+        </HubSection>
+      ) : null}
+
       {/* 3. Próxima partida */}
       <HubSection
         index="03"
@@ -576,6 +614,16 @@ function buildWeeklyObjectives({
   seasonView,
 }) {
   const list = []
+  if (gm?.draftClass?.length > 0 && !gm?.draftComplete) {
+    list.push({
+      id: 'draft-night',
+      tag: 'Draft',
+      tone: 'warning',
+      title: 'Assistir à Draft Night',
+      detail: `${gm.draftClass.length} prospects na mesa — transmissão ao vivo.`,
+    })
+  }
+
   const obj = gm?.objectives?.[currentTeamId]
   if (obj) {
     list.push({

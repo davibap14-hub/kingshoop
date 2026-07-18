@@ -427,6 +427,47 @@ export const useGameStore = create((set, get) => {
 
     advanceWeek: () => get().runWeek(get().selectedActivityId),
 
+    /**
+     * Aplica GM resultante da Draft Night ao vivo + auto-save.
+     * A Interface não escolhe prospects — só confirma o pacote da Engine.
+     */
+    applyDraftNightResult: (payload) => {
+      if (!payload?.gm) {
+        return { ok: false, error: 'Draft Night sem GM para aplicar.' }
+      }
+      const messages = [
+        payload.summary ?? 'Draft Night concluído na Engine.',
+        ...(payload.picks ?? [])
+          .slice(0, 6)
+          .map(
+            (p) =>
+              `#${p.pickNumber} ${String(p.teamId).toUpperCase()}: ${p.prospectName}`,
+          ),
+      ]
+      set({
+        gm: payload.gm,
+        lastEvent: messages[messages.length - 1] ?? 'Draft Night',
+        weekNews: [
+          ...(get().weekNews ?? []),
+          ...messages.map((text) => ({
+            category: 'draft',
+            title: text,
+            summary: 'Draft Night · transmissão',
+          })),
+        ].slice(-24),
+      })
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: `Auto-save · Draft Night T${get().currentSeason}`,
+          saveList: gameService.listSaves(),
+        })
+      }
+      return { ok: true, messages }
+    },
+
     resetCareer: (archetypeId = DEFAULT_ARCHETYPE_ID) => {
       const bootNext = gameService.startCareer({
         archetypeId,

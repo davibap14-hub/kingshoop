@@ -42,6 +42,11 @@ import {
   buildLiveMatchFeed,
   getLiveMatchFrame,
   rescaleLiveFeedSpeed,
+  getDraftNightStatus,
+  buildDraftNightLive,
+  buildDraftNightReplay,
+  getDraftNightFrame,
+  rescaleDraftNightSpeed,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -157,6 +162,41 @@ export const gameService = {
 
   rescaleLiveFeedSpeed(feed, speedId) {
     return rescaleLiveFeedSpeed(feed, speedId)
+  },
+
+  /** Draft Night Engine — transmissão ESPN (frames; live aplica GM via store) */
+  getDraftNightStatus(state) {
+    return getDraftNightStatus({
+      gm: state.gm,
+      season: state.season,
+      currentSeason: state.currentSeason,
+      currentWeek: state.currentWeek,
+      currentTeamId: state.currentTeamId,
+    })
+  },
+
+  buildDraftNightLive(state, opts = {}) {
+    return buildDraftNightLive(state.gm, state.season ?? {}, {
+      playerTeamId: state.currentTeamId,
+      seasonNumber: state.currentSeason,
+      ...opts,
+    })
+  },
+
+  buildDraftNightReplay(state, opts = {}) {
+    return buildDraftNightReplay(state.gm, {
+      playerTeamId: state.currentTeamId,
+      seasonNumber: state.currentSeason,
+      ...opts,
+    })
+  },
+
+  getDraftNightFrame(broadcast, index) {
+    return getDraftNightFrame(broadcast, index)
+  },
+
+  rescaleDraftNightSpeed(broadcast, speedId) {
+    return rescaleDraftNightSpeed(broadcast, speedId)
   },
 
   /**

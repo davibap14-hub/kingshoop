@@ -333,6 +333,22 @@ const result = processDraft(gm, seasonState, rng)
 
 Fluxo na offseason: semana 44 revela a classe + Mock Draft; semanas 45–46 executam o draft. Após o draft, **todos** entram na liga (elenco ou free agency).
 
+## Draft Night Engine
+
+`src/engine/draftNight/` + `src/data/draftNight/` — tela exclusiva de **transmissão** do Draft (estilo ESPN).
+
+Agrega Draft · Scouting · Franchise · News. Monta frames pick a pick; a Interface só avança o índice e atualiza o painel.
+
+Mostra: relógio da escolha · Mock Draft · prospects disponíveis · necessidades da franquia · análise · comparação · reação da torcida · notícias em tempo real.
+
+```js
+getDraftNightStatus(state)
+buildDraftNightLive(gm, seasonState)   // executa draft + frames; aplica GM na store
+buildDraftNightReplay(gm)              // replay de lastDraft
+getDraftNightFrame(broadcast, index)
+// UI: /draft-night
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:
@@ -648,6 +664,8 @@ buildLiveMatchFeed(matchResult)
 getLiveMatchFrame(feed, index)
 // UI: /live-match ← Jogar Partida no Match Center
 ```
+
+Ver também **Draft Night Engine** (`/draft-night`) para a transmissão do Draft.
 
 ## Defensive Engine
 
