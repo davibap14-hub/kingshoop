@@ -44,6 +44,7 @@ export * from './dynasty'
 export * from './legacy'
 export * from './records'
 export * from './presentation'
+export * from './matchCenter'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

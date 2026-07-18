@@ -622,6 +622,19 @@ getPresentationView(state)
 
 On-demand (sandbox `/match`); prefs em `state.presentation` (**Save v25**). UI: `MatchPanel` / `MatchResult`.
 
+## Match Center Engine
+
+`src/engine/matchCenter/` + `src/data/matchCenter/` — página exclusiva de **pré-jogo**.
+
+Agrega (sem simular): logos/identidade · titulares · últimos resultados · recordes · destaque · rivalidades · probabilidade · objetivos · condição física · lesões · árbitros.
+
+```js
+getMatchCenterView(state)
+// Interface: /match-center → botão "Jogar Partida" → Simulation Engine
+```
+
+UI: `MatchCenterPanel`. Nenhuma lógica na Interface.
+
 ## Defensive Engine
 
 `src/engine/defense/` + `src/data/defense/` — defesa coletiva em toda posse.

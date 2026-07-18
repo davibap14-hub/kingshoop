@@ -38,6 +38,7 @@ import {
   getPresentationStep,
   getAnimationCueAt,
   updatePresentationPrefs,
+  getMatchCenterView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -132,9 +133,14 @@ export const gameService = {
     return buildDefaultMatchup(homeTeamId, awayTeamId)
   },
 
-  runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
-    const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
+  runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos', gm = null) {
+    const matchup = buildDefaultMatchup(homeTeamId, awayTeamId, gm)
     return simulateGame(matchup)
+  },
+
+  /** Match Center Engine — pré-jogo (somente leitura / agregação) */
+  getMatchCenterView(state) {
+    return getMatchCenterView(state)
   },
 
   /**

@@ -5,8 +5,12 @@ import { useCareerSnapshot } from '../hooks/useCareer'
 
 const PAGE_META = {
   '/': {
-    title: 'Dashboard',
-    subtitle: 'Visão geral da carreira · estilo NBA',
+    title: 'Jogo',
+    subtitle: 'Hub da carreira · o que fazer agora',
+  },
+  '/match-center': {
+    title: 'Match Center',
+    subtitle: 'Pré-jogo · dados das Engines',
   },
   '/match': {
     title: 'Partida',
