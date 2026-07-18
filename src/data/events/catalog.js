@@ -1,8 +1,10 @@
 /**
+ * @deprecated Catálogo fixo legado — o fluxo semanal usa a Story Engine
+ * procedural (`data/story` + `engine/story`). Mantido só para referência.
+ *
  * Catálogo de 80 eventos de carreira — dados puros.
  * Categorias: Treino, Família, Dinheiro, Mídia, Companheiros,
  * Lesões, Treinador, Patrocínio, NBA, Torcedores.
- * Gerado para testes; cada evento tem 2–4 escolhas.
  */
 
 export const CAREER_EVENTS = [
