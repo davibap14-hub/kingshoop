@@ -64,8 +64,8 @@ export default function WeekControls() {
             {pendingContractOffer
               ? 'Resolva o contrato'
               : pendingEvent
-                ? 'Resolva o evento'
-                : 'Confirmar Semana'}
+                ? 'Resolva a história'
+                : 'Avançar Semana'}
           </Button>
         </div>
       </div>

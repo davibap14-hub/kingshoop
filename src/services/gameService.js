@@ -38,6 +38,23 @@ import {
   getPresentationStep,
   getAnimationCueAt,
   updatePresentationPrefs,
+  getMatchCenterView,
+  buildLiveMatchFeed,
+  getLiveMatchFrame,
+  rescaleLiveFeedSpeed,
+  getDraftNightStatus,
+  buildDraftNightLive,
+  buildDraftNightReplay,
+  getDraftNightFrame,
+  rescaleDraftNightSpeed,
+  getFreeAgencyView,
+  createFaOffer,
+  negotiateFaOffer,
+  acceptFaOffer,
+  withdrawFaOffer,
+  getNbaTvView,
+  getFranchiseHubView,
+  getPlayerProfileView,
   getRelationshipView,
   getChemistryView,
   getInjuryView,
@@ -132,9 +149,98 @@ export const gameService = {
     return buildDefaultMatchup(homeTeamId, awayTeamId)
   },
 
-  runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos') {
-    const matchup = buildDefaultMatchup(homeTeamId, awayTeamId)
+  runDefaultMatch(homeTeamId = 'gsw', awayTeamId = 'bos', gm = null) {
+    const matchup = buildDefaultMatchup(homeTeamId, awayTeamId, gm)
     return simulateGame(matchup)
+  },
+
+  /** Match Center Engine — pré-jogo (somente leitura / agregação) */
+  getMatchCenterView(state) {
+    return getMatchCenterView(state)
+  },
+
+  /** Live Match Engine — frames a partir do PBP (nunca re-simula) */
+  buildLiveMatchFeed(matchResult, opts) {
+    return buildLiveMatchFeed(matchResult, opts)
+  },
+
+  getLiveMatchFrame(feed, index) {
+    return getLiveMatchFrame(feed, index)
+  },
+
+  rescaleLiveFeedSpeed(feed, speedId) {
+    return rescaleLiveFeedSpeed(feed, speedId)
+  },
+
+  /** Draft Night Engine — transmissão ESPN (frames; live aplica GM via store) */
+  getDraftNightStatus(state) {
+    return getDraftNightStatus({
+      gm: state.gm,
+      season: state.season,
+      currentSeason: state.currentSeason,
+      currentWeek: state.currentWeek,
+      currentTeamId: state.currentTeamId,
+    })
+  },
+
+  buildDraftNightLive(state, opts = {}) {
+    return buildDraftNightLive(state.gm, state.season ?? {}, {
+      playerTeamId: state.currentTeamId,
+      seasonNumber: state.currentSeason,
+      ...opts,
+    })
+  },
+
+  buildDraftNightReplay(state, opts = {}) {
+    return buildDraftNightReplay(state.gm, {
+      playerTeamId: state.currentTeamId,
+      seasonNumber: state.currentSeason,
+      ...opts,
+    })
+  },
+
+  getDraftNightFrame(broadcast, index) {
+    return getDraftNightFrame(broadcast, index)
+  },
+
+  rescaleDraftNightSpeed(broadcast, speedId) {
+    return rescaleDraftNightSpeed(broadcast, speedId)
+  },
+
+  /** Free Agency Engine — board + negociação via Contract Engine */
+  getFreeAgencyView(state, filters) {
+    return getFreeAgencyView(state, filters)
+  },
+
+  createFaOffer(state, playerId, opts) {
+    return createFaOffer(state, playerId, opts)
+  },
+
+  negotiateFaOffer(state, terms) {
+    return negotiateFaOffer(state, terms)
+  },
+
+  acceptFaOffer(state) {
+    return acceptFaOffer(state)
+  },
+
+  withdrawFaOffer(state) {
+    return withdrawFaOffer(state)
+  },
+
+  /** NBA TV Engine — portal (só agrega News · History · Analytics) */
+  getNbaTvView(state, filters) {
+    return getNbaTvView(state, filters)
+  },
+
+  /** Franchise Hub — tela completa da franquia (engines existentes) */
+  getFranchiseHubView(state) {
+    return getFranchiseHubView(state)
+  },
+
+  /** Player Profile — perfil estilo NBA 2K (engines existentes) */
+  getPlayerProfileView(state) {
+    return getPlayerProfileView(state)
   },
 
   /**

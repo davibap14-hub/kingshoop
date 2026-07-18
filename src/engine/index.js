@@ -44,6 +44,13 @@ export * from './dynasty'
 export * from './legacy'
 export * from './records'
 export * from './presentation'
+export * from './matchCenter'
+export * from './liveMatch'
+export * from './draftNight'
+export * from './freeAgency'
+export * from './nbaTv'
+export * from './franchiseHub'
+export * from './playerProfile'
 export {
   buildLineupFromDb,
   buildDefaultMatchup,

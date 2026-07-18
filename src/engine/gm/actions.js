@@ -19,6 +19,7 @@ function cloneGm(gm) {
     playerOverrides: { ...(gm.playerOverrides ?? {}) },
     lastTrades: [...(gm.lastTrades ?? [])],
     log: [...(gm.log ?? [])],
+    pendingFaOffer: gm.pendingFaOffer ?? null,
   }
 }
 

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { TEAMS } from '../../data/teams'
 import { useMatchStore } from '../../store/useMatchStore'
 import { Button, Card, SectionHeader } from '../ui'
@@ -11,6 +12,7 @@ export default function MatchPanel() {
   const awayTeamId = useMatchStore((s) => s.awayTeamId)
   const lastMatch = useMatchStore((s) => s.lastMatch)
   const lastPresentation = useMatchStore((s) => s.lastPresentation)
+  const lastLiveFeed = useMatchStore((s) => s.lastLiveFeed)
   const isSimulating = useMatchStore((s) => s.isSimulating)
   const setHomeTeam = useMatchStore((s) => s.setHomeTeam)
   const setAwayTeam = useMatchStore((s) => s.setAwayTeam)
@@ -23,13 +25,23 @@ export default function MatchPanel() {
         title="Posse a posse"
         description="A Simulation Engine gera o resultado; a Presentation Engine só interpreta — sequência, destaques, narração e cues de animação."
         action={
-          <Button
-            variant="accent"
-            onClick={simulate}
-            disabled={isSimulating || homeTeamId === awayTeamId}
-          >
-            {isSimulating ? 'Simulando…' : 'Simular Partida'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {lastLiveFeed || lastMatch ? (
+              <Link
+                to="/live-match"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-navy no-underline"
+              >
+                Ao vivo
+              </Link>
+            ) : null}
+            <Button
+              variant="accent"
+              onClick={simulate}
+              disabled={isSimulating || homeTeamId === awayTeamId}
+            >
+              {isSimulating ? 'Simulando…' : 'Simular Partida'}
+            </Button>
+          </div>
         }
       />
 

@@ -2,6 +2,18 @@
 
 Jogo de carreira estilo *The Fenômeno* ambientado na NBA.
 
+## Design System (Interface)
+
+`src/design-system/` + primitives em `src/components/ui/` — visual AAA (2K · EA FC · FM · Apple Sports · The Fenômeno).
+
+- Tokens e temas por tela (`SCREEN_THEMES`) — ambient, accent, hero
+- Tipografia: **Barlow Condensed** (display) + **Plus Jakarta Sans** (body)
+- Surfaces glass/sólidas, `PageHero`, ícones SVG consistentes
+- Microanimações (`rise`, `fade-up`, hover lift) + `prefers-reduced-motion`
+- Tailwind CSS — **nunca altera Engines**
+
+Temas de rota aplicados no `AppLayout` via CSS variables (`--ds-accent`, `--ds-hero-*`, `--ds-ambient`).
+
 ## Arquitetura
 
 Separação rígida em três camadas:
@@ -333,6 +345,79 @@ const result = processDraft(gm, seasonState, rng)
 
 Fluxo na offseason: semana 44 revela a classe + Mock Draft; semanas 45–46 executam o draft. Após o draft, **todos** entram na liga (elenco ou free agency).
 
+## Draft Night Engine
+
+`src/engine/draftNight/` + `src/data/draftNight/` — tela exclusiva de **transmissão** do Draft (estilo ESPN).
+
+Agrega Draft · Scouting · Franchise · News. Monta frames pick a pick; a Interface só avança o índice e atualiza o painel.
+
+Mostra: relógio da escolha · Mock Draft · prospects disponíveis · necessidades da franquia · análise · comparação · reação da torcida · notícias em tempo real.
+
+```js
+getDraftNightStatus(state)
+buildDraftNightLive(gm, seasonState)   // executa draft + frames; aplica GM na store
+buildDraftNightReplay(gm)              // replay de lastDraft
+getDraftNightFrame(broadcast, index)
+// UI: /draft-night
+```
+
+## Free Agency Engine
+
+`src/engine/freeAgency/` + `src/data/freeAgency/` — tela de **mercado de agentes livres**.
+
+Agrega GM · Franchise AI · Scouting · News · History. **Toda negociação usa a Contract Engine** (`generateFranchiseOffer`, `negotiateOffer`, `contractFromOffer`).
+
+Mostra: jogadores livres · interesse por franquia · salário pedido · popularidade · idade · potencial · comparação · histórico · rumores.
+
+Filtros: posição · idade · overall · salário.
+
+```js
+getFreeAgencyView(state, filters)
+createFaOffer(state, playerId)
+negotiateFaOffer(state, terms)
+acceptFaOffer(state)
+// UI: /free-agency · Save v26 (gm.pendingFaOffer)
+```
+
+## NBA TV Engine
+
+`src/engine/nbaTv/` + `src/data/nbaTv/` — portal de **notícias da liga**.
+
+Consome apenas **News Engine**, **History Engine** e **Analytics Engine** (plus Records/Season para seções). **Nunca gera notícias na Interface.**
+
+Seções: últimas notícias · rumores · top performances · recordes quebrados · Power Ranking · Jogador da Semana · Jogador do Mês · rookies · estatísticas.
+
+```js
+getNbaTvView(state, { category })
+// UI: /nba-tv
+```
+
+## Franchise Hub Engine
+
+`src/engine/franchiseHub/` + `src/data/franchiseHub/` — tela completa da **franquia**.
+
+Agrega Engines existentes (sem lógica nova de jogo): GM · Franchise AI · Cap · Chemistry · Coach · Playbook · Trade · Finance · History · Dynasty · Season · Lineups.
+
+Seções: elenco · contratos · salary cap · química · rotação · coach · GM · objetivos · escolhas de draft · patrimônio · histórico.
+
+```js
+getFranchiseHubView(state)
+// UI: /franchise
+```
+
+## Player Profile Engine
+
+`src/engine/playerProfile/` + `src/data/playerProfile/` — perfil estilo **NBA 2K / MyPLAYER**.
+
+Agrega Career · Personality · DNA · Achievements · Contract · Injury · History · Analytics · Progression · Legacy · Story.
+
+Seções: foto (placeholder) · nome · posição · overall · arquétipo · badges · personalidade · DNA · tendências · conquistas · histórico · contratos · lesões · prêmios · stats · gráficos · timeline.
+
+```js
+getPlayerProfileView(state)
+// UI: /player-profile
+```
+
 ## Personality Engine
 
 `src/engine/personality/` + `src/data/personality/` — traços 0–100 em cada jogador:
@@ -621,6 +706,35 @@ getPresentationView(state)
 ```
 
 On-demand (sandbox `/match`); prefs em `state.presentation` (**Save v25**). UI: `MatchPanel` / `MatchResult`.
+
+## Match Center Engine
+
+`src/engine/matchCenter/` + `src/data/matchCenter/` — página exclusiva de **pré-jogo**.
+
+Agrega (sem simular): logos/identidade · titulares · últimos resultados · recordes · destaque · rivalidades · probabilidade · objetivos · condição física · lesões · árbitros.
+
+```js
+getMatchCenterView(state)
+// Interface: /match-center → botão "Jogar Partida" → Simulation Engine
+```
+
+UI: `MatchCenterPanel`. Nenhuma lógica na Interface.
+
+## Live Match Engine
+
+`src/engine/liveMatch/` + `src/data/liveMatch/` — tela de **partida ao vivo**.
+
+Consome apenas o Play-by-Play da Simulation Engine (frames pré-montados). A Interface só avança o índice com animações — **nunca re-simula**.
+
+Mostra: placar · relógio · quarto · sequência · marcador · assistências · faltas · timeouts · momentum · probabilidade · stats ao vivo.
+
+```js
+buildLiveMatchFeed(matchResult)
+getLiveMatchFrame(feed, index)
+// UI: /live-match ← Jogar Partida no Match Center
+```
+
+Ver também **Draft Night Engine** (`/draft-night`) para a transmissão do Draft.
 
 ## Defensive Engine
 

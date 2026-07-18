@@ -36,10 +36,10 @@ export default function NextMatch({
           Tip-off · <span className="font-semibold text-navy">{tipOff}</span>
         </p>
         <Link
-          to="/match"
+          to="/match-center"
           className="inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-blue-700 no-underline"
         >
-          Simular
+          Match Center
         </Link>
       </div>
     </Card>

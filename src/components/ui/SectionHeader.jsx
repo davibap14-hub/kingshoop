@@ -14,15 +14,17 @@ export default function SectionHeader({
     >
       <div>
         {eyebrow && (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ds-muted)]">
             {eyebrow}
           </p>
         )}
-        <h2 className="font-display text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
+        <h2 className="font-display text-2xl font-extrabold uppercase tracking-tight text-navy sm:text-3xl">
           {title}
         </h2>
         {description && (
-          <p className="mt-1 max-w-xl text-sm text-slate-500">{description}</p>
+          <p className="mt-1 max-w-xl text-sm text-slate-500 text-balance">
+            {description}
+          </p>
         )}
       </div>
       {action}

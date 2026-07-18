@@ -427,6 +427,141 @@ export const useGameStore = create((set, get) => {
 
     advanceWeek: () => get().runWeek(get().selectedActivityId),
 
+    /**
+     * Free Agency — cria / negoceia / aceita / retira oferta (Contract Engine).
+     */
+    createFaOffer: (playerId) => {
+      const result = gameService.createFaOffer(get(), playerId)
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+      set({
+        gm: result.gm,
+        lastEvent: result.message,
+      })
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          saveList: gameService.listSaves(),
+        })
+      }
+      return result
+    },
+
+    negotiateFaOffer: (terms) => {
+      const result = gameService.negotiateFaOffer(get(), terms)
+      if (!result.ok) {
+        set({
+          lastEvent: result.error,
+          ...(result.gm ? { gm: result.gm } : {}),
+        })
+        return result
+      }
+      set({
+        gm: result.gm,
+        lastEvent: result.message,
+      })
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          saveList: gameService.listSaves(),
+        })
+      }
+      return result
+    },
+
+    acceptFaOffer: () => {
+      const result = gameService.acceptFaOffer(get())
+      if (!result.ok) {
+        set({
+          lastEvent: result.error,
+          ...(result.gm ? { gm: result.gm } : {}),
+        })
+        return result
+      }
+      set({
+        gm: result.gm,
+        ...(result.contractEngine
+          ? { contractEngine: result.contractEngine }
+          : {}),
+        lastEvent: result.message,
+        weekNews: [
+          ...(get().weekNews ?? []),
+          {
+            category: 'signing',
+            title: result.message,
+            summary: 'Free Agency · Contract Engine',
+          },
+        ].slice(-24),
+      })
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: `Auto-save · FA ${get().currentSeason}`,
+          saveList: gameService.listSaves(),
+        })
+      }
+      return result
+    },
+
+    withdrawFaOffer: () => {
+      const result = gameService.withdrawFaOffer(get())
+      if (!result.ok) {
+        set({ lastEvent: result.error })
+        return result
+      }
+      set({ gm: result.gm, lastEvent: result.message })
+      return result
+    },
+
+    /**
+     * Aplica GM resultante da Draft Night ao vivo + auto-save.
+     * A Interface não escolhe prospects — só confirma o pacote da Engine.
+     */
+    applyDraftNightResult: (payload) => {
+      if (!payload?.gm) {
+        return { ok: false, error: 'Draft Night sem GM para aplicar.' }
+      }
+      const messages = [
+        payload.summary ?? 'Draft Night concluído na Engine.',
+        ...(payload.picks ?? [])
+          .slice(0, 6)
+          .map(
+            (p) =>
+              `#${p.pickNumber} ${String(p.teamId).toUpperCase()}: ${p.prospectName}`,
+          ),
+      ]
+      set({
+        gm: payload.gm,
+        lastEvent: messages[messages.length - 1] ?? 'Draft Night',
+        weekNews: [
+          ...(get().weekNews ?? []),
+          ...messages.map((text) => ({
+            category: 'draft',
+            title: text,
+            summary: 'Draft Night · transmissão',
+          })),
+        ].slice(-24),
+      })
+      const saved = gameService.autoSave(pickCareerFields(get()))
+      if (saved.ok) {
+        set({
+          activeSaveId: saved.payload.id,
+          lastSaveAt: saved.payload.updatedAt,
+          lastSaveMessage: `Auto-save · Draft Night T${get().currentSeason}`,
+          saveList: gameService.listSaves(),
+        })
+      }
+      return { ok: true, messages }
+    },
+
     resetCareer: (archetypeId = DEFAULT_ARCHETYPE_ID) => {
       const bootNext = gameService.startCareer({
         archetypeId,
