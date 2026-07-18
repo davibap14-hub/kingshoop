@@ -5,6 +5,7 @@ import {
   matchesPersonalityConditions,
   sortChoicesByPersonality,
 } from '../personality/events'
+import { calculateRelationshipEffects } from '../relationships'
 import { pickWeighted } from '../utils/math'
 
 /**
@@ -33,6 +34,16 @@ export function matchesConditions(event, state, context = {}) {
   ) {
     return false
   }
+
+  // Relationship Engine — condições opcionais por chave
+  const rel = state.relationships ?? {}
+  if (c.minCoach != null && (rel.coach ?? 0) < c.minCoach) return false
+  if (c.minGm != null && (rel.gm ?? 0) < c.minGm) return false
+  if (c.minTeammates != null && (rel.teammates ?? 0) < c.minTeammates) return false
+  if (c.minFans != null && (rel.fans ?? 0) < c.minFans) return false
+  if (c.minPress != null && (rel.press ?? 0) < c.minPress) return false
+  if (c.minSponsors != null && (rel.sponsors ?? 0) < c.minSponsors) return false
+  if (c.minAgent != null && (rel.agent ?? 0) < c.minAgent) return false
 
   if (c.minWeek != null && week < c.minWeek) return false
   if (c.maxWeek != null && week > c.maxWeek) return false
@@ -73,12 +84,18 @@ export function rollEvent(state, context = {}, rng = Math.random) {
   const eligible = listEligibleEvents(state, context)
   if (!eligible.length) return null
 
-  // Personality Engine — repondera eventos pelo perfil do jogador
+  // Relationship Engine — peso por categoria (tensão / alianças)
+  const relMods =
+    calculateRelationshipEffects(state.relationships).eventWeightMods ?? {}
+
+  // Personality + Relationship — repondera eventos
   const weighted = eligible.map((e) => ({
     ...e,
     peso: Math.max(
       0.1,
-      (e.peso ?? 1) * calcEventWeightMultiplier(e, state.player),
+      (e.peso ?? 1) *
+        calcEventWeightMultiplier(e, state.player) *
+        (relMods[e.categoria] ?? 1),
     ),
   }))
 

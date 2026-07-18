@@ -17,6 +17,7 @@ import BalancePanel from './BalancePanel'
 import HistoryPanel from './HistoryPanel'
 import NewsPanel from './NewsPanel'
 import ProgressionPanel from './ProgressionPanel'
+import RelationshipPanel from './RelationshipPanel'
 import SavePanel from './SavePanel'
 import SeasonPanel from './SeasonPanel'
 import WeekControls from './WeekControls'
@@ -125,6 +126,7 @@ export default function CareerDashboard() {
           <EventChoicePanel />
           <WeekControls />
           <NewsPanel />
+          <RelationshipPanel />
           <HistoryPanel />
           <SeasonPanel />
           <GmPanel />

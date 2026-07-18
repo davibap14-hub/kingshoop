@@ -5,7 +5,7 @@ import { trait } from './traits'
  * Química de elenco influenciada por personalidade.
  * Liderança e lealdade elevam; ego e temperamento altos tensionam o vestiário.
  */
-export function calcRosterChemistry(players = []) {
+export function calcRosterChemistry(players = [], relationshipBonus = 0) {
   if (!players.length) return 55
 
   const n = players.length
@@ -42,7 +42,8 @@ export function calcRosterChemistry(players = []) {
     (avgLoyal - 50) * 0.18 -
     (avgEgo - 55) * 0.16 -
     (avgTemper - 50) * 0.14 -
-    Math.sqrt(egoVar) * 0.12
+    Math.sqrt(egoVar) * 0.12 +
+    (Number(relationshipBonus) || 0)
 
   return clamp(Math.round(chem), 30, 95)
 }

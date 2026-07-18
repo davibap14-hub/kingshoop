@@ -1,5 +1,10 @@
 import { SAVE_VERSION } from '../../data/save/constants'
 import { createLeagueHistory } from '../history/state'
+import {
+  calculateRelationshipEffects,
+  createRelationshipsState,
+  hydrateRelationshipsFromStatus,
+} from '../relationships'
 import { createEmptyCareerStats, createEmptyHistory } from './history'
 
 /**
@@ -34,6 +39,11 @@ export function buildSaveSnapshot(state) {
     leagueHistory: structuredCloneSafe(
       state.leagueHistory ?? createLeagueHistory(),
     ),
+    relationships: structuredCloneSafe(
+      state.relationships ?? createRelationshipsState(),
+    ),
+    relationshipEffects: structuredCloneSafe(state.relationshipEffects),
+    playingTimeShare: state.playingTimeShare ?? null,
     season: structuredCloneSafe(state.season),
     gm: structuredCloneSafe(state.gm),
     weekNews: structuredCloneSafe(state.weekNews ?? []),
@@ -107,6 +117,15 @@ export function hydrateSaveToOverrides(payload) {
     history: snap.history ?? createEmptyHistory(),
     careerStats: snap.careerStats ?? createEmptyCareerStats(),
     leagueHistory: createLeagueHistory(snap.leagueHistory),
+    relationships: snap.relationships
+      ? createRelationshipsState(snap.relationships)
+      : hydrateRelationshipsFromStatus(snap.status ?? {}),
+    relationshipEffects:
+      snap.relationshipEffects ??
+      calculateRelationshipEffects(
+        snap.relationships ?? hydrateRelationshipsFromStatus(snap.status ?? {}),
+      ),
+    playingTimeShare: snap.playingTimeShare ?? null,
     season: snap.season,
     gm: snap.gm,
     weekNews: snap.weekNews ?? [],

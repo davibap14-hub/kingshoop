@@ -50,6 +50,12 @@ export function calcWeeklyXp(state, activity, rng = Math.random) {
   }
 
   xp = applyPersonalityToXp(xp, state.player)
+
+  // Relationship Engine — coach / companheiros influenciam XP
+  if (state.relationshipEffects?.xpMultiplier) {
+    xp = Math.round(xp * state.relationshipEffects.xpMultiplier)
+  }
+
   return balanceXpGain(xp, {
     player: state.player,
     progression: state.progression,

@@ -17,8 +17,10 @@ import {
   capPressure,
   getConferenceTables,
   getGmView,
+  calculateRelationshipEffects,
   getBalanceView,
   getHistoryView,
+  getRelationshipView,
   getSeasonView,
   GM_PERSONALITIES,
   investCash,
@@ -166,6 +168,15 @@ export const gameService = {
   /** Balance Engine — Interface só lê */
   getBalanceView(state) {
     return getBalanceView(state)
+  },
+
+  /** Relationship Engine — Interface só lê */
+  getRelationshipView(state) {
+    return getRelationshipView(state)
+  },
+
+  getRelationshipEffects(relationships) {
+    return calculateRelationshipEffects(relationships)
   },
 
   analyzeFranchise(state, teamId) {

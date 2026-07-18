@@ -33,6 +33,7 @@ src/
  │    ├── news/
  │    ├── history/
  │    ├── balance/
+ │    ├── relationships/
  │    ├── personality/
  │    ├── career/
  │    ├── match/
@@ -46,6 +47,7 @@ src/
  │    ├── news/
  │    ├── history/
  │    ├── balance/
+ │    ├── relationships/
  │    ├── personality/
  │    ├── teams/
  │    ├── events/
@@ -56,6 +58,22 @@ src/
  ├── services/       # Fachada Interface → Engine
  └── assets/
 ```
+
+## Relationship Engine
+
+`src/engine/relationships/` + `src/data/relationships/` — todos os vínculos do jogador (0–100):
+
+**Treinador · GM · Companheiros · Torcida · Imprensa · Patrocinadores · Agente**
+
+```js
+increaseRelationship(rels, 'coach', 3)
+decreaseRelationship(rels, 'press', 2)
+calculateRelationshipEffects(rels) // minutos, química, XP, contratos, patrocínios…
+getRelationshipStatus(rels)        // tiers / média
+processWeeklyRelationships({ relationships, activity, chemDelta, … })
+```
+
+Cada atividade/evento/notícia altera um ou mais relacionamentos. Os efeitos influenciam eventos, contratos, tempo de quadra, química, patrocínios e evolução. Persistido no Save (`SAVE_VERSION` 5). UI: `RelationshipPanel`.
 
 ## Balance Engine
 

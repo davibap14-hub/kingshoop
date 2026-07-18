@@ -25,7 +25,7 @@ function resolveRosterPlayers(rosterIds = [], gm = null) {
  */
 export function buildLineupFromDb(
   teamId,
-  { excludeIds = [], styleId, gm = null } = {},
+  { excludeIds = [], styleId, gm = null, chemistryBonus = 0 } = {},
 ) {
   const excluded = new Set(excludeIds)
   const lineup = []
@@ -69,7 +69,7 @@ export function buildLineupFromDb(
   }
 
   const team = getTeamById(teamId) ?? TEAMS[0]
-  const chemistry = calcRosterChemistry(lineup)
+  const chemistry = calcRosterChemistry(lineup, chemistryBonus)
 
   const ai = styleId
     ? { styleId, auto: false }

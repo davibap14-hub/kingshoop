@@ -15,6 +15,11 @@ import {
 } from '../save/history'
 import { calcBalancedSalary } from '../balance'
 import { createLeagueHistory } from '../history/state'
+import {
+  calculateRelationshipEffects,
+  createRelationshipsState,
+  hydrateRelationshipsFromStatus,
+} from '../relationships'
 import { createGmState } from '../gm/state'
 import { createSeasonState } from '../season/state'
 import { createProgressionState } from '../progression/xp'
@@ -76,6 +81,17 @@ export function createDefaultContract(teamId = DEFAULT_TEAM_ID, yearlySalary = 1
 export function createCareerState(overrides = {}) {
   const archetypeId = overrides.archetypeId ?? DEFAULT_ARCHETYPE_ID
   const player = overrides.player ?? buildStatsFromArchetype(archetypeId)
+  const statusSeed = {
+    ...DEFAULT_CAREER_STATUS,
+    popularidade: player.popularidade ?? DEFAULT_CAREER_STATUS.popularidade,
+    ...(overrides.status ?? {}),
+  }
+  const relationships = overrides.relationships
+    ? createRelationshipsState(overrides.relationships)
+    : hydrateRelationshipsFromStatus(statusSeed)
+  const relationshipEffects =
+    overrides.relationshipEffects ??
+    calculateRelationshipEffects(relationships)
 
   return {
     playerName: overrides.playerName ?? player.nome ?? 'Rookie',
@@ -108,11 +124,7 @@ export function createCareerState(overrides = {}) {
         (player.qi.passe + player.qi.visao + player.qi.tomadaDecisao) / 3,
       ),
     },
-    status: {
-      ...DEFAULT_CAREER_STATUS,
-      popularidade: player.popularidade ?? DEFAULT_CAREER_STATUS.popularidade,
-      ...(overrides.status ?? {}),
-    },
+    status: statusSeed,
     // aliases legados
     careerVariables: null, // preenchido abaixo
     progression: createProgressionState(overrides.progression),
@@ -150,6 +162,10 @@ export function createCareerState(overrides = {}) {
     history: overrides.history ?? createEmptyHistory(),
     careerStats: overrides.careerStats ?? createEmptyCareerStats(),
     leagueHistory: createLeagueHistory(overrides.leagueHistory),
+    relationships,
+    relationshipEffects,
+    playingTimeShare:
+      overrides.playingTimeShare ?? relationshipEffects.playingTimeShare,
     season:
       overrides.season ??
       createSeasonState({

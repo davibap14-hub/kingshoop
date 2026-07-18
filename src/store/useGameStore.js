@@ -26,6 +26,9 @@ function pickCareerFields(state) {
     history: state.history,
     careerStats: state.careerStats,
     leagueHistory: state.leagueHistory,
+    relationships: state.relationships,
+    relationshipEffects: state.relationshipEffects,
+    playingTimeShare: state.playingTimeShare,
     season: state.season,
     gm: state.gm,
     weekNews: state.weekNews,
@@ -88,22 +91,33 @@ export const useGameStore = create((set, get) => {
     setTeam: (teamId) => {
       if (!gameService.listTeams().some((t) => t.id === teamId)) return
       const patch = gameService.transferTeam(teamId)
-      set((state) => ({
-        currentTeamId: patch.currentTeamId,
-        lastEvent: patch.lastEvent,
-        status: {
-          ...state.status,
-          ...(patch.statusPatch ?? {}),
-        },
-        careerVariables: {
-          ...state.careerVariables,
-          ...(patch.careerVariablesPatch ?? {}),
-        },
-        contract: {
-          ...state.contract,
-          teamId,
-        },
-      }))
+      set((state) => {
+        const relationships = {
+          ...(state.relationships ?? {}),
+          ...(patch.relationshipsPatch ?? {}),
+        }
+        const relationshipEffects =
+          gameService.getRelationshipEffects(relationships)
+        return {
+          currentTeamId: patch.currentTeamId,
+          lastEvent: patch.lastEvent,
+          status: {
+            ...state.status,
+            ...(patch.statusPatch ?? {}),
+          },
+          careerVariables: {
+            ...state.careerVariables,
+            ...(patch.careerVariablesPatch ?? {}),
+          },
+          relationships,
+          relationshipEffects,
+          playingTimeShare: relationshipEffects.playingTimeShare,
+          contract: {
+            ...state.contract,
+            teamId,
+          },
+        }
+      })
     },
 
     updateStat: (statKey, delta) => {

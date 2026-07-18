@@ -111,6 +111,12 @@ export function applyTeamTransfer(teamId, teamName) {
     currentTeamId: teamId,
     careerVariablesPatch: { quimica: 50, relCompanheiros: 50 },
     statusPatch: { relCompanheiros: 50, relTreinador: 50 },
+    relationshipsPatch: {
+      coach: 50,
+      teammates: 50,
+      gm: 50,
+      fans: 40,
+    },
     lastEvent: `Transferido para ${teamName}.`,
   }
 }

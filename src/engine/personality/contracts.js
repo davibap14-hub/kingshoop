@@ -1,12 +1,13 @@
 import { balanceDemandFactor } from '../balance'
+import { calculateRelationshipEffects } from '../relationships'
 import { trait } from './traits'
 
 /**
  * Fator de demanda salarial (1.0 = neutro).
  * Ego e ambição elevam; lealdade reduz.
- * Clamp final vem do Balance Engine.
+ * Clamp final vem do Balance Engine; agente/GM vêm do Relationship Engine.
  */
-export function calcSalaryDemandFactor(player) {
+export function calcSalaryDemandFactor(player, relationships = null) {
   if (!player) return 1
 
   const ego = trait(player, 'ego')
@@ -14,12 +15,17 @@ export function calcSalaryDemandFactor(player) {
   const lealdade = trait(player, 'lealdade')
   const confianca = trait(player, 'confianca')
 
-  const factor =
+  let factor =
     1 +
     (ego - 50) * 0.0035 +
     (ambicao - 50) * 0.003 +
     (confianca - 50) * 0.0015 -
     (lealdade - 50) * 0.0025
+
+  if (relationships) {
+    const effects = calculateRelationshipEffects(relationships)
+    factor *= effects.contractDemandFactor
+  }
 
   return balanceDemandFactor(factor)
 }
@@ -27,7 +33,11 @@ export function calcSalaryDemandFactor(player) {
 /**
  * Probabilidade relativa de aceitar renovação (0–1 scale boost).
  */
-export function calcRenewWillingness(player, franchiseMode = 'balanced') {
+export function calcRenewWillingness(
+  player,
+  franchiseMode = 'balanced',
+  relationships = null,
+) {
   if (!player) return 0.5
 
   const lealdade = trait(player, 'lealdade')
@@ -47,6 +57,11 @@ export function calcRenewWillingness(player, franchiseMode = 'balanced') {
   if (franchiseMode === 'rebuild' || franchiseMode === 'reconstrucao') {
     score -= (ambicao - 50) * 0.005
     score += (lealdade - 50) * 0.003
+  }
+
+  if (relationships) {
+    const effects = calculateRelationshipEffects(relationships)
+    score += effects.renewWillingnessBonus
   }
 
   return Math.max(0.15, Math.min(0.95, score))

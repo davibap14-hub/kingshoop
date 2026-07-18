@@ -35,6 +35,10 @@ export function applyTraining(state, activity, rng = Math.random) {
   if (motivation < 40) efficiency *= 0.75
   if (motivation >= 80) efficiency *= 1.15
   efficiency *= calcTrainingPersonalityMultiplier(state.player)
+  // Relationship Engine — confiança do treinador / agente
+  if (state.relationshipEffects?.trainingMultiplier) {
+    efficiency *= state.relationshipEffects.trainingMultiplier
+  }
 
   const keys = pickTrainKeys(groupKey, rng)
   const attributeDeltas = {}

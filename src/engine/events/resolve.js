@@ -4,6 +4,11 @@ import {
 } from '../career/state'
 import { applyPersonalityToChoiceEffects } from '../personality/events'
 import {
+  applyEventToRelationships,
+  calculateRelationshipEffects,
+  syncStatusFromRelationships,
+} from '../relationships'
+import {
   appendHistory,
   buildEventHistoryEntry,
   updateCareerStatsAfterEvent,
@@ -58,7 +63,15 @@ export function resolveEventChoice(state, eventId, choiceId) {
   // Personality Engine — amplifica / atenua efeitos da escolha
   merged = applyPersonalityToChoiceEffects(merged, state.player)
 
-  const status = applyStatusDeltas(state.status, merged)
+  // Relationship Engine — atualiza coach/gm/teammates/fans/press/sponsors/agent
+  const relResult = applyEventToRelationships(
+    state.relationships,
+    merged,
+    { reason: `event:${event.id}:${choice.id}` },
+  )
+  const relationshipEffects = calculateRelationshipEffects(relResult.relationships)
+  let status = applyStatusDeltas(state.status, merged)
+  status = syncStatusFromRelationships(status, relResult.relationships)
   const careerVariables = syncLegacyCareerVariables(status)
 
   const messages = [
@@ -75,6 +88,10 @@ export function resolveEventChoice(state, eventId, choiceId) {
         : `${key}: ${sign}${value}`,
     )
   }
+  for (const entry of relResult.log) {
+    const sign = entry.delta > 0 ? '+' : ''
+    messages.push(`Relação ${entry.key}: ${sign}${entry.delta}.`)
+  }
 
   const effects = {
     eventId: event.id,
@@ -82,6 +99,7 @@ export function resolveEventChoice(state, eventId, choiceId) {
     choiceId: choice.id,
     choiceLabel: choice.label,
     deltas: merged,
+    relationshipDeltas: relResult.applied,
     messages,
   }
 
@@ -89,6 +107,9 @@ export function resolveEventChoice(state, eventId, choiceId) {
     ...state,
     status,
     careerVariables,
+    relationships: relResult.relationships,
+    relationshipEffects,
+    playingTimeShare: relationshipEffects.playingTimeShare,
     pendingEvent: null,
     lastEvent: messages[messages.length - 1],
     lastEventResult: effects,

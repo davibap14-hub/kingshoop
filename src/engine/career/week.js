@@ -9,6 +9,12 @@ import {
 } from '../personality'
 import { processSeasonalBalance } from '../balance'
 import { processWeeklyNews } from '../news'
+import {
+  applyEventToRelationships,
+  calculateRelationshipEffects,
+  processWeeklyRelationships,
+  syncStatusFromRelationships,
+} from '../relationships'
 import { applyTraining, rangeRoll } from './activities'
 import { processWeeklyFinance, trySignSponsorship } from '../finance'
 import {
@@ -130,19 +136,27 @@ export function runCareerWeek(state, activityId, opts = {}) {
   let injury = state.injury
   let sponsorships = [...(state.sponsorships ?? [])]
   let activityCashBonus = 0
+  let popularityGain = 0
+  let trainingSuccess = false
+
+  // Relationship Engine — efeitos da semana anterior guiam treino/XP
+  const priorRelEffects = calculateRelationshipEffects(state.relationships)
+  const stateWithRel = {
+    ...state,
+    relationshipEffects: priorRelEffects,
+  }
 
   messages.push(`Atividade: ${activity.label}.`)
 
   if (activity.type === 'train') {
-    const training = applyTraining(state, activity, rng)
+    const training = applyTraining(stateWithRel, activity, rng)
     player = training.player
     Object.assign(attributeDeltas, training.attributeDeltas)
     messages.push(...training.messages)
+    trainingSuccess = Object.values(training.attributeDeltas).some((v) => v > 0)
 
     deltas.energia += -Math.abs(activity.energyCost)
     deltas.motivacao += rng() < 0.5 ? 2 : 1
-    deltas.relTreinador += activity.coachBias ?? 0
-    deltas.relCompanheiros += activity.teammatesBias ?? 0
 
     const maybeInjury = rollInjury(state, activity, rng)
     if (maybeInjury) {
@@ -154,7 +168,6 @@ export function runCareerWeek(state, activityId, opts = {}) {
   } else if (activity.type === 'rest') {
     deltas.energia += Math.abs(activity.energyCost)
     deltas.motivacao += 4
-    deltas.relTreinador += activity.coachBias ?? 0
     messages.push('Descanso completo — corpo e mente recuperados.')
 
     const tick = tickInjury(injury, { accelerated: false })
@@ -163,41 +176,38 @@ export function runCareerWeek(state, activityId, opts = {}) {
   } else if (activity.type === 'recovery') {
     deltas.energia += 15
     deltas.motivacao += 3
-    deltas.relTreinador += activity.coachBias ?? 0
     const tick = tickInjury(injury, { accelerated: true })
     injury = tick.injury
     messages.push('Sessão de fisioterapia intensiva.')
     messages.push(...tick.messages)
   } else if (activity.type === 'media') {
     deltas.energia += -Math.abs(activity.energyCost)
-    const popGain = rangeRoll(activity.popularityGain ?? [2, 5], rng)
-    deltas.popularidade += popGain
+    popularityGain = rangeRoll(activity.popularityGain ?? [2, 5], rng)
     deltas.motivacao += 2
-    deltas.relTreinador += activity.coachBias ?? 0
-    messages.push(`Exposição na mídia: popularidade +${popGain}.`)
+    messages.push(`Exposição na mídia: imprensa/torcida +${popularityGain}.`)
   } else if (activity.type === 'bonding') {
     deltas.energia += -Math.abs(activity.energyCost)
-    deltas.relCompanheiros += activity.teammatesBias ?? 5
     deltas.motivacao += 5
     messages.push('Confraternização fortaleceu o vestiário.')
   } else if (activity.type === 'coach') {
     deltas.energia += -Math.abs(activity.energyCost)
-    deltas.relTreinador += activity.coachBias ?? 6
     deltas.motivacao += 3
     messages.push('Sessão com o treinador alinhou expectativas.')
   } else if (activity.type === 'sponsor') {
     deltas.energia += -Math.abs(activity.energyCost)
     activityCashBonus = rangeRoll(activity.cashBonus ?? [3000, 8000], rng)
-    const popGain = rangeRoll(activity.popularityGain ?? [1, 4], rng)
-    deltas.popularidade += popGain
-    deltas.relTreinador += activity.coachBias ?? 0
-    deltas.relCompanheiros += activity.teammatesBias ?? 0
+    popularityGain = rangeRoll(activity.popularityGain ?? [1, 4], rng)
     messages.push(
-      `Evento de marca: +$${activityCashBonus.toLocaleString('en-US')} e popularidade +${popGain}.`,
+      `Evento de marca: +$${activityCashBonus.toLocaleString('en-US')}.`,
     )
 
     const signed = trySignSponsorship(
-      { ...state, status: applyStatusDeltas(state.status, deltas) },
+      {
+        ...state,
+        status: applyStatusDeltas(state.status, deltas),
+        relationships: state.relationships,
+        relationshipEffects: priorRelEffects,
+      },
       rng,
     )
     if (signed.sponsorship) {
@@ -206,10 +216,9 @@ export function runCareerWeek(state, activityId, opts = {}) {
     }
   }
 
-  // Personality Engine — química / relações pelo perfil do jogador
+  // Personality Engine — química alimenta a Relationship Engine (companheiros)
   const chemDelta = calcTeammateChemistryDelta(player, activity.type)
   if (chemDelta) {
-    deltas.relCompanheiros += chemDelta
     messages.push(
       chemDelta > 0
         ? `Personalidade: química do elenco +${chemDelta}.`
@@ -235,15 +244,47 @@ export function runCareerWeek(state, activityId, opts = {}) {
   sponsorships = finance.sponsorships
   deltas.dinheiro += finance.deltas.dinheiro
   deltas.felicidade += finance.deltas.felicidade
-  deltas.popularidade += finance.deltas.popularidade
+  // popularidade financeira vira torcida/imprensa via Relationship Engine
+  if (finance.deltas.popularidade) {
+    popularityGain += finance.deltas.popularidade
+  }
   messages.push(...finance.messages)
 
   if (activity.type !== 'train' && activity.type !== 'rest') {
     deltas.energia += 5
   }
 
-  const status = applyStatusDeltas(state.status, deltas)
   const calendar = advanceCalendar(state)
+
+  // Relationship Engine — ações da semana alteram coach/gm/teammates/fans/press/sponsors/agent
+  const relResult = processWeeklyRelationships({
+    relationships: state.relationships,
+    status: state.status,
+    activity,
+    chemDelta,
+    popularityGain,
+    trainingSuccess,
+    injured: Boolean(injury && !state.injury),
+    week: calendar.currentWeek,
+    seasonNumber: calendar.currentSeason,
+  })
+  messages.push(...relResult.messages)
+
+  // Status: deltas de energia/motivação/dinheiro + espelho dos relacionamentos
+  let status = applyStatusDeltas(relResult.status, {
+    energia: deltas.energia,
+    motivacao: deltas.motivacao + (relResult.effects.motivationAura ?? 0),
+    felicidade: deltas.felicidade,
+    dinheiro: deltas.dinheiro,
+  })
+  status = {
+    ...status,
+    relTreinador: relResult.relationships.coach,
+    relCompanheiros: relResult.relationships.teammates,
+    popularidade: Math.round(
+      (relResult.relationships.fans + relResult.relationships.press) / 2,
+    ),
+  }
 
   if (calendar.seasonRolled) {
     messages.push(`Nova temporada! Temporada ${calendar.currentSeason} começa.`)
@@ -274,9 +315,15 @@ export function runCareerWeek(state, activityId, opts = {}) {
 
   const playerStats = syncPlayerStatsFromDetailed(player)
 
-  // Progression Engine — XP semanal + level-up gradual (já amortecido pelo Balance)
+  // Progression Engine — XP semanal (Balance + Relationship)
   const progResult = processWeeklyProgression(
-    { ...state, status, injury, player },
+    {
+      ...state,
+      status,
+      injury,
+      player,
+      relationshipEffects: relResult.effects,
+    },
     activity,
     rng,
   )
@@ -353,12 +400,22 @@ export function runCareerWeek(state, activityId, opts = {}) {
   })
   messages.push(...newsResult.messages)
 
-  // impacto das notícias no status (deltas da semana)
+  // impacto das notícias no status + relacionamentos
   for (const [k, v] of Object.entries(newsResult.deltas ?? {})) {
     if (!v) continue
     deltas[k] = (deltas[k] ?? 0) + v
   }
-  const statusWithNews = applyStatusDeltas(status, newsResult.deltas)
+  const newsRel = applyEventToRelationships(
+    relResult.relationships,
+    newsResult.deltas ?? {},
+    { reason: 'news' },
+  )
+  let statusWithNews = applyStatusDeltas(status, newsResult.deltas)
+  statusWithNews = syncStatusFromRelationships(
+    statusWithNews,
+    newsRel.relationships,
+  )
+  const relationshipEffects = calculateRelationshipEffects(newsRel.relationships)
   const careerVariablesWithNews = syncLegacyCareerVariables(statusWithNews)
 
   let nextState = {
@@ -367,6 +424,9 @@ export function runCareerWeek(state, activityId, opts = {}) {
     playerStats,
     status: statusWithNews,
     careerVariables: careerVariablesWithNews,
+    relationships: newsRel.relationships,
+    relationshipEffects,
+    playingTimeShare: relationshipEffects.playingTimeShare,
     contract,
     sponsorships,
     finance: finance.finance,
@@ -419,6 +479,7 @@ export function runCareerWeek(state, activityId, opts = {}) {
     season: seasonResult.summary,
     gm: gmResult.summary,
     balance: balanceResult.summary,
+    relationships: relResult.summary,
     historyEngine: historyResult.summary,
     news: newsResult.summary,
     weekNews: newsResult.weekNews,
