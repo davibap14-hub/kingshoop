@@ -9,12 +9,12 @@ import {
 import { SectionHeader } from '../ui'
 import { gameService } from '../../services/gameService'
 import { useCareerSnapshot } from '../../hooks/useCareer'
+import { useState } from 'react'
 import CareerPanel from './CareerPanel'
-import EventChoicePanel from './EventChoicePanel'
 import FinancePanel from './FinancePanel'
+import GameHub from './GameHub'
 import GmPanel from './GmPanel'
 import BalancePanel from './BalancePanel'
-import ContractOfferPanel from './ContractOfferPanel'
 import ContractPanel from './ContractPanel'
 import AchievementsPanel from './AchievementsPanel'
 import AnalyticsPanel from './AnalyticsPanel'
@@ -38,7 +38,7 @@ import SeasonPanel from './SeasonPanel'
 import WeekControls from './WeekControls'
 
 function buildTrend(currentWeek, overall, status) {
-  const len = Math.min(8, Math.max(3, currentWeek))
+  const len = Math.min(6, Math.max(3, currentWeek))
   const start = Math.max(1, currentWeek - len + 1)
   return Array.from({ length: len }, (_, i) => {
     const week = start + i
@@ -53,6 +53,7 @@ function buildTrend(currentWeek, overall, status) {
 }
 
 export default function CareerDashboard() {
+  const [showDetails, setShowDetails] = useState(false)
   const {
     playerName,
     team,
@@ -66,6 +67,8 @@ export default function CareerDashboard() {
     currentTeamId,
     finance,
     season,
+    progression,
+    weekEffects,
   } = useCareerSnapshot()
 
   const seasonView = season
@@ -77,12 +80,8 @@ export default function CareerDashboard() {
     : null
 
   const next = seasonView?.nextGame
-  const homeTeam = next
-    ? getTeamById(next.game.homeId)
-    : team
-  const awayTeam = next
-    ? getTeamById(next.game.awayId)
-    : null
+  const homeTeam = next ? getTeamById(next.game.homeId) : team
+  const awayTeam = next ? getTeamById(next.game.awayId) : null
   const isHome = next ? next.game.homeId === currentTeamId : true
 
   const attributes = ATTRIBUTE_KEYS.map((key) => ({
@@ -123,70 +122,108 @@ export default function CareerDashboard() {
   const trend = buildTrend(currentWeek, overall, status)
 
   return (
-    <div className="flex flex-col gap-6">
-      <SectionHeader
-        eyebrow="NBA Dashboard"
-        title={playerName}
-        description={`${team?.name ?? 'Free Agent'} · Temporada ${currentSeason} · Semana ${currentWeek}`}
+    <div className="flex flex-col gap-8 pb-8">
+      <GameHub
+        playerName={playerName}
+        team={team}
+        overall={overall}
+        status={status}
+        injury={injury}
+        player={player}
+        currentWeek={currentWeek}
+        currentSeason={currentSeason}
+        currentTeamId={currentTeamId}
+        seasonView={seasonView}
+        finance={finance}
+        progression={progression}
+        weekEffects={weekEffects}
       />
 
-      <div className="grid gap-4 xl:grid-cols-12">
-        <div className="flex flex-col gap-4 xl:col-span-8">
-          <StatsOverview
-            attributes={attributes}
-            metrics={metrics}
-            trend={trend}
+      {/* Gráficos e painéis técnicos — secundários */}
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionHeader
+            eyebrow="Painel técnico"
+            title="Gráficos e engines"
+            description="Detalhes opcionais — o jogo acontece acima."
           />
-
-          <ContractOfferPanel />
-          <EventChoicePanel />
-          <WeekControls />
-          <NewsPanel />
-          <ContractPanel />
-          <RelationshipPanel />
-          <DnaPanel />
-          <PlaybookPanel />
-          <DefensePanel />
-          <FatiguePanel />
-          <MomentumPanel />
-          <TradePanel />
-          <ChemistryPanel />
-          <InjuryPanel />
-          <CoachPanel />
-          <ScoutingPanel />
-          <AnalyticsPanel />
-          <AchievementsPanel />
-          <HallOfFamePanel />
-          <HistoryPanel />
-          <SeasonPanel />
-          <GmPanel />
-          <BalancePanel />
-          <SavePanel />
-          <FinancePanel />
-          <ProgressionPanel />
-          <CareerPanel />
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-navy shadow-sm transition hover:border-navy/30"
+          >
+            {showDetails ? 'Ocultar detalhes' : 'Mostrar detalhes'}
+          </button>
         </div>
 
-        <aside className="flex flex-col gap-4 xl:col-span-4">
-          <PlayerStatus
-            playerName={playerName}
-            team={team}
-            position={player?.posicao}
-            overall={overall}
-            status={status}
-            injury={injury}
-          />
-          <NextMatch
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            week={next?.week ?? currentWeek}
-            venue={isHome ? 'Casa' : 'Visitante'}
-          />
-          <SeasonCalendar
-            currentWeek={currentWeek}
-            currentSeason={currentSeason}
-          />
-        </aside>
+        {showDetails ? (
+          <div className="mt-6 grid gap-4 xl:grid-cols-12">
+            <div className="flex flex-col gap-4 xl:col-span-8">
+              <div className="opacity-90 [&_.grid]:gap-3">
+                <StatsOverview
+                  attributes={attributes}
+                  metrics={metrics}
+                  trend={trend}
+                  className="[&>div:nth-child(2)]:max-h-[280px] [&>div:nth-child(2)]:overflow-hidden"
+                />
+              </div>
+
+              <WeekControls />
+              <NewsPanel />
+              <ContractPanel />
+              <RelationshipPanel />
+              <DnaPanel />
+              <PlaybookPanel />
+              <DefensePanel />
+              <FatiguePanel />
+              <MomentumPanel />
+              <TradePanel />
+              <ChemistryPanel />
+              <InjuryPanel />
+              <CoachPanel />
+              <ScoutingPanel />
+              <AnalyticsPanel />
+              <AchievementsPanel />
+              <HallOfFamePanel />
+              <HistoryPanel />
+              <SeasonPanel />
+              <GmPanel />
+              <BalancePanel />
+              <SavePanel />
+              <FinancePanel />
+              <ProgressionPanel />
+              <CareerPanel />
+            </div>
+
+            <aside className="flex flex-col gap-4 xl:col-span-4">
+              <PlayerStatus
+                playerName={playerName}
+                team={team}
+                position={player?.posicao}
+                overall={overall}
+                status={status}
+                injury={injury}
+              />
+              <NextMatch
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+                week={next?.week ?? currentWeek}
+                venue={isHome ? 'Casa' : 'Visitante'}
+              />
+              <SeasonCalendar
+                currentWeek={currentWeek}
+                currentSeason={currentSeason}
+              />
+            </aside>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">
+            Status compacto: OVR {overall} · {team?.short ?? '—'} ·{' '}
+            {record ? `${record.wins}-${record.losses}` : '0-0'} · Energia{' '}
+            {status?.energia ?? 0}. Abra os detalhes só se precisar de gráficos
+            ou engines avançadas.
+          </p>
+        )}
       </div>
     </div>
   )
